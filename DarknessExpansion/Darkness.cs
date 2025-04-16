@@ -14,7 +14,7 @@ public class Darkness
     public static EquipmentDef DarknessEquipment;
     public static BuffDef DarknessBuff;
     public static int DarknessLevel = 0;
-    private static Sprite eliteIcon = Addressables.LoadAssetAsync<Sprite>("RoR2/Base/EliteFire/texBuffAffixWhite.tif").WaitForCompletion();
+    private static Sprite eliteIcon = Addressables.LoadAssetAsync<Sprite>("RoR2/Base/EliteIce/texBuffAffixWhite.tif").WaitForCompletion();
 
     public Darkness()
     {
@@ -85,23 +85,24 @@ public class Darkness
         {
             for (int i = 0; i < 50; i++)
             {
-                texture.SetPixel(i, y, new Color(0,0,i));
+                
+                texture.SetPixel(i, y, new Color(0,0,i/255f,255));
             }
             for (int i = 0; i < 50; i++)
             {
-                texture.SetPixel(i+50, y, new Color(0,0,50-i));
+                texture.SetPixel(i+50, y, new Color(0,0,50/255f-i/255f,255));
             }
             for (int i = 0; i < 50; i++)
             {
-                texture.SetPixel(i+100, y, new Color(i,0,i));
+                texture.SetPixel(i+100, y, new Color(i/255f,0,i/255f,255));
             }
             for (int i = 0; i < 50; i++)
             {
-                texture.SetPixel(i+150, y, new Color(50-i,0,50-i));
+                texture.SetPixel(i+150, y, new Color(50/255f-i/255f,0,50/255f-i/255f,255));
             }
             for (int i = 0; i < 56; i++)
             {
-                texture.SetPixel(i+200, y, new Color(0,i,0));
+                texture.SetPixel(i+200, y, new Color(0,i/255f,0,255));
             }
         }
         
