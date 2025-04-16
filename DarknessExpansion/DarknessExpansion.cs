@@ -15,5 +15,16 @@ public class DarknessExpansion : BaseUnityPlugin
         Log.Init(Logger);
         new Darkness();
     }
-    
+
+    private void Update()
+    {
+        // This if statement checks if the player has currently pressed F2.
+        if (Input.GetKeyDown(KeyCode.F2))
+        {
+            Log.Debug("Increasing Darkness Level");
+            Darkness.DarknessLevel++;
+            Darkness.UpdateDarkness();
+        }
+    }
+
 }

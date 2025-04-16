@@ -13,8 +13,8 @@ public class Darkness
     public static EliteDef DarknessElite;
     public static EquipmentDef DarknessEquipment;
     public static BuffDef DarknessBuff;
-    public static int DarknessLevel = 3;
-    private static Sprite eliteIcon = Addressables.LoadAssetAsync<Sprite>("RoR2/Base/EliteIce/texBuffAffixWhite.tif").WaitForCompletion();
+    public static int DarknessLevel = 0;
+    private static Sprite eliteIcon = Addressables.LoadAssetAsync<Sprite>("RoR2/Base/EliteFire/texBuffAffixWhite.tif").WaitForCompletion();
 
     public Darkness()
     {
@@ -54,6 +54,7 @@ public class Darkness
         UpdateDarkness();
         CombatDirector.Spawn += CombatDirectorOnSpawn;
         SpawnCard.onSpawnedServerGlobal += SpawnCardOnonSpawnedServerGlobal;
+        
     }
 
     private void SpawnCardOnonSpawnedServerGlobal(SpawnCard.SpawnResult obj)
@@ -82,10 +83,25 @@ public class Darkness
 
         for (int y = 0; y < 8; y++)
         {
-            for (int x = 0; x < 256; x++)
+            for (int i = 0; i < 50; i++)
             {
-                
-                texture.SetPixel(x, y, new Color(0,0,0,255));
+                texture.SetPixel(i, y, new Color(0,0,i));
+            }
+            for (int i = 0; i < 50; i++)
+            {
+                texture.SetPixel(i+50, y, new Color(0,0,50-i));
+            }
+            for (int i = 0; i < 50; i++)
+            {
+                texture.SetPixel(i+100, y, new Color(i,0,i));
+            }
+            for (int i = 0; i < 50; i++)
+            {
+                texture.SetPixel(i+150, y, new Color(50-i,0,50-i));
+            }
+            for (int i = 0; i < 56; i++)
+            {
+                texture.SetPixel(i+200, y, new Color(0,i,0));
             }
         }
         
@@ -108,7 +124,7 @@ public class Darkness
         return orig(self,spawncard,elitedef,spawntarget,spawndistance,preventoverhead,valuemultiplier,placementmode);
     }
     
-    public void UpdateDarkness()
+    public static void UpdateDarkness()
     {
         DarknessElite.healthBoostCoefficient = 1f + Mathf.Sqrt(DarknessLevel);
         DarknessElite.damageBoostCoefficient = 1f + (DarknessElite.healthBoostCoefficient-1) / 2f;
