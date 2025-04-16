@@ -8,12 +8,15 @@ namespace DarknessExpansion;
 [BepInDependency(ItemAPI.PluginGUID,BepInDependency.DependencyFlags.HardDependency)]
 [BepInDependency(EliteAPI.PluginGUID,BepInDependency.DependencyFlags.HardDependency)]
 
+
 public class DarknessExpansion : BaseUnityPlugin
 {
     private void Awake()
     {
         Log.Init(Logger);
         new Darkness();
+        new DarknessShrine();
+        new BigArtifact();
     }
 
     private void Update()

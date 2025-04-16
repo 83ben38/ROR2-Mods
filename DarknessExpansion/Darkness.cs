@@ -14,10 +14,11 @@ public class Darkness
     public static EquipmentDef DarknessEquipment;
     public static BuffDef DarknessBuff;
     public static int DarknessLevel = 0;
-    private static Sprite eliteIcon = Addressables.LoadAssetAsync<Sprite>("RoR2/Base/EliteIce/texBuffAffixWhite.tif").WaitForCompletion();
+    private static Sprite eliteIcon = Addressables.LoadAssetAsync<Sprite>("RoR2/Base/EliteFire/texBuffAffixRed.tif").WaitForCompletion();
 
     public Darkness()
     {
+        
         DarknessElite = ScriptableObject.CreateInstance<EliteDef>();
         DarknessElite.color = new Color(0, 0, 0, 255);
         EliteRamp.AddRamp(DarknessElite,CreateDarknessTexture());
@@ -70,6 +71,7 @@ public class Darkness
                     List<ItemIndex> li = ItemCatalog.tier3ItemList;
                     i.GiveItem(li[(int)(li.Count * Random.value)]);
                     Log.Debug("Giving Item");
+                    
                 }
             }
         }
