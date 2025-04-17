@@ -56,7 +56,7 @@ public class Darkness
         UpdateDarkness();
         CombatDirector.Spawn += CombatDirectorOnSpawn;
         SpawnCard.onSpawnedServerGlobal += SpawnCardOnonSpawnedServerGlobal;
-        
+        Run.onRunStartGlobal += run => DarknessLevel = 0;
     }
 
     private void SpawnCardOnonSpawnedServerGlobal(SpawnCard.SpawnResult obj)
