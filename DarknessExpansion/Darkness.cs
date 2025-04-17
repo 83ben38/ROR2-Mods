@@ -23,6 +23,7 @@ public class Darkness
         DarknessElite.color = new Color(0, 0, 0, 255);
         EliteRamp.AddRamp(DarknessElite,CreateDarknessTexture());
         DarknessElite.name = "EliteDarkness";
+        DarknessElite.modifierToken = "Dark {0}";
 
         DarknessBuff = ScriptableObject.CreateInstance<BuffDef>();
         DarknessBuff.name = "DarknessBuff";

@@ -16,7 +16,6 @@ public class DarknessExpansion : BaseUnityPlugin
         Log.Init(Logger);
         new Darkness();
         new DarknessShrine();
-        new BigArtifact();
     }
 
     private void Update()
