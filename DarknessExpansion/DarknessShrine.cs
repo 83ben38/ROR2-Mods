@@ -1,35 +1,34 @@
-﻿using System;
-using BepInEx;
+﻿using BepInEx;
 using R2API;
 using RoR2;
 using RoR2.Navigation;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
-using Object = UnityEngine.Object;
+
 
 namespace DarknessExpansion;
 
 public class DarknessShrine
 {
-    private GameObject shrine1 = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/ShrineBoss/mdlShrineBoss.fbx").WaitForCompletion();
+    private GameObject shrine1 = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/ShrineBoss/mdlShrineBoss.fbx").WaitForCompletion().InstantiateClone("Darkness Shrine");
     private Material darkMaterial = Addressables.LoadAssetAsync<Material>("RoR2/Base/ShrineBlood/matShrineBlood.mat").WaitForCompletion();
+
     public DarknessShrine()
     {
         shrine1.name = "Shrine of Darkness";
         shrine1.transform.localScale *= 1.5f;
         shrine1.AddComponent<NetworkIdentity>();
-        shrine1.transform.GetComponent<MeshRenderer>().sharedMaterial = darkMaterial;
+        shrine1.GetComponent<MeshRenderer>().sharedMaterial = darkMaterial;
         shrine1.AddComponent<MeshCollider>();
+
+        DarknessShrineManager dsm = shrine1.AddComponent<DarknessShrineManager>();
         PurchaseInteraction interaction = shrine1.AddComponent<PurchaseInteraction>();
         interaction.contextToken = "Reckon with the powers of Darkness (E)";
         interaction.NetworkdisplayNameToken = "Shrine of Darkness";
-        interaction.enabled = true;
-        DarknessShrineManager dsm = shrine1.AddComponent<DarknessShrineManager>();
         dsm.purchaseInteraction = interaction;
-        shrine1.GetComponent<Highlight>().targetRenderer = shrine1.GetComponentInChildren<MeshRenderer>();
-
-        GameObject trigger = Object.Instantiate(new GameObject("Trigger"), shrine1.transform);
+        shrine1.GetComponent<Highlight>().targetRenderer = shrine1.GetComponent<MeshRenderer>();
+        GameObject trigger = BaseUnityPlugin.Instantiate(new GameObject(), shrine1.transform);
         trigger.AddComponent<BoxCollider>().isTrigger = true;
         trigger.AddComponent<EntityLocator>().entity = shrine1;
 
@@ -43,13 +42,20 @@ public class DarknessShrine
         card.forbiddenFlags = NodeFlags.NoShrineSpawn;
         card.directorCreditCost = 20;
         card.occupyPosition = true;
+        card.orientToFloor = false;
         card.skipSpawnWhenSacrificeArtifactEnabled = false;
-        DirectorCard dc = new DirectorCard();
-        dc.selectionWeight = 500;
-        dc.spawnCard = card;
-        DirectorAPI.DirectorCardHolder cardHolder = new DirectorAPI.DirectorCardHolder();
-        cardHolder.Card = dc;
-        cardHolder.InteractableCategory = DirectorAPI.InteractableCategory.Shrines;
+
+        DirectorCard dc = new DirectorCard()
+        {
+            selectionWeight = 500,
+            spawnCard = card
+        };
+
+        DirectorAPI.DirectorCardHolder cardHolder = new DirectorAPI.DirectorCardHolder()
+        {
+            Card = dc,
+            InteractableCategory = DirectorAPI.InteractableCategory.Shrines
+        };
         DirectorAPI.Helpers.AddNewInteractable(cardHolder);
         SpawnCard.onSpawnedServerGlobal += SpawnCardOnonSpawnedServerGlobal;
         
@@ -74,15 +80,10 @@ public class DarknessShrine
 
         public void Start()
         {
-            purchaseInteraction.SetAvailable(true);
+            purchaseInteraction.SetAvailableTrue();
             purchaseInteraction.onPurchase.AddListener(OnPurchase);
         }
-
-        private void Update()
-        {
-            purchaseInteraction.SetAvailableTrue();
-        }
-
+        
         public void OnPurchase(Interactor interactor)
         {
             EffectManager.SpawnEffect(shrineUseEffect,new EffectData(){
@@ -91,6 +92,10 @@ public class DarknessShrine
                 scale = 1f,
                 color = Color.black
             },true);
+            Chat.SendBroadcastChat(new Chat.SimpleChatMessage(){baseToken = "<style=cEvent><color=#000000>Darkness Increased!</color></style>"});
+            purchaseInteraction.SetAvailable(false);
+            Darkness.DarknessLevel++;
+            Darkness.UpdateDarkness();
         }
     }
     
