@@ -20,7 +20,7 @@ public class DarknessShrine
     private GameObject shrine2 = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/ShrineBlood/mdlShrineBlood.fbx")
         .WaitForCompletion().InstantiateClone("Darkness Item");
 
-    private SpawnCard spawnCard;
+    private InteractableSpawnCard spawnCard;
     public DarknessShrine()
     {
         shrine1.name = "Shrine of Darkness";
@@ -72,6 +72,20 @@ public class DarknessShrine
         shrine2.AddComponent<NetworkIdentity>();
         shrine2.GetComponent<Renderer>().sharedMaterial = darkMaterial;
         shrine2.AddComponent<MeshCollider>();
+        
+        spawnCard = ScriptableObject.CreateInstance<InteractableSpawnCard>();
+        spawnCard.name = "iscDarknessPotential";
+        spawnCard.prefab = shrine2;
+        spawnCard.sendOverNetwork = true;
+        spawnCard.hullSize = HullClassification.Human;
+        spawnCard.nodeGraphType = MapNodeGroup.GraphType.Ground;
+        spawnCard.requiredFlags = NodeFlags.None;
+        spawnCard.forbiddenFlags = NodeFlags.NoShrineSpawn;
+        spawnCard.directorCreditCost = 0;
+        spawnCard.occupyPosition = true;
+        spawnCard.orientToFloor = false;
+        spawnCard.skipSpawnWhenSacrificeArtifactEnabled = false;
+        spawnCard.maxSpawnsPerStage = 3;
 
         DarknessPotentialManager dpm = shrine2.AddComponent<DarknessPotentialManager>();
         PurchaseInteraction interaction2 = shrine2.AddComponent<PurchaseInteraction>();
@@ -94,6 +108,14 @@ public class DarknessShrine
             dsm.purchaseInteraction.SetAvailable(true);
             dsm.createPotentials(shrine2,spawnCard);
         }
+
+        DarknessPotentialManager dpm = obj.spawnedInstance.GetComponent<DarknessPotentialManager>();
+        if (dpm != null)
+        {
+            Log.Debug("Darkness Potential Found");
+            dpm.transform.Rotate(-90,-90,-90);
+            dpm.purchaseInteraction.SetAvailable(true);
+        }
     }
 
 
@@ -114,6 +136,7 @@ public class DarknessShrine
             for (int i = 0; i < 3; i++)
             {
                 terminalGameObjects[i] = DirectorCore.instance.TrySpawnObject(new DirectorSpawnRequest(spawnCard,new DirectorPlacementRule(){placementMode = DirectorPlacementRule.PlacementMode.Random},new Xoroshiro128Plus((ulong)(Random.value * ulong.MaxValue))));
+                terminalGameObjects[i].GetComponent<DarknessPotentialManager>().parent = this;
             }
             
         }
