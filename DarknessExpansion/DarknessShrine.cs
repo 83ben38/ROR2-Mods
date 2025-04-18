@@ -1,10 +1,13 @@
-﻿using BepInEx;
+﻿using System;
+using BepInEx;
+using On.EntityStates.VoidInfestor;
 using R2API;
 using RoR2;
 using RoR2.Navigation;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
+using Random = UnityEngine.Random;
 
 
 namespace DarknessExpansion;
@@ -14,6 +17,10 @@ public class DarknessShrine
     private GameObject shrine1 = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/ShrineBoss/mdlShrineBoss.fbx").WaitForCompletion().InstantiateClone("Darkness Shrine");
     private Material darkMaterial = Addressables.LoadAssetAsync<Material>("RoR2/Base/ShrineBlood/matShrineBlood.mat").WaitForCompletion();
 
+    private GameObject shrine2 = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/ShrineBlood/mdlShrineBlood.fbx")
+        .WaitForCompletion().InstantiateClone("Darkness Item");
+
+    private SpawnCard spawnCard;
     public DarknessShrine()
     {
         shrine1.name = "Shrine of Darkness";
@@ -59,6 +66,21 @@ public class DarknessShrine
         DirectorAPI.Helpers.AddNewInteractable(cardHolder);
         SpawnCard.onSpawnedServerGlobal += SpawnCardOnonSpawnedServerGlobal;
         
+        shrine2.name = "Darkness Potential";
+        shrine2.transform.localScale *= 0.5f;
+        shrine2.AddComponent<NetworkIdentity>();
+        shrine2.GetComponent<Renderer>().sharedMaterial = darkMaterial;
+        shrine2.AddComponent<MeshCollider>();
+
+        DarknessPotentialManager dpm = shrine2.AddComponent<DarknessPotentialManager>();
+        PurchaseInteraction interaction2 = shrine2.AddComponent<PurchaseInteraction>();
+        interaction2.contextToken = "Offer a Sacrifice to the Darkness (E)";
+        interaction2.NetworkdisplayNameToken = "Darkness Potential";
+        dpm.purchaseInteraction = interaction2;
+        shrine2.GetComponent<Highlight>().targetRenderer = shrine2.GetComponent<Renderer>();
+        GameObject trigger2 = BaseUnityPlugin.Instantiate(new GameObject(), shrine2.transform);
+        trigger2.AddComponent<BoxCollider>().isTrigger = true;
+        trigger2.AddComponent<EntityLocator>().entity = shrine2;
     }
 
     private void SpawnCardOnonSpawnedServerGlobal(SpawnCard.SpawnResult obj)
@@ -69,6 +91,7 @@ public class DarknessShrine
             Log.Debug("Darkness Shrine Found");
             dsm.transform.Rotate(-90,-90,-90);
             dsm.purchaseInteraction.SetAvailable(true);
+            dsm.createPotentials(shrine2,spawnCard);
         }
     }
 
@@ -77,13 +100,23 @@ public class DarknessShrine
     {
         public PurchaseInteraction purchaseInteraction;
         private GameObject shrineUseEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/ShrineUseEffect.prefab").WaitForCompletion();
-
+        private GameObject[] terminalGameObjects;
         public void Start()
         {
             purchaseInteraction.SetAvailableTrue();
             purchaseInteraction.onPurchase.AddListener(OnPurchase);
         }
-        
+
+        public void createPotentials(GameObject shrine2, SpawnCard spawnCard)
+        {
+            terminalGameObjects = new GameObject[3];
+            for (int i = 0; i < 3; i++)
+            {
+                terminalGameObjects[i] = DirectorCore.instance.TrySpawnObject(new DirectorSpawnRequest(spawnCard,new DirectorPlacementRule(){placementMode = DirectorPlacementRule.PlacementMode.Random},new Xoroshiro128Plus((ulong)(Random.value * ulong.MaxValue))));
+            }
+            
+        }
+
         public void OnPurchase(Interactor interactor)
         {
             EffectManager.SpawnEffect(shrineUseEffect,new EffectData(){
@@ -98,5 +131,20 @@ public class DarknessShrine
             Darkness.UpdateDarkness();
         }
     }
-    
+
+    public class DarknessPotentialManager : NetworkBehaviour
+    {
+        public PurchaseInteraction purchaseInteraction;
+        public DarknessShrineManager parent;
+        public void Start()
+        {
+            purchaseInteraction.SetAvailableTrue();
+            purchaseInteraction.onPurchase.AddListener(OnPurchase);
+        }
+        
+        public void OnPurchase(Interactor interactor)
+        {
+        }
+    }
+
 }
