@@ -51,6 +51,7 @@ public class DarknessShrine
         card.occupyPosition = true;
         card.orientToFloor = false;
         card.skipSpawnWhenSacrificeArtifactEnabled = false;
+        card.maxSpawnsPerStage = 1;
 
         DirectorCard dc = new DirectorCard()
         {
