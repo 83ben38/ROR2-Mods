@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using R2API;
 using RoR2;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using CombatDirector = On.RoR2.CombatDirector;
+using Random = UnityEngine.Random;
 
 
 namespace DarknessExpansion;
@@ -127,10 +129,15 @@ public class Darkness
 
         return orig(self,spawncard,elitedef,spawntarget,spawndistance,preventoverhead,valuemultiplier,placementmode);
     }
-    
+
+    public static event Action<int> onDarknessLevelChange;
     public static void UpdateDarkness()
     {
         DarknessElite.healthBoostCoefficient = 1f + Mathf.Sqrt(DarknessLevel);
         DarknessElite.damageBoostCoefficient = 1f + (DarknessElite.healthBoostCoefficient-1) / 2f;
+        if (onDarknessLevelChange != null)
+        {
+            onDarknessLevelChange.Invoke(DarknessLevel);
+        }
     }
 }
