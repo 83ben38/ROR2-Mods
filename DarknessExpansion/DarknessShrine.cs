@@ -2,12 +2,16 @@
 using BepInEx;
 using On.EntityStates.VoidInfestor;
 using R2API;
+using Rewired;
 using RoR2;
 using RoR2.Navigation;
+using RoR2.UI;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
+using PlayerController = UnityEngine.Networking.PlayerController;
 using Random = UnityEngine.Random;
+using RunReport = On.RoR2.RunReport;
 
 
 namespace DarknessExpansion;
@@ -19,6 +23,10 @@ public class DarknessShrine
 
     private GameObject shrine2 = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/ShrineBlood/mdlShrineBlood.fbx")
         .WaitForCompletion().InstantiateClone("Darkness Item");
+
+    private static GameObject itemSelectionScreen = Addressables
+        .LoadAssetAsync<GameObject>("RoR2/Base/Scrapper/ScrapperPickerPanel.prefab").WaitForCompletion()
+        .InstantiateClone("Darkness Item Selector");
 
     private InteractableSpawnCard spawnCard;
     public DarknessShrine()
@@ -68,7 +76,7 @@ public class DarknessShrine
         SpawnCard.onSpawnedServerGlobal += SpawnCardOnonSpawnedServerGlobal;
         
         shrine2.name = "Darkness Potential";
-        shrine2.transform.localScale *= 0.5f;
+        shrine2.transform.localScale *= 0.005f;
         shrine2.AddComponent<NetworkIdentity>();
         shrine2.GetComponent<Renderer>().sharedMaterial = darkMaterial;
         shrine2.AddComponent<MeshCollider>();
@@ -89,6 +97,7 @@ public class DarknessShrine
 
         DarknessPotentialManager dpm = shrine2.AddComponent<DarknessPotentialManager>();
         PurchaseInteraction interaction2 = shrine2.AddComponent<PurchaseInteraction>();
+        
         interaction2.contextToken = "Offer a Sacrifice to the Darkness (E)";
         interaction2.NetworkdisplayNameToken = "Darkness Potential";
         dpm.purchaseInteraction = interaction2;
@@ -168,6 +177,12 @@ public class DarknessShrine
         
         public void OnPurchase(Interactor interactor)
         {
+            Behaviour[] b = interactor.GetComponents<Behaviour>();
+            for (int i = 0; i < b.Length; i++)
+            {
+                Debug.Log(b[i].GetType());
+            }
+            GameObject go = Instantiate(itemSelectionScreen,interactor.gameObject.transform);
         }
     }
 
