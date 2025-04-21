@@ -15,6 +15,8 @@ public class DarknessItems
 
     private GameObject darkGolemPickup = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Knurl/PickupKnurl.prefab")
         .WaitForCompletion();
+
+    public static ItemIndex ItemIndex;
     public DarknessItems()
     {
         darkTier = ScriptableObject.CreateInstance<ItemTierDef>();
@@ -30,5 +32,6 @@ public class DarknessItems
         darkGolemItem.pickupToken = "DARK_GOLEM_PICKUP";
         darkGolemItem.pickupIconSprite = darkGolemSprite;
         darkGolemItem.pickupModelPrefab = darkGolemPickup;
+        ItemIndex = darkGolemItem.itemIndex;
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using BepInEx;
 using R2API;
+using RoR2;
 using UnityEngine;
 
 namespace DarknessExpansion;
@@ -17,17 +18,17 @@ public class DarknessExpansion : BaseUnityPlugin
         new Darkness();
         new DarknessShrine();
         new DarknessArtifact();
+        new DarknessItems();
     }
 
-    // private void Update()
-    // {
-    //     // This if statement checks if the player has currently pressed F2.
-    //     if (Input.GetKeyDown(KeyCode.F2))
-    //     {
-    //         Log.Debug("Increasing Darkness Level");
-    //         Darkness.DarknessLevel++;
-    //         Darkness.UpdateDarkness();
-    //     }
-    // }
+    private void Update()
+    {
+        // This if statement checks if the player has currently pressed F2.
+        if (Input.GetKeyDown(KeyCode.F2))
+        {
+            var transform = PlayerCharacterMasterController.instances[0].master.GetBodyObject().transform;
+            PickupDropletController.CreatePickupDroplet(PickupCatalog.FindPickupIndex(DarknessItems.ItemIndex),transform.position,transform.forward*20f);
+        }
+    }
 
 }

@@ -9,6 +9,8 @@ using RoR2.UI;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
+using CameraRigController = On.RoR2.CameraRigController;
+using Object = System.Object;
 using PlayerController = UnityEngine.Networking.PlayerController;
 using Random = UnityEngine.Random;
 using RunReport = On.RoR2.RunReport;
@@ -169,21 +171,33 @@ public class DarknessShrine
     {
         public PurchaseInteraction purchaseInteraction;
         public DarknessShrineManager parent;
+        public NetworkUIPromptController networkUIPromptController;
+        public GameObject UIObject;
         public void Start()
         {
             purchaseInteraction.SetAvailableTrue();
             purchaseInteraction.onPurchase.AddListener(OnPurchase);
+            networkUIPromptController = gameObject.AddComponent<NetworkUIPromptController>();
+            networkUIPromptController.onDisplayBegin += onDisplayBegin;
+            networkUIPromptController.onDisplayEnd += onDisplayEnd;
         }
-        
+
+        private void onDisplayEnd(NetworkUIPromptController arg1, LocalUser arg2, RoR2.CameraRigController arg3)
+        {
+            Destroy(UIObject);
+            UIObject = null;
+        }
+
+        private void onDisplayBegin(NetworkUIPromptController arg1, LocalUser arg2, RoR2.CameraRigController arg3)
+        {
+            UIObject = Instantiate(itemSelectionScreen, arg3.hud.mainContainer.transform);
+        }
+
         public void OnPurchase(Interactor interactor)
         {
-            Behaviour[] b = interactor.GetComponents<Behaviour>();
-            for (int i = 0; i < b.Length; i++)
-            {
-                Debug.Log(b[i].GetType());
-            }
-            GameObject go = Instantiate(itemSelectionScreen,interactor.gameObject.transform);
+            networkUIPromptController.SetParticipantMasterFromInteractor(interactor);
         }
+        
     }
 
 }
