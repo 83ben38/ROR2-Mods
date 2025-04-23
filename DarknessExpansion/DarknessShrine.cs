@@ -201,7 +201,7 @@ public class DarknessShrine
             frames = 0;
             foreach (var item in inventory.itemAcquisitionOrder)
             {
-                panelController.Show(PickupCatalog.GetPickupDef(PickupCatalog.FindPickupIndex(item)),WithSidecar: false);
+                panelController.Show(PickupCatalog.GetPickupDef(PickupCatalog.FindPickupIndex(item)),WithSidecar: false, incomingUserProfile: null);
             }
         }
 
