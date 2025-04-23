@@ -173,6 +173,9 @@ public class DarknessShrine
         public DarknessShrineManager parent;
         public NetworkUIPromptController networkUIPromptController;
         public GameObject UIObject;
+        public InspectPanelController panelController;
+        public Inventory inventory;
+        public int frames = 0;
         public void Start()
         {
             purchaseInteraction.SetAvailableTrue();
@@ -184,20 +187,47 @@ public class DarknessShrine
 
         private void onDisplayEnd(NetworkUIPromptController arg1, LocalUser arg2, RoR2.CameraRigController arg3)
         {
+            Log.Debug("Display Ending");
             Destroy(UIObject);
             UIObject = null;
+            panelController = null;
         }
 
         private void onDisplayBegin(NetworkUIPromptController arg1, LocalUser arg2, RoR2.CameraRigController arg3)
         {
+            Log.Debug("Display Starting");
             UIObject = Instantiate(itemSelectionScreen, arg3.hud.mainContainer.transform);
+            panelController = UIObject.GetComponent<ScrapperInfoPanelHelper>().inspectPanelController;
+            frames = 0;
+            foreach (var item in inventory.itemAcquisitionOrder)
+            {
+                panelController.Show(PickupCatalog.GetPickupDef(PickupCatalog.FindPickupIndex(item)),WithSidecar: false);
+            }
         }
 
         public void OnPurchase(Interactor interactor)
         {
+            inventory = interactor.GetComponent<Inventory>();
             networkUIPromptController.SetParticipantMasterFromInteractor(interactor);
         }
-        
+
+        private void FixedUpdate()
+        {
+            CharacterMaster currentParticipantMaster = networkUIPromptController.currentParticipantMaster;
+            if (currentParticipantMaster)
+            {
+                CharacterBody body = currentParticipantMaster.GetBody();
+                if (!body || (body.inputBank.aimOrigin - transform.position).sqrMagnitude > 10f)
+                {
+                    networkUIPromptController.SetParticipantMaster(null);
+                }
+            }
+
+            if (!UIObject)
+            {
+                networkUIPromptController.SetParticipantMaster(null);
+            }
+        }
     }
 
 }
