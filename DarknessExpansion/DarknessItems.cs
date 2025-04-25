@@ -19,23 +19,24 @@ public class DarknessItems
     
     public DarknessItems()
     {
+        ColorCatalog.ColorIndex ci = ColorsAPI.RegisterColor(Color.black);
         darkTier = ScriptableObject.CreateInstance<ItemTierDef>();
         darkTier.tier = (ItemTier)11;
-        darkTier.darkColorIndex = ColorCatalog.ColorIndex.Error;
-        ColorCatalog.indexToColor32[14] = new Color32(0, 0, 0, byte.MaxValue);
-        ColorCatalog.indexToHexString[14] =  Util.RGBToHex(ColorCatalog.indexToColor32[14]);
+        darkTier.darkColorIndex = ci;
         //figure out how to change the color
-        darkTier.colorIndex = ColorCatalog.ColorIndex.Error;
+        darkTier.colorIndex = ci;
         darkTier.highlightPrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/Junk/UI/HighlightMisc.prefab")
             .WaitForCompletion().InstantiateClone("Dark Item Highlight");
         darkTier.dropletDisplayPrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/PickupDroplet.prefab")
             .WaitForCompletion();
         darkTier.highlightPrefab.GetComponent<HighlightRect>().highlightColor = Color.black;
+        darkTier.isDroppable = true;
         foreach (var item in darkTier.dropletDisplayPrefab.GetComponents<Object>())
         {
             Log.Debug(item.GetType());
         }
         darkTier.canScrap = false;
+        darkTier.canRestack = false;
         ContentAddition.AddItemTierDef(darkTier);
         new DarkGolemItem();
     }
