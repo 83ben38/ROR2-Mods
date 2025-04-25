@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using BepInEx;
 using On.EntityStates.VoidInfestor;
 using R2API;
@@ -173,8 +174,8 @@ public class DarknessShrine
         public DarknessShrineManager parent;
         public NetworkUIPromptController networkUIPromptController;
         public GameObject UIObject;
-        public InspectPanelController panelController;
-        public int frames = 0;
+        public PickupPickerController panelController;
+        public Interactor interactor;
         public void Start()
         {
             purchaseInteraction.SetAvailableTrue();
@@ -196,18 +197,26 @@ public class DarknessShrine
         {
             Log.Debug("Display Starting");
             UIObject = Instantiate(itemSelectionScreen, arg3.hud.mainContainer.transform);
-            panelController = UIObject.GetComponent<ScrapperInfoPanelHelper>().inspectPanelController;
-            frames = 0;
+            panelController = UIObject.GetComponent<PickupPickerController>();
+            List<PickupPickerController.Option> list = new List<PickupPickerController.Option>();
             foreach (var item in arg2.cachedMaster.inventory.itemAcquisitionOrder)
             {
-                Log.Debug("Attempting to add an item to the screen.");
-                //figure out how to add the items
-                panelController.Show(PickupCatalog.GetPickupDef(PickupCatalog.FindPickupIndex(item)),WithSidecar: false, incomingUserProfile: null);
+                PickupIndex pickupIndex = PickupCatalog.FindPickupIndex(item);
+                if (pickupIndex != PickupIndex.none)
+                {
+                    list.Add(new PickupPickerController.Option()
+                    {
+                        available = true,
+                        pickupIndex = pickupIndex
+                    });
+                }
             }
+            panelController.SetOptionsFromInteractor(interactor);
         }
 
         public void OnPurchase(Interactor interactor)
-        { 
+        {
+            this.interactor = interactor;
             networkUIPromptController.SetParticipantMasterFromInteractor(interactor);
         }
 
