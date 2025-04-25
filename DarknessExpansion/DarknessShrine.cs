@@ -174,7 +174,6 @@ public class DarknessShrine
         public NetworkUIPromptController networkUIPromptController;
         public GameObject UIObject;
         public InspectPanelController panelController;
-        public Inventory inventory;
         public int frames = 0;
         public void Start()
         {
@@ -199,15 +198,16 @@ public class DarknessShrine
             UIObject = Instantiate(itemSelectionScreen, arg3.hud.mainContainer.transform);
             panelController = UIObject.GetComponent<ScrapperInfoPanelHelper>().inspectPanelController;
             frames = 0;
-            foreach (var item in inventory.itemAcquisitionOrder)
+            foreach (var item in arg2.cachedMaster.inventory.itemAcquisitionOrder)
             {
+                Log.Debug("Attempting to add an item to the screen.");
+                //figure out how to add the items
                 panelController.Show(PickupCatalog.GetPickupDef(PickupCatalog.FindPickupIndex(item)),WithSidecar: false, incomingUserProfile: null);
             }
         }
 
         public void OnPurchase(Interactor interactor)
-        {
-            inventory = interactor.GetComponent<Inventory>();
+        { 
             networkUIPromptController.SetParticipantMasterFromInteractor(interactor);
         }
 

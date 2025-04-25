@@ -27,7 +27,7 @@ public class DarknessExpansion : BaseUnityPlugin
         if (Input.GetKeyDown(KeyCode.F2))
         {
             var transform = PlayerCharacterMasterController.instances[0].master.GetBodyObject().transform;
-            PickupDropletController.CreatePickupDroplet(PickupCatalog.FindPickupIndex(DarknessItems.darkGolemItem.itemIndex),transform.position,transform.forward*20f);
+            PickupDropletController.CreatePickupDroplet(PickupCatalog.FindPickupIndex(DarknessItems.testItem.itemIndex),transform.position,transform.forward*20f);
         }
     }
 
