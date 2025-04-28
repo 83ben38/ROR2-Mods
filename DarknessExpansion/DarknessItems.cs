@@ -55,19 +55,9 @@ public class DarknessItems
         new DarkConstructItem();
         new DarkCoreItem();
         new DarkParentItem();
+        new DarkStacksItem();
         Inventory.onServerItemGiven += InventoryOnonServerItemGiven;
-
-        stackingDarkItem = ScriptableObject.CreateInstance<ItemDef>();
-        stackingDarkItem.hidden = true;
-        stackingDarkItem.canRemove = false;
-        stackingDarkItem.tier = ItemTier.NoTier;
-        stackingDarkItem.itemIndex = ItemIndex.Count;
-        stackingDarkItem.pickupIconSprite = Addressables.LoadAssetAsync<Sprite>("RoR2/Base/Knurl/texKnurlIcon.png").WaitForCompletion();
-        stackingDarkItem.pickupModelPrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Knurl/PickupKnurl.prefab")
-            .WaitForCompletion();
         onKillDarknessEnemy += body => body.inventory.GiveItem(stackingDarkItem);
-        ContentAddition.AddItemDef(stackingDarkItem);
-        
         On.RoR2.CharacterBody.RecalculateStats += CharacterBodyOnRecalculateStats; 
         CharacterMaster.OnInventoryChanged += CharacterMasterOnOnInventoryChanged;
         HealthComponent.Heal += HealthComponentOnHeal;
@@ -183,6 +173,36 @@ public class DarknessItems
         {
             Darkness.DarknessLevel += arg3;
             Darkness.UpdateDarkness();
+        }
+    }
+
+    public class DarkStacksItem
+    {
+
+        private Sprite darkGolemSprite =
+            Addressables.LoadAssetAsync<Sprite>("RoR2/Base/Knurl/texKnurlIcon.png").WaitForCompletion();
+
+        private GameObject darkGolemPickup = Addressables
+            .LoadAssetAsync<GameObject>("RoR2/Base/Knurl/PickupKnurl.prefab")
+            .WaitForCompletion();
+
+        public DarkStacksItem()
+        {
+            stackingDarkItem = ScriptableObject.CreateInstance<ItemDef>();
+            stackingDarkItem.name = "DARK_GOLEM_NAME";
+            stackingDarkItem.descriptionToken = "DARK_GOLEM_DESCRIPTION";
+            stackingDarkItem.nameToken = "DARK_GOLEM_NAME";
+            stackingDarkItem.loreToken = "DARK_GOLEM_LORE";
+            stackingDarkItem.pickupToken = "DARK_GOLEM_PICKUP";
+            stackingDarkItem.pickupIconSprite = darkGolemSprite;
+            stackingDarkItem.pickupModelPrefab = darkGolemPickup;
+            stackingDarkItem.canRemove = false;
+            stackingDarkItem.hidden = true;
+            stackingDarkItem._itemTierDef = darkTier;
+            stackingDarkItem.tier = (ItemTier)11;
+            var displayRules = new ItemDisplayRuleDict(null);
+            stackingDarkItem.itemIndex = ItemIndex.Count;
+            ItemAPI.Add(new CustomItem(stackingDarkItem, displayRules));
         }
     }
 
