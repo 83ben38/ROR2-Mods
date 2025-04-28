@@ -684,7 +684,7 @@ public class DarknessItems
             darkParentItem.itemIndex = ItemIndex.Count;
             ItemAPI.Add(new CustomItem(darkParentItem, displayRules));
             LanguageAPI.Add("DARK_PARENT_NAME", "Dark Planula");
-            LanguageAPI.Add("DARK_PARENT_DESCRIPTION", "Heal from incoming damage equal to 100% (+100% per stack) armor. On taking damage, ignite nearby enemies. Upon killing a dark enemy, gain 1.5 (+1.5 per stack) armor.");
+            LanguageAPI.Add("DARK_PARENT_DESCRIPTION", "Heal from incoming damage equal to 100% (+100% per stack) armor. On taking damage, ignite enemies within a 13m (+8m per stack) radius. Upon killing a dark enemy, gain 1.5 (+1.5 per stack) armor.");
             LanguageAPI.Add("DARK_PARENT_PICKUP",
                 "Heal from incoming damage and ignite nearby enemies. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkParentItem.itemIndex);
