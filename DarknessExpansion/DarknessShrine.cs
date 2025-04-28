@@ -1,20 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using BepInEx;
-using On.EntityStates.VoidInfestor;
 using R2API;
-using Rewired;
 using RoR2;
 using RoR2.Navigation;
-using RoR2.UI;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
-using CameraRigController = On.RoR2.CameraRigController;
-using Object = System.Object;
-using PlayerController = UnityEngine.Networking.PlayerController;
 using Random = UnityEngine.Random;
-using RunReport = On.RoR2.RunReport;
 
 
 namespace DarknessExpansion;
@@ -197,7 +189,7 @@ public class DarknessShrine
         {
             Log.Debug("Display Starting");
             UIObject = Instantiate(itemSelectionScreen, arg3.hud.mainContainer.transform);
-            panelController = UIObject.GetComponent<PickupPickerController>();
+            panelController = UIObject.GetComponentInChildren<PickupPickerController>();
             List<PickupPickerController.Option> list = new List<PickupPickerController.Option>();
             foreach (var item in arg2.cachedMaster.inventory.itemAcquisitionOrder)
             {

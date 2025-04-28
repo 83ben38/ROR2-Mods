@@ -7,6 +7,7 @@ using RoR2.Projectile;
 using RoR2.UI;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.Networking;
 using CharacterMaster = On.RoR2.CharacterMaster;
 using HealthComponent = On.RoR2.HealthComponent;
 using Object = UnityEngine.Object;
@@ -97,13 +98,23 @@ public class DarknessItems
             int numDarkWisps = self.inventory.GetItemCount(DarkWispItem.darkWispItem);
             int numDarkBleedItems = self.inventory.GetItemCount(DarkBleedItem.darkBleedItem);
             orig(self);
+            if (numDarkBleedItems > 0)
+            {
+                self.crit += 20f;
+            }
+
             self.maxHealth += (numDarkGolems * 100) + (numDarkGolems * 5 * numDarknessStacks);
+            self.healthComponent.Heal((numDarkGolems * 100) + (numDarkGolems * 5 * numDarknessStacks),
+                default, false);
             self.regen += (numDarkGolems * 10) + (numDarkGolems * 1 * numDarknessStacks);
             self.critMultiplier += (numDarkBleedItems * numDarknessStacks * .03f);
             self.attackSpeed += 1 + (numDarkBeetles * numDarknessStacks * .03f);
             self.moveSpeed *= 1 + (numDarkWisps * numDarknessStacks * .03f);
+            float prevMaxHealth = self.maxHealth;
             self.maxHealth *= 1 + (numDarkPearls * .5f);
             self.maxHealth *= 1 + (numDarkPearls * numDarknessStacks * .02f);
+            self.healthComponent.Heal(self.maxHealth-prevMaxHealth,
+                default, false);
             float darkBetterPearlMultiplier = 1 + (numDarkBetterPearls * .5f);
             darkBetterPearlMultiplier *= 1 + (numDarkBetterPearls * numDarknessStacks * .01f);
             self.maxHealth *= darkBetterPearlMultiplier;
@@ -175,6 +186,7 @@ public class DarknessItems
         private GameObject fistProjectilePrefab = Addressables
             .LoadAssetAsync<GameObject>("RoR2/Base/Titan/TitanPreFistProjectile.prefab").WaitForCompletion()
             .InstantiateClone("Dark Fist");
+
         public DarkGolemItem()
         {
             darkGolemItem = ScriptableObject.CreateInstance<ItemDef>();
@@ -193,38 +205,15 @@ public class DarknessItems
             darkGolemItem.itemIndex = ItemIndex.Count;
             ItemAPI.Add(new CustomItem(darkGolemItem, displayRules));
             HealthComponent.TakeDamageProcess += HealthComponentOnTakeDamageProcess;
-            Inventory.onServerItemGiven += InventoryOnonServerItemGiven;
-            onKillDarknessEnemy += OnKillDarknessEnemy;
-
-            
-
-            LanguageAPI.Add("DARK_GOLEM_NAME","Titanic Boulder");
-            LanguageAPI.Add("DARK_GOLEM_DESCRIPTION","Gives 100 (+100 per stack) health and 10 (+10 per stack) regen. Upon taking damage, 20% chance to summon a fist for 200% (+200% per stack) damage + 100% damage (+100% per stack) per 500 health. Gives 5 (+5 per stack) health and 1 (+1 per stack) regen upon killing a dark enemy.");
-            LanguageAPI.Add("DARK_GOLEM_PICKUP","Increases health and regen. Upon taking damage, chance to summon a fist. Fist damage scales with health. Grows stronger as it absorbs darkness.");
-            testItem = darkGolemItem;
+            LanguageAPI.Add("DARK_GOLEM_NAME", "Titanic Boulder");
+            LanguageAPI.Add("DARK_GOLEM_DESCRIPTION",
+                "Gives 100 (+100 per stack) health and 10 (+10 per stack) regen. Upon taking damage, 20% chance to summon a fist for 200% (+200% per stack) damage + 100% damage (+100% per stack) per 500 health. Gives 5 (+5 per stack) health and 1 (+1 per stack) regen upon killing a dark enemy.");
+            LanguageAPI.Add("DARK_GOLEM_PICKUP",
+                "Increases health and regen. Upon taking damage, chance to summon a fist. Fist damage scales with health. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkGolemItem.itemIndex);
         }
-        private void OnKillDarknessEnemy(CharacterBody obj)
-        {
-            int numDarkGolems = obj.inventory.GetItemCount(darkGolemItem);
-            if (numDarkGolems > 0)
-            {
-                obj.inventory.beadAppliedHealth += numDarkGolems * 5f;
-                obj.inventory.beadAppliedRegen += numDarkGolems;
-            }
-        }
 
-        private void InventoryOnonServerItemGiven(Inventory arg1, ItemIndex arg2, int arg3)
-        {
-            if (arg2 == darkGolemItem.itemIndex)
-            {
-                arg1.beadAppliedHealth += arg3 * 100;
-                arg1.beadAppliedRegen += arg3 * 10;
-                //figure out how to add armor
-            }
-        }
         
-
         private void HealthComponentOnTakeDamageProcess(HealthComponent.orig_TakeDamageProcess orig, RoR2.HealthComponent self, DamageInfo damageinfo)
         {
             if (self.body.inventory)
@@ -470,10 +459,83 @@ public class DarknessItems
             ItemAPI.Add(new CustomItem(darkBleedItem, displayRules));
             LanguageAPI.Add("DARK_BLEED_NAME", "Dark Shatterspleen");
             LanguageAPI.Add("DARK_BLEED_DESCRIPTION",
-                "Gain 20% critical chance. All strikes apply 1 stack of bleed. Crits apply bonus bleed based on crit damage. Bleeding enemies explode on death for 100% damage (+100% per stack) damage per bleed stack + 15% (+15% per stack) of their max health. 10% (+10% per stack) of bleed is applied to hit enemies. Upon killing a dark enemy, gain 3% (+3% per stack) crit damage.");
+                "Gain 20% critical chance. All strikes apply 1 stack of bleed. Crits apply bonus bleed based on crit damage. Bleeding enemies explode on death for 100% damage (+100% per stack) damage per bleed stack + 15% (+15% per stack) of their max health. Upon killing a dark enemy, gain 3% (+3% per stack) crit damage.");
             LanguageAPI.Add("DARK_BLEED_PICKUP",
-                "All hits apply bleed, and crits apply extra. Bleeding enemies explode, dealing damage and applying bleed to nearby enemies. Grows stronger as it absorbs darkness.");
+                "All hits apply bleed, and crits apply extra. Bleeding enemies explode, dealing damage to nearby enemies. Grows stronger as it absorbs darkness.");
+            On.RoR2.GlobalEventManager.ProcessHitEnemy += GlobalEventManagerOnProcessHitEnemy;
+            GlobalEventManager.onCharacterDeathGlobal += GlobalEventManagerOnonCharacterDeathGlobal;
+            testItem = darkBleedItem;
             darkItems.Add(darkBleedItem.itemIndex);
+        }
+
+        private void GlobalEventManagerOnonCharacterDeathGlobal(DamageReport obj)
+        {
+            if (!obj.attacker || !obj.attackerBody)
+            {
+                return;
+            }
+
+            if (obj.attackerBody.inventory)
+            {
+                int numDarkBleedItems = obj.attackerBody.inventory.GetItemCount(darkBleedItem);
+                if (numDarkBleedItems > 0 && obj.victimBody.HasBuff(RoR2Content.Buffs.Bleeding) || obj.victimBody.HasBuff(RoR2Content.Buffs.SuperBleed))
+                {
+                    Util.PlaySound("Play_bleedOnCritAndExplode_explode", obj.victimBody.gameObject);
+                    Vector3 position = obj.victimBody.transform.position;
+                    float damageCoefficient = 1f * numDarkBleedItems * (obj.victimBody.GetBuffCount(RoR2Content.Buffs.Bleeding) + 3);
+                    float num = 0.15f * numDarkBleedItems;
+                    float baseDamage = Util.OnKillProcDamage(obj.attackerBody.damage, damageCoefficient) + obj.victimBody.maxHealth * num;
+                    GameObject gameObject = Object.Instantiate(GlobalEventManager.CommonAssets.bleedOnHitAndExplodeBlastEffect, position, Quaternion.identity);
+                    DelayBlast component = gameObject.GetComponent<DelayBlast>();
+                    component.position = position;
+                    component.baseDamage = baseDamage;
+                    component.baseForce = 0f;
+                    component.radius = 16f;
+                    component.attacker = obj.attacker;
+                    component.inflictor = null;
+                    component.crit = Util.CheckRoll(obj.attackerBody.crit, obj.attackerMaster);
+                    component.maxTimer = 0f;
+                    component.damageColorIndex = DamageColorIndex.Item;
+                    component.falloffModel = BlastAttack.FalloffModel.SweetSpot;
+                    gameObject.GetComponent<TeamFilter>().teamIndex = obj.attackerTeamIndex;
+                    NetworkServer.Spawn(gameObject);
+                }
+            }
+        }
+
+        private void GlobalEventManagerOnProcessHitEnemy(On.RoR2.GlobalEventManager.orig_ProcessHitEnemy orig, GlobalEventManager self, DamageInfo damageinfo, GameObject victim)
+        {
+            orig(self, damageinfo, victim);
+            if (damageinfo.attacker && damageinfo.procCoefficient > 0f)
+            {
+                CharacterBody component2 = damageinfo.attacker.GetComponent<CharacterBody>();
+                if (component2)
+                {
+                    var master = component2.master;
+                    if (master)
+                    {
+                        if (!damageinfo.procChainMask.HasProc(ProcType.BleedOnHit))
+                        {
+                            Inventory inventory = master.inventory;
+                            int numDarkBleedItems = inventory.GetItemCount(darkBleedItem);
+                            if (numDarkBleedItems > 0)
+                            {
+                                ProcChainMask procChainMask2 = damageinfo.procChainMask;
+                                procChainMask2.AddProc(ProcType.BleedOnHit);
+                                int numBleeds = 1;
+                                if (damageinfo.crit)
+                                {
+                                    numBleeds *= (int)(component2.critMultiplier/100f);
+                                }
+                                for (int i = 0; i < numBleeds; i++)
+                                {
+                                    DotController.InflictDot(victim, damageinfo.attacker, DotController.DotIndex.Bleed, 3f * damageinfo.procCoefficient, 1f);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
     public class DarkClayItem
