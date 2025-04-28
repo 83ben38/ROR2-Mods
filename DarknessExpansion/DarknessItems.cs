@@ -54,6 +54,8 @@ public class DarknessItems
         new DarkBleedItem();
         new DarkClayItem();
         new DarkConstructItem();
+        new DarkCoreItem();
+        new DarkParentItem();
         Inventory.onServerItemGiven += InventoryOnonServerItemGiven;
 
         stackingDarkItem = ScriptableObject.CreateInstance<ItemDef>();
@@ -97,6 +99,8 @@ public class DarknessItems
             int numDarkJellyfish = self.inventory.GetItemCount(DarkJellyfishItem.darkJellyfishItem);
             int numDarkWisps = self.inventory.GetItemCount(DarkWispItem.darkWispItem);
             int numDarkBleedItems = self.inventory.GetItemCount(DarkBleedItem.darkBleedItem);
+            int numDarkCoreItems = self.inventory.GetItemCount(DarkCoreItem.darkCoreItem);
+            int numDarkParentItems = self.inventory.GetItemCount(DarkParentItem.darkParentItem);
             orig(self);
             if (numDarkBleedItems > 0)
             {
@@ -108,7 +112,8 @@ public class DarknessItems
                 default, false);
             self.regen += (numDarkGolems * 10) + (numDarkGolems * 1 * numDarknessStacks);
             self.critMultiplier += (numDarkBleedItems * numDarknessStacks * .03f);
-            self.attackSpeed += 1 + (numDarkBeetles * numDarknessStacks * .03f);
+            self.armor += (numDarkParentItems * numDarknessStacks * 1.5f);
+            self.attackSpeed *= 1 + (numDarkBeetles * numDarknessStacks * .03f);
             self.moveSpeed *= 1 + (numDarkWisps * numDarknessStacks * .03f);
             float prevMaxHealth = self.maxHealth;
             self.maxHealth *= 1 + (numDarkPearls * .5f);
@@ -607,8 +612,82 @@ public class DarknessItems
             LanguageAPI.Add("DARK_CONSTRUCT_NAME", "Defense Cell");
             LanguageAPI.Add("DARK_CONSTRUCT_DESCRIPTION", "Killing an elite enemy spawns an Alpha Construct that attaches to you with 1000% (+1000% per stack) health. On hit, all Constructs attached to you have a 5% chance to fire at the enemy hit for 300% (+300% per stack) damage. Limit of 4 (+4 per stack) constructs. Upon killing a dark enemy, gain .03 luck.");
             LanguageAPI.Add("DARK_CONSTRUCT_PICKUP",
-                "Upon killing an elite, gain an alpha construct that attaches to you and fires at enemies you fire at. Gets stronger as it absorbs darkness.");
+                "Upon killing an elite, gain an alpha construct that attaches to you and fires at enemies you fire at. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkConstructItem.itemIndex);
+        }
+    }
+    
+    public class DarkCoreItem
+    {
+        public static ItemDef darkCoreItem;
+
+        private Sprite darkCoreSprite =
+            Addressables.LoadAssetAsync<Sprite>("RoR2/Base/RoboBallBuddy/texEmpathyChip.png").WaitForCompletion();
+
+        private GameObject darkCorePickup = Addressables
+            .LoadAssetAsync<GameObject>("RoR2/Base/RoboBallBuddy/PickupEmpathyChip.prefab")
+            .WaitForCompletion();
+        
+
+        public DarkCoreItem()
+        {
+            darkCoreItem = ScriptableObject.CreateInstance<ItemDef>();
+            darkCoreItem.name = "DARK_CORE_NAME";
+            darkCoreItem.descriptionToken = "DARK_CORE_DESCRIPTION";
+            darkCoreItem.nameToken = "DARK_CORE_NAME";
+            darkCoreItem.loreToken = "DARK_CORE_LORE";
+            darkCoreItem.pickupToken = "DARK_CORE_PICKUP";
+            darkCoreItem.pickupIconSprite = darkCoreSprite;
+            darkCoreItem.pickupModelPrefab = darkCorePickup;
+            darkCoreItem.canRemove = true;
+            darkCoreItem.hidden = false;
+            darkCoreItem._itemTierDef = darkTier;
+            darkCoreItem.tier = (ItemTier)11;
+            var displayRules = new ItemDisplayRuleDict(null);
+            darkCoreItem.itemIndex = ItemIndex.Count;
+            ItemAPI.Add(new CustomItem(darkCoreItem, displayRules));
+            LanguageAPI.Add("DARK_CORE_NAME", "Sympathy Cores");
+            LanguageAPI.Add("DARK_CORE_DESCRIPTION", "Every 10 seconds, summon two Solus Probes. All allies gain +100% (+100% per stack) health and damage per ally on your team. Upon killing a dark enemy, increase all of your allies stats by 2% (+2% per stack).");
+            LanguageAPI.Add("DARK_CORE_PICKUP",
+                "Summon probes. All allies gain stats per ally on your team. Grows stronger as it absorbs darkness.");
+            darkItems.Add(darkCoreItem.itemIndex);
+        }
+    }
+    
+    public class DarkParentItem
+    {
+        public static ItemDef darkParentItem;
+
+        private Sprite darkParentSprite =
+            Addressables.LoadAssetAsync<Sprite>("RoR2/Base/ParentEgg/texParentEggIcon.png").WaitForCompletion();
+
+        private GameObject darkParentPickup = Addressables
+            .LoadAssetAsync<GameObject>("RoR2/Base/ParentEgg/PickupParentEgg.prefab")
+            .WaitForCompletion();
+        
+
+        public DarkParentItem()
+        {
+            darkParentItem = ScriptableObject.CreateInstance<ItemDef>();
+            darkParentItem.name = "DARK_PARENT_NAME";
+            darkParentItem.descriptionToken = "DARK_PARENT_DESCRIPTION";
+            darkParentItem.nameToken = "DARK_PARENT_NAME";
+            darkParentItem.loreToken = "DARK_PARENT_LORE";
+            darkParentItem.pickupToken = "DARK_PARENT_PICKUP";
+            darkParentItem.pickupIconSprite = darkParentSprite;
+            darkParentItem.pickupModelPrefab = darkParentPickup;
+            darkParentItem.canRemove = true;
+            darkParentItem.hidden = false;
+            darkParentItem._itemTierDef = darkTier;
+            darkParentItem.tier = (ItemTier)11;
+            var displayRules = new ItemDisplayRuleDict(null);
+            darkParentItem.itemIndex = ItemIndex.Count;
+            ItemAPI.Add(new CustomItem(darkParentItem, displayRules));
+            LanguageAPI.Add("DARK_PARENT_NAME", "Dark Planula");
+            LanguageAPI.Add("DARK_PARENT_DESCRIPTION", "Heal from incoming damage equal to 100% (+100% per stack) armor. On taking damage, ignite nearby enemies. Upon killing a dark enemy, gain 1.5 (+1.5 per stack) armor.");
+            LanguageAPI.Add("DARK_PARENT_PICKUP",
+                "Heal from incoming damage and ignite nearby enemies. Grows stronger as it absorbs darkness.");
+            darkItems.Add(darkParentItem.itemIndex);
         }
     }
 }
