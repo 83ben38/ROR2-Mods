@@ -48,6 +48,8 @@ public class DarknessItems
         new DarkPearlItem();
         new DarkPearlItem2();
         new DarkJellyfishItem();
+        new DarkWispItem();
+        new DarkBleedItem();
         Inventory.onServerItemGiven += InventoryOnonServerItemGiven;
 
         stackingDarkItem = ScriptableObject.CreateInstance<ItemDef>();
@@ -67,12 +69,28 @@ public class DarknessItems
         int numDarkGolems = self.inventory.GetItemCount(DarkGolemItem.darkGolemItem);
         int numDarkBeetles = self.inventory.GetItemCount(DarkBeetleItem.darkBeetleItem);
         int numDarkPearls = self.inventory.GetItemCount(DarkPearlItem.darkPearlItem);
+        int numDarkBetterPearls = self.inventory.GetItemCount(DarkPearlItem2.darkPearlItem);
+        int numDarkJellyfish = self.inventory.GetItemCount(DarkJellyfishItem.darkJellyfishItem);
+        int numDarkWisps = self.inventory.GetItemCount(DarkWispItem.darkWispItem);
+        int numDarkBleedItems = self.inventory.GetItemCount(DarkBleedItem.darkBleedItem);
         self.maxHealth += (numDarkGolems * 100) + (numDarkGolems * 5 * numDarknessStacks);
         self.regen += (numDarkGolems * 10) + (numDarkGolems * 1 * numDarknessStacks);
+        self.critMultiplier += (numDarkBleedItems * numDarknessStacks * .03f);
         orig(self);
         self.attackSpeed += 1 + (numDarkBeetles * numDarknessStacks * .03f);
+        self.moveSpeed *= 1 + (numDarkWisps * numDarknessStacks * .03f);
         self.maxHealth *= 1 + (numDarkPearls * .5f);
-        self.maxHealth *= 1 + (numDarkPearls * numDarknessStacks * .01f);
+        self.maxHealth *= 1 + (numDarkPearls * numDarknessStacks * .02f);
+        float darkBetterPearlMultiplier = 1 + (numDarkBetterPearls * .5f);
+        darkBetterPearlMultiplier *= 1 + (numDarkBetterPearls * numDarknessStacks * .01f);
+        self.maxHealth *= darkBetterPearlMultiplier;
+        self.regen *= darkBetterPearlMultiplier;
+        self.moveSpeed *= darkBetterPearlMultiplier;
+        self.damage *= darkBetterPearlMultiplier;
+        self.crit *= darkBetterPearlMultiplier;
+        self.attackSpeed *= darkBetterPearlMultiplier;
+        self.armor *= darkBetterPearlMultiplier;
+        
     }
 
     private void GlobalEventManagerOnonCharacterDeathGlobal(DamageReport obj)
@@ -260,7 +278,7 @@ public class DarknessItems
             ItemAPI.Add(new CustomItem(darkPearlItem, displayRules));
             LanguageAPI.Add("DARK_PEARL_NAME", "Dark Pearl");
             LanguageAPI.Add("DARK_PEARL_DESCRIPTION",
-                "Increases maximum health by 50% (+50% per stack). Upon killing a dark enemy, increases health by 1% (+1% per stack).");
+                "Increases maximum health by 50% (+50% per stack). Upon killing a dark enemy, increases health by 2% (+2% per stack).");
             LanguageAPI.Add("DARK_PEARL_PICKUP",
                 "Increases health. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkPearlItem.itemIndex);
@@ -334,10 +352,84 @@ public class DarknessItems
             ItemAPI.Add(new CustomItem(darkJellyfishItem, displayRules));
             LanguageAPI.Add("DARK_JELLYFISH_NAME", "Omega Loop");
             LanguageAPI.Add("DARK_JELLYFISH_DESCRIPTION",
-                "When below 50% health, every 30 / 2 (+1 per stack) seconds, charge an explosion, dealing 6000% damage (+6000% per stack). Additionally, gain 3 (+3 per stack) charges. Upon using your secondary, release a ball of lightning that deaals 500% base damage (+500% per stack). Upon killing a dark enemy, gain 1.5% (+1.5% per stack) cooldown reduction, which affects this item.");
+                "When below 50% health, every 30 / 2 (+1 per stack) seconds, charge an explosion, dealing 6000% damage (+6000% per stack). Additionally, gain 3 (+3 per stack) charges. Upon using your secondary, release a ball of lightning that deaals 500% base damage (+500% per stack). Upon killing a dark enemy, gain 1% (+1% per stack) cooldown reduction, which affects this item.");
             LanguageAPI.Add("DARK_JELLYFISH_PICKUP",
                 "Upon reaching low health, explode in an area. Upon using your secondary, release a ball of lightning. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkJellyfishItem.itemIndex);
+        }
+    }
+    public class DarkWispItem
+    {
+        public static ItemDef darkWispItem;
+
+        private Sprite darkWispSprite =
+            Addressables.LoadAssetAsync<Sprite>("RoR2/Base/SprintWisp/texBrokenMaskIcon.png").WaitForCompletion();
+
+        private GameObject darkWispPickup = Addressables
+            .LoadAssetAsync<GameObject>("RoR2/Base/SprintWisp/PickupBrokenMask.prefab")
+            .WaitForCompletion();
+        
+
+        public DarkWispItem()
+        {
+            darkWispItem = ScriptableObject.CreateInstance<ItemDef>();
+            darkWispItem.name = "DARK_WISP_NAME";
+            darkWispItem.descriptionToken = "DARK_WISP_DESCRIPTION";
+            darkWispItem.nameToken = "DARK_WISP_NAME";
+            darkWispItem.loreToken = "DARK_WISP_LORE";
+            darkWispItem.pickupToken = "DARK_WISP_PICKUP";
+            darkWispItem.pickupIconSprite = darkWispSprite;
+            darkWispItem.pickupModelPrefab = darkWispPickup;
+            darkWispItem.canRemove = true;
+            darkWispItem.hidden = false;
+            darkWispItem._itemTierDef = darkTier;
+            darkWispItem.tier = (ItemTier)11;
+            var displayRules = new ItemDisplayRuleDict(null);
+            darkWispItem.itemIndex = ItemIndex.Count;
+            ItemAPI.Add(new CustomItem(darkWispItem, displayRules));
+            LanguageAPI.Add("DARK_WISP_NAME", "Large Disciple");
+            LanguageAPI.Add("DARK_WISP_DESCRIPTION",
+                "Fire 3 (+3 per stack) tracking wisps for 300% (+300% per stack) base damage. Wisps have 3.0 (+3 per stack) proc coefficient. Fires every 1.6 seconds while sprinting. Fire rate increases with movement speed. Upon killing a dark enemy, gain 3% (+3% per stack) movement speed.");
+            LanguageAPI.Add("DARK_WISP_PICKUP",
+                "Fire 3 tracking wisps while sprinting. Fire rate scales with move speed. Grows stronger as it absorbs darkness.");
+            darkItems.Add(darkWispItem.itemIndex);
+        }
+    }
+    public class DarkBleedItem
+    {
+        public static ItemDef darkBleedItem;
+
+        private Sprite darkBleedSprite =
+            Addressables.LoadAssetAsync<Sprite>("RoR2/Base/BleedOnHitAndExplode/texBleedOnHitAndExplodeIcon.png").WaitForCompletion();
+
+        private GameObject darkBleedPickup = Addressables
+            .LoadAssetAsync<GameObject>("RoR2/Base/BleedOnHitAndExplode/DisplayBleedOnHitAndExplode.prefab")
+            .WaitForCompletion();
+        
+
+        public DarkBleedItem()
+        {
+            darkBleedItem = ScriptableObject.CreateInstance<ItemDef>();
+            darkBleedItem.name = "DARK_BLEED_NAME";
+            darkBleedItem.descriptionToken = "DARK_BLEED_DESCRIPTION";
+            darkBleedItem.nameToken = "DARK_BLEED_NAME";
+            darkBleedItem.loreToken = "DARK_BLEED_LORE";
+            darkBleedItem.pickupToken = "DARK_BLEED_PICKUP";
+            darkBleedItem.pickupIconSprite = darkBleedSprite;
+            darkBleedItem.pickupModelPrefab = darkBleedPickup;
+            darkBleedItem.canRemove = true;
+            darkBleedItem.hidden = false;
+            darkBleedItem._itemTierDef = darkTier;
+            darkBleedItem.tier = (ItemTier)11;
+            var displayRules = new ItemDisplayRuleDict(null);
+            darkBleedItem.itemIndex = ItemIndex.Count;
+            ItemAPI.Add(new CustomItem(darkBleedItem, displayRules));
+            LanguageAPI.Add("DARK_BLEED_NAME", "Dark Shatterspleen");
+            LanguageAPI.Add("DARK_BLEED_DESCRIPTION",
+                "Gain 20% critical chance. All strikes apply 1 stack of bleed. Crits apply bonus bleed based on crit damage. Bleeding enemies explode on death for 100% damage (+100% per stack) damage per bleed stack + 15% (+15% per stack) of their max health. 10% (+10% per stack) of bleed is applied to hit enemies. Upon killing a dark enemy, gain 3% (+3% per stack) crit damage.");
+            LanguageAPI.Add("DARK_BLEED_PICKUP",
+                "All hits apply bleed, and crits apply extra. Bleeding enemies explode, dealing damage and applying bleed to nearby enemies. Grows stronger as it absorbs darkness.");
+            darkItems.Add(darkBleedItem.itemIndex);
         }
     }
 }
