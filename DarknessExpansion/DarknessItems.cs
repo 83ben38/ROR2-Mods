@@ -33,14 +33,13 @@ public class DarknessItems
         darkTier.colorIndex = ci;
         darkTier.highlightPrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/Junk/UI/HighlightMisc.prefab")
             .WaitForCompletion().InstantiateClone("Dark Item Highlight");
-        darkTier.dropletDisplayPrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/PickupDroplet.prefab")
-            .WaitForCompletion();
+        darkTier.dropletDisplayPrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/Tier1Orb.prefab")
+            .WaitForCompletion().InstantiateClone("Darkness Orb");
+        darkTier.dropletDisplayPrefab.GetComponentInChildren<Light>().color = Color.black;
+        darkTier.dropletDisplayPrefab.GetComponentInChildren<TrailRenderer>().startColor= Color.black;
+        darkTier.dropletDisplayPrefab.GetComponentInChildren<TrailRenderer>().endColor= new Color(0,0,0,0);
         darkTier.highlightPrefab.GetComponent<HighlightRect>().highlightColor = Color.black;
         darkTier.isDroppable = true;
-        foreach (var item in darkTier.dropletDisplayPrefab.GetComponents<Object>())
-        {
-            Log.Debug(item.GetType());
-        }
         darkTier.canScrap = false;
         darkTier.canRestack = false;
         ContentAddition.AddItemTierDef(darkTier);
@@ -63,6 +62,9 @@ public class DarknessItems
         stackingDarkItem.canRemove = false;
         stackingDarkItem.tier = ItemTier.NoTier;
         stackingDarkItem.itemIndex = ItemIndex.Count;
+        stackingDarkItem.pickupIconSprite = Addressables.LoadAssetAsync<Sprite>("RoR2/Base/Knurl/texKnurlIcon.png").WaitForCompletion();
+        stackingDarkItem.pickupModelPrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Knurl/PickupKnurl.prefab")
+            .WaitForCompletion();
         onKillDarknessEnemy += body => body.inventory.GiveItem(stackingDarkItem);
         ContentAddition.AddItemDef(stackingDarkItem);
         
@@ -172,6 +174,11 @@ public class DarknessItems
 
     private void InventoryOnonServerItemGiven(Inventory arg1, ItemIndex arg2, int arg3)
     {
+        Debug.Log(arg2);
+        for (int i = 0; i < darkItems.Count; i++)
+        {
+            Debug.Log(darkItems[i]);
+        }
         if (darkItems.Contains(arg2))
         {
             Darkness.DarknessLevel += arg3;
@@ -530,7 +537,7 @@ public class DarknessItems
                                 int numBleeds = 1;
                                 if (damageinfo.crit)
                                 {
-                                    numBleeds *= (int)(component2.critMultiplier/100f);
+                                    numBleeds *= (int)(component2.critMultiplier);
                                 }
                                 for (int i = 0; i < numBleeds; i++)
                                 {

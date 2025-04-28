@@ -3,6 +3,7 @@ using BepInEx;
 using R2API;
 using RoR2;
 using RoR2.Navigation;
+using RoR2.UI;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
@@ -166,7 +167,7 @@ public class DarknessShrine
         public DarknessShrineManager parent;
         public NetworkUIPromptController networkUIPromptController;
         public GameObject UIObject;
-        public PickupPickerController panelController;
+        public PickupPickerPanel panelController;
         public Interactor interactor;
         public void Start()
         {
@@ -189,21 +190,23 @@ public class DarknessShrine
         {
             Log.Debug("Display Starting");
             UIObject = Instantiate(itemSelectionScreen, arg3.hud.mainContainer.transform);
-            panelController = UIObject.GetComponentInChildren<PickupPickerController>();
-            List<PickupPickerController.Option> list = new List<PickupPickerController.Option>();
+            panelController = UIObject.GetComponent<PickupPickerPanel>();
+            PickupPickerController.Option[] list = new PickupPickerController.Option[arg2.cachedMaster.inventory.itemAcquisitionOrder.Count];
+            int i = 0;
             foreach (var item in arg2.cachedMaster.inventory.itemAcquisitionOrder)
             {
                 PickupIndex pickupIndex = PickupCatalog.FindPickupIndex(item);
                 if (pickupIndex != PickupIndex.none)
                 {
-                    list.Add(new PickupPickerController.Option()
+                    list[i]=new PickupPickerController.Option()
                     {
                         available = true,
                         pickupIndex = pickupIndex
-                    });
+                    };
+                    i++;
                 }
             }
-            panelController.SetOptionsFromInteractor(interactor);
+            panelController.SetPickupOptions(list);
         }
 
         public void OnPurchase(Interactor interactor)
