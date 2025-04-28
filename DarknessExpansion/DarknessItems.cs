@@ -50,6 +50,8 @@ public class DarknessItems
         new DarkJellyfishItem();
         new DarkWispItem();
         new DarkBleedItem();
+        new DarkClayItem();
+        new DarkConstructItem();
         Inventory.onServerItemGiven += InventoryOnonServerItemGiven;
 
         stackingDarkItem = ScriptableObject.CreateInstance<ItemDef>();
@@ -61,6 +63,15 @@ public class DarknessItems
         ContentAddition.AddItemDef(stackingDarkItem);
         
         On.RoR2.CharacterBody.RecalculateStats += CharacterBodyOnRecalculateStats;
+        HealthComponent.Heal += HealthComponentOnHeal;
+    }
+
+    private float HealthComponentOnHeal(HealthComponent.orig_Heal orig, RoR2.HealthComponent self, float amount, ProcChainMask procchainmask, bool nonregen)
+    {
+        int numDarkClay = self.body.inventory.GetItemCount(DarkClayItem.darkClayItem);
+        int numDarknessStacks = self.body.inventory.GetItemCount(stackingDarkItem);
+        float healMultiplier = 1 + (numDarknessStacks * numDarkClay * .03f);
+        return orig(self, amount * healMultiplier, procchainmask, nonregen);
     }
 
     private void CharacterBodyOnRecalculateStats(On.RoR2.CharacterBody.orig_RecalculateStats orig, CharacterBody self)
@@ -73,6 +84,7 @@ public class DarknessItems
         int numDarkJellyfish = self.inventory.GetItemCount(DarkJellyfishItem.darkJellyfishItem);
         int numDarkWisps = self.inventory.GetItemCount(DarkWispItem.darkWispItem);
         int numDarkBleedItems = self.inventory.GetItemCount(DarkBleedItem.darkBleedItem);
+        int numDarkConstructItems = self.inventory.GetItemCount(DarkConstructItem.darkConstructItem);
         self.maxHealth += (numDarkGolems * 100) + (numDarkGolems * 5 * numDarknessStacks);
         self.regen += (numDarkGolems * 10) + (numDarkGolems * 1 * numDarknessStacks);
         self.critMultiplier += (numDarkBleedItems * numDarknessStacks * .03f);
@@ -430,6 +442,79 @@ public class DarknessItems
             LanguageAPI.Add("DARK_BLEED_PICKUP",
                 "All hits apply bleed, and crits apply extra. Bleeding enemies explode, dealing damage and applying bleed to nearby enemies. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkBleedItem.itemIndex);
+        }
+    }
+    public class DarkClayItem
+    {
+        public static ItemDef darkClayItem;
+
+        private Sprite darkClaySprite =
+            Addressables.LoadAssetAsync<Sprite>("RoR2/Base/SiphonOnLowHealth/texSiphonOnLowHealthIcon.png").WaitForCompletion();
+
+        private GameObject darkClayPickup = Addressables
+            .LoadAssetAsync<GameObject>("RoR2/Base/SiphonOnLowHealth/PickupSiphonOnLowHealth.prefab")
+            .WaitForCompletion();
+        
+
+        public DarkClayItem()
+        {
+            darkClayItem = ScriptableObject.CreateInstance<ItemDef>();
+            darkClayItem.name = "DARK_CLAY_NAME";
+            darkClayItem.descriptionToken = "DARK_CLAY_DESCRIPTION";
+            darkClayItem.nameToken = "DARK_CLAY_NAME";
+            darkClayItem.loreToken = "DARK_CLAY_LORE";
+            darkClayItem.pickupToken = "DARK_CLAY_PICKUP";
+            darkClayItem.pickupIconSprite = darkClaySprite;
+            darkClayItem.pickupModelPrefab = darkClayPickup;
+            darkClayItem.canRemove = true;
+            darkClayItem.hidden = false;
+            darkClayItem._itemTierDef = darkTier;
+            darkClayItem.tier = (ItemTier)11;
+            var displayRules = new ItemDisplayRuleDict(null);
+            darkClayItem.itemIndex = ItemIndex.Count;
+            ItemAPI.Add(new CustomItem(darkClayItem, displayRules));
+            LanguageAPI.Add("DARK_CLAY_NAME", "Polished Urn");
+            LanguageAPI.Add("DARK_CLAY_DESCRIPTION", "The nearest 1 (+1 per stack) enemies to you within 13m (+8m per stack) will be 'tethered' to you, applying tar. Deal 15% (+15% per stack) additional damage to enemies with tar applied, and heal for 5% (+5% per stack) of the damage dealt. Upon killing a dark enemy, gain 3% (+3% per stack) healing multiplier.");
+            LanguageAPI.Add("DARK_CLAY_PICKUP",
+                "Tether yourself to nearby enemies, dealing bonus damage and healing for a portion of the damage dealt. Grows stronger as it absorbs darkness.");
+            darkItems.Add(darkClayItem.itemIndex);
+        }
+    }
+    
+    public class DarkConstructItem
+    {
+        public static ItemDef darkConstructItem;
+
+        private Sprite darkConstructSprite =
+            Addressables.LoadAssetAsync<Sprite>("RoR2/DLC1/MinorConstructOnKill/texMinorConstructOnKillIcon.png").WaitForCompletion();
+
+        private GameObject darkConstructPickup = Addressables
+            .LoadAssetAsync<GameObject>("RoR2/DLC1/MinorConstructOnKill/PickupDefenseNucleus.prefab")
+            .WaitForCompletion();
+        
+
+        public DarkConstructItem()
+        {
+            darkConstructItem = ScriptableObject.CreateInstance<ItemDef>();
+            darkConstructItem.name = "DARK_CONSTRUCT_NAME";
+            darkConstructItem.descriptionToken = "DARK_CONSTRUCT_DESCRIPTION";
+            darkConstructItem.nameToken = "DARK_CONSTRUCT_NAME";
+            darkConstructItem.loreToken = "DARK_CONSTRUCT_LORE";
+            darkConstructItem.pickupToken = "DARK_CONSTRUCT_PICKUP";
+            darkConstructItem.pickupIconSprite = darkConstructSprite;
+            darkConstructItem.pickupModelPrefab = darkConstructPickup;
+            darkConstructItem.canRemove = true;
+            darkConstructItem.hidden = false;
+            darkConstructItem._itemTierDef = darkTier;
+            darkConstructItem.tier = (ItemTier)11;
+            var displayRules = new ItemDisplayRuleDict(null);
+            darkConstructItem.itemIndex = ItemIndex.Count;
+            ItemAPI.Add(new CustomItem(darkConstructItem, displayRules));
+            LanguageAPI.Add("DARK_CONSTRUCT_NAME", "Defense Cell");
+            LanguageAPI.Add("DARK_CONSTRUCT_DESCRIPTION", "Killing an elite enemy spawns an Alpha Construct that attaches to you with 1000% (+1000% per stack) health. On hit, all Constructs attached to you have a 5% chance to fire at the enemy hit for 300% (+300% per stack) damage. Limit of 4 (+4 per stack) constructs. Upon killing a dark enemy, gain .03 luck.");
+            LanguageAPI.Add("DARK_CONSTRUCT_PICKUP",
+                "Upon killing an elite, gain an alpha construct that attaches to you and fires at enemies you fire at. Gets stronger as it absorbs darkness.");
+            darkItems.Add(darkConstructItem.itemIndex);
         }
     }
 }
