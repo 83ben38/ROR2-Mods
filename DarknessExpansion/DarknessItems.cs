@@ -19,6 +19,7 @@ public class DarknessItems
     public static ItemDef testItem;
     public static List<ItemIndex> darkItems = new();
     public static Action<CharacterBody> onKillDarknessEnemy;
+    public static ItemDef stackingDarkItem;
     
     public DarknessItems()
     {
@@ -48,6 +49,21 @@ public class DarknessItems
         new DarkPearlItem2();
         new DarkJellyfishItem();
         Inventory.onServerItemGiven += InventoryOnonServerItemGiven;
+
+        stackingDarkItem = ScriptableObject.CreateInstance<ItemDef>();
+        stackingDarkItem.hidden = true;
+        stackingDarkItem.canRemove = false;
+        stackingDarkItem.tier = ItemTier.NoTier;
+        stackingDarkItem.itemIndex = ItemIndex.Count;
+        onKillDarknessEnemy += body => body.inventory.GiveItem(stackingDarkItem);
+        ContentAddition.AddItemDef(stackingDarkItem);
+        
+        On.RoR2.CharacterBody.RecalculateStats += CharacterBodyOnRecalculateStats;
+    }
+
+    private void CharacterBodyOnRecalculateStats(On.RoR2.CharacterBody.orig_RecalculateStats orig, CharacterBody self)
+    {
+        orig(self);
     }
 
     private void GlobalEventManagerOnonCharacterDeathGlobal(DamageReport obj)
@@ -112,7 +128,7 @@ public class DarknessItems
             
 
             LanguageAPI.Add("DARK_GOLEM_NAME","Titanic Boulder");
-            LanguageAPI.Add("DARK_GOLEM_DESCRIPTION","Gives 100 (+100 per stack) health and 10 (+10 per stack) regen. Upon taking damage, 20% chance to summon a fist for 200% (+200% per stack) damage + 100% damage (+100% per stack) per 500 health. Gives 10 (+10 per stack) health and 1 (+1 per stack) regen upon killing a dark enemy.");
+            LanguageAPI.Add("DARK_GOLEM_DESCRIPTION","Gives 100 (+100 per stack) health and 10 (+10 per stack) regen. Upon taking damage, 20% chance to summon a fist for 200% (+200% per stack) damage + 100% damage (+100% per stack) per 500 health. Gives 5 (+5 per stack) health and 1 (+1 per stack) regen upon killing a dark enemy.");
             LanguageAPI.Add("DARK_GOLEM_PICKUP","Increases health and regen. Upon taking damage, chance to summon a fist. Fist damage scales with health. Grows stronger as it absorbs darkness.");
             testItem = darkGolemItem;
             darkItems.Add(darkGolemItem.itemIndex);
@@ -122,7 +138,7 @@ public class DarknessItems
             int numDarkGolems = obj.inventory.GetItemCount(darkGolemItem);
             if (numDarkGolems > 0)
             {
-                obj.inventory.beadAppliedHealth += numDarkGolems * 10f;
+                obj.inventory.beadAppliedHealth += numDarkGolems * 5f;
                 obj.inventory.beadAppliedRegen += numDarkGolems;
             }
         }
@@ -198,7 +214,7 @@ public class DarknessItems
             ItemAPI.Add(new CustomItem(darkBeetleItem, displayRules));
             LanguageAPI.Add("DARK_BEETLE_NAME", "King's Gland");
             LanguageAPI.Add("DARK_BEETLE_DESCRIPTION",
-                "Every 30 seconds, summon a Beetle Guard with 300% (+300% per stack) damage and 300% (+300% per stack) health. Beetle Guards apply 1 (+1 per stack) debuff on hit. Can have up to 1 (+1 per stack) beetle guard at a time. Give your minions 5% (+5% per stack) attack speed upon killing a dark enemy.");
+                "Every 30 seconds, summon a Beetle Guard with 300% (+300% per stack) damage and 300% (+300% per stack) health. Beetle Guards apply 1 (+1 per stack) debuff on hit. Can have up to 1 (+1 per stack) beetle guard at a time. Give your beetles your attack speed. Upon killing a dark enemy, gain 1.5% (+1.5% per stack) attack speed.");
             LanguageAPI.Add("DARK_BEETLE_PICKUP",
                 "Summon a beetle guard which applies random debuffs on hit. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkBeetleItem.itemIndex);
@@ -235,7 +251,7 @@ public class DarknessItems
             ItemAPI.Add(new CustomItem(darkPearlItem, displayRules));
             LanguageAPI.Add("DARK_PEARL_NAME", "Dark Pearl");
             LanguageAPI.Add("DARK_PEARL_DESCRIPTION",
-                "Increases maximum health by 50% (+50% per stack). Upon killing a dark enemy, increases health by 2% (+2% per stack).");
+                "Increases maximum health by 50% (+50% per stack). Upon killing a dark enemy, increases health by 1% (+1% per stack).");
             LanguageAPI.Add("DARK_PEARL_PICKUP",
                 "Increases health. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkPearlItem.itemIndex);
@@ -272,7 +288,7 @@ public class DarknessItems
             ItemAPI.Add(new CustomItem(darkPearlItem, displayRules));
             LanguageAPI.Add("DARK_PEARL_NAME2", "Dark Irradient Pearl");
             LanguageAPI.Add("DARK_PEARL_DESCRIPTION2",
-                "Increases all stats by 50% (+50% per stack). Upon killing a dark enemy, increases all stats by 2% (+2% per stack).");
+                "Increases all stats by 50% (+50% per stack). Upon killing a dark enemy, increases all stats by 1% (+1% per stack).");
             LanguageAPI.Add("DARK_PEARL_PICKUP2",
                 "Increases all stats. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkPearlItem.itemIndex);
@@ -309,7 +325,7 @@ public class DarknessItems
             ItemAPI.Add(new CustomItem(darkJellyfishItem, displayRules));
             LanguageAPI.Add("DARK_JELLYFISH_NAME", "Omega Loop");
             LanguageAPI.Add("DARK_JELLYFISH_DESCRIPTION",
-                "When below 50% health, every 30 / 2 (+1 per stack) seconds, charge an explosion, dealing 6000% damage (+6000% per stack). Additionally, gain 1 (+1 per stack) charges. Upon using your secondary, release a ball of lightning that deaals 500% base damage (+500% per stack). Upon killing a dark enemy, gain 2% (+2% per stack) cooldown reduction, which affects this item.");
+                "When below 50% health, every 30 / 2 (+1 per stack) seconds, charge an explosion, dealing 6000% damage (+6000% per stack). Additionally, gain 3 (+3 per stack) charges. Upon using your secondary, release a ball of lightning that deaals 500% base damage (+500% per stack). Upon killing a dark enemy, gain 1.5% (+1.5% per stack) cooldown reduction, which affects this item.");
             LanguageAPI.Add("DARK_JELLYFISH_PICKUP",
                 "Upon reaching low health, explode in an area. Upon using your secondary, release a ball of lightning. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkJellyfishItem.itemIndex);
