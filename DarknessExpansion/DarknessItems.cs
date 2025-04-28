@@ -63,7 +63,16 @@ public class DarknessItems
 
     private void CharacterBodyOnRecalculateStats(On.RoR2.CharacterBody.orig_RecalculateStats orig, CharacterBody self)
     {
+        int numDarknessStacks = self.inventory.GetItemCount(stackingDarkItem);
+        int numDarkGolems = self.inventory.GetItemCount(DarkGolemItem.darkGolemItem);
+        int numDarkBeetles = self.inventory.GetItemCount(DarkBeetleItem.darkBeetleItem);
+        int numDarkPearls = self.inventory.GetItemCount(DarkPearlItem.darkPearlItem);
+        self.maxHealth += (numDarkGolems * 100) + (numDarkGolems * 5 * numDarknessStacks);
+        self.regen += (numDarkGolems * 10) + (numDarkGolems * 1 * numDarknessStacks);
         orig(self);
+        self.attackSpeed += 1 + (numDarkBeetles * numDarknessStacks * .03f);
+        self.maxHealth *= 1 + (numDarkPearls * .5f);
+        self.maxHealth *= 1 + (numDarkPearls * numDarknessStacks * .01f);
     }
 
     private void GlobalEventManagerOnonCharacterDeathGlobal(DamageReport obj)
@@ -94,7 +103,7 @@ public class DarknessItems
 
     public class DarkGolemItem
     {
-        private ItemDef darkGolemItem;
+        public static ItemDef darkGolemItem;
         private Sprite darkGolemSprite =
             Addressables.LoadAssetAsync<Sprite>("RoR2/Base/Knurl/texKnurlIcon.png").WaitForCompletion();
 
@@ -185,7 +194,7 @@ public class DarknessItems
 
     public class DarkBeetleItem
     {
-        private ItemDef darkBeetleItem;
+        public static ItemDef darkBeetleItem;
 
         private Sprite darkBeetleSprite =
             Addressables.LoadAssetAsync<Sprite>("RoR2/Base/BeetleGland/texBeetleGlandIcon.png").WaitForCompletion();
@@ -214,7 +223,7 @@ public class DarknessItems
             ItemAPI.Add(new CustomItem(darkBeetleItem, displayRules));
             LanguageAPI.Add("DARK_BEETLE_NAME", "King's Gland");
             LanguageAPI.Add("DARK_BEETLE_DESCRIPTION",
-                "Every 30 seconds, summon a Beetle Guard with 300% (+300% per stack) damage and 300% (+300% per stack) health. Beetle Guards apply 1 (+1 per stack) debuff on hit. Can have up to 1 (+1 per stack) beetle guard at a time. Give your beetles your attack speed. Upon killing a dark enemy, gain 1.5% (+1.5% per stack) attack speed.");
+                "Every 30 seconds, summon a Beetle Guard with 300% (+300% per stack) damage and 300% (+300% per stack) health. Beetle Guards apply 1 (+1 per stack) debuff on hit. Can have up to 1 (+1 per stack) beetle guard at a time. Give your beetles your attack speed. Upon killing a dark enemy, gain 3% (+3% per stack) attack speed.");
             LanguageAPI.Add("DARK_BEETLE_PICKUP",
                 "Summon a beetle guard which applies random debuffs on hit. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkBeetleItem.itemIndex);
@@ -222,7 +231,7 @@ public class DarknessItems
     }
     public class DarkPearlItem
     {
-        private ItemDef darkPearlItem;
+        public static ItemDef darkPearlItem;
 
         private Sprite darkPearlSprite =
             Addressables.LoadAssetAsync<Sprite>("RoR2/Base/Pearl/texPearlIcon.png").WaitForCompletion();
@@ -259,7 +268,7 @@ public class DarknessItems
     }
     public class DarkPearlItem2
     {
-        private ItemDef darkPearlItem;
+        public static ItemDef darkPearlItem;
 
         private Sprite darkPearlSprite =
             Addressables.LoadAssetAsync<Sprite>("RoR2/Base/ShinyPearl/texShinyPearlIcon.png").WaitForCompletion();
@@ -296,7 +305,7 @@ public class DarknessItems
     }
     public class DarkJellyfishItem
     {
-        private ItemDef darkJellyfishItem;
+        public static ItemDef darkJellyfishItem;
 
         private Sprite darkJellyfishSprite =
             Addressables.LoadAssetAsync<Sprite>("RoR2/Base/NovaOnLowHealth/texJellyGutsIcon.png").WaitForCompletion();
