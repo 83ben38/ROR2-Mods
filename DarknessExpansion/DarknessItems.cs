@@ -7,6 +7,7 @@ using RoR2.Projectile;
 using RoR2.UI;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using CharacterMaster = On.RoR2.CharacterMaster;
 using HealthComponent = On.RoR2.HealthComponent;
 using Object = UnityEngine.Object;
 
@@ -62,8 +63,17 @@ public class DarknessItems
         onKillDarknessEnemy += body => body.inventory.GiveItem(stackingDarkItem);
         ContentAddition.AddItemDef(stackingDarkItem);
         
-        On.RoR2.CharacterBody.RecalculateStats += CharacterBodyOnRecalculateStats;
+        On.RoR2.CharacterBody.RecalculateStats += CharacterBodyOnRecalculateStats; 
+        CharacterMaster.OnInventoryChanged += CharacterMasterOnOnInventoryChanged;
         HealthComponent.Heal += HealthComponentOnHeal;
+    }
+
+    private void CharacterMasterOnOnInventoryChanged(CharacterMaster.orig_OnInventoryChanged orig, RoR2.CharacterMaster self)
+    {
+        int numDarknessStacks = self.inventory.GetItemCount(stackingDarkItem);
+        int numDarkConstructItems = self.inventory.GetItemCount(DarkConstructItem.darkConstructItem);
+        orig(self);
+        self.luck += numDarknessStacks * numDarkConstructItems * .03f;
     }
 
     private float HealthComponentOnHeal(HealthComponent.orig_Heal orig, RoR2.HealthComponent self, float amount, ProcChainMask procchainmask, bool nonregen)
@@ -76,33 +86,55 @@ public class DarknessItems
 
     private void CharacterBodyOnRecalculateStats(On.RoR2.CharacterBody.orig_RecalculateStats orig, CharacterBody self)
     {
-        int numDarknessStacks = self.inventory.GetItemCount(stackingDarkItem);
-        int numDarkGolems = self.inventory.GetItemCount(DarkGolemItem.darkGolemItem);
-        int numDarkBeetles = self.inventory.GetItemCount(DarkBeetleItem.darkBeetleItem);
-        int numDarkPearls = self.inventory.GetItemCount(DarkPearlItem.darkPearlItem);
-        int numDarkBetterPearls = self.inventory.GetItemCount(DarkPearlItem2.darkPearlItem);
-        int numDarkJellyfish = self.inventory.GetItemCount(DarkJellyfishItem.darkJellyfishItem);
-        int numDarkWisps = self.inventory.GetItemCount(DarkWispItem.darkWispItem);
-        int numDarkBleedItems = self.inventory.GetItemCount(DarkBleedItem.darkBleedItem);
-        int numDarkConstructItems = self.inventory.GetItemCount(DarkConstructItem.darkConstructItem);
-        self.maxHealth += (numDarkGolems * 100) + (numDarkGolems * 5 * numDarknessStacks);
-        self.regen += (numDarkGolems * 10) + (numDarkGolems * 1 * numDarknessStacks);
-        self.critMultiplier += (numDarkBleedItems * numDarknessStacks * .03f);
-        orig(self);
-        self.attackSpeed += 1 + (numDarkBeetles * numDarknessStacks * .03f);
-        self.moveSpeed *= 1 + (numDarkWisps * numDarknessStacks * .03f);
-        self.maxHealth *= 1 + (numDarkPearls * .5f);
-        self.maxHealth *= 1 + (numDarkPearls * numDarknessStacks * .02f);
-        float darkBetterPearlMultiplier = 1 + (numDarkBetterPearls * .5f);
-        darkBetterPearlMultiplier *= 1 + (numDarkBetterPearls * numDarknessStacks * .01f);
-        self.maxHealth *= darkBetterPearlMultiplier;
-        self.regen *= darkBetterPearlMultiplier;
-        self.moveSpeed *= darkBetterPearlMultiplier;
-        self.damage *= darkBetterPearlMultiplier;
-        self.crit *= darkBetterPearlMultiplier;
-        self.attackSpeed *= darkBetterPearlMultiplier;
-        self.armor *= darkBetterPearlMultiplier;
-        
+        if (self.inventory)
+        {
+            int numDarknessStacks = self.inventory.GetItemCount(stackingDarkItem);
+            int numDarkGolems = self.inventory.GetItemCount(DarkGolemItem.darkGolemItem);
+            int numDarkBeetles = self.inventory.GetItemCount(DarkBeetleItem.darkBeetleItem);
+            int numDarkPearls = self.inventory.GetItemCount(DarkPearlItem.darkPearlItem);
+            int numDarkBetterPearls = self.inventory.GetItemCount(DarkPearlItem2.darkPearlItem);
+            int numDarkJellyfish = self.inventory.GetItemCount(DarkJellyfishItem.darkJellyfishItem);
+            int numDarkWisps = self.inventory.GetItemCount(DarkWispItem.darkWispItem);
+            int numDarkBleedItems = self.inventory.GetItemCount(DarkBleedItem.darkBleedItem);
+            orig(self);
+            self.maxHealth += (numDarkGolems * 100) + (numDarkGolems * 5 * numDarknessStacks);
+            self.regen += (numDarkGolems * 10) + (numDarkGolems * 1 * numDarknessStacks);
+            self.critMultiplier += (numDarkBleedItems * numDarknessStacks * .03f);
+            self.attackSpeed += 1 + (numDarkBeetles * numDarknessStacks * .03f);
+            self.moveSpeed *= 1 + (numDarkWisps * numDarknessStacks * .03f);
+            self.maxHealth *= 1 + (numDarkPearls * .5f);
+            self.maxHealth *= 1 + (numDarkPearls * numDarknessStacks * .02f);
+            float darkBetterPearlMultiplier = 1 + (numDarkBetterPearls * .5f);
+            darkBetterPearlMultiplier *= 1 + (numDarkBetterPearls * numDarknessStacks * .01f);
+            self.maxHealth *= darkBetterPearlMultiplier;
+            self.regen *= darkBetterPearlMultiplier;
+            self.moveSpeed *= darkBetterPearlMultiplier;
+            self.damage *= darkBetterPearlMultiplier;
+            self.crit *= darkBetterPearlMultiplier;
+            self.attackSpeed *= darkBetterPearlMultiplier;
+            self.armor *= darkBetterPearlMultiplier;
+            float cooldownMult = Mathf.Pow(1-(.01f*numDarkJellyfish),numDarknessStacks);
+            if (self.skillLocator.primary)
+            {
+                self.skillLocator.primary.cooldownScale = cooldownMult;
+            }
+            if (self.skillLocator.secondaryBonusStockSkill)
+            {
+                self.skillLocator.secondaryBonusStockSkill.cooldownScale = cooldownMult;
+            }
+            if (self.skillLocator.utilityBonusStockSkill)
+            {
+                self.skillLocator.utilityBonusStockSkill.cooldownScale = cooldownMult;
+            }
+            if (self.skillLocator.specialBonusStockSkill)
+            {
+                self.skillLocator.specialBonusStockSkill.cooldownScale = cooldownMult;
+            }
+        }
+        else
+        {
+            orig(self);
+        }
     }
 
     private void GlobalEventManagerOnonCharacterDeathGlobal(DamageReport obj)
