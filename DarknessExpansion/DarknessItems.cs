@@ -27,17 +27,13 @@ public class DarknessItems
     {
         ColorCatalog.ColorIndex ci = ColorsAPI.RegisterColor(Color.black);
         darkTier = ScriptableObject.CreateInstance<ItemTierDef>();
-        darkTier.tier = (ItemTier)11;
+        darkTier.tier = ItemTier.AssignedAtRuntime;
         darkTier.darkColorIndex = ci;
         //figure out how to change the color
         darkTier.colorIndex = ci;
         darkTier.highlightPrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/Junk/UI/HighlightMisc.prefab")
             .WaitForCompletion().InstantiateClone("Dark Item Highlight");
-        darkTier.dropletDisplayPrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/Tier1Orb.prefab")
-            .WaitForCompletion().InstantiateClone("Darkness Orb");
-        darkTier.dropletDisplayPrefab.GetComponentInChildren<Light>().color = Color.black;
-        darkTier.dropletDisplayPrefab.GetComponentInChildren<TrailRenderer>().startColor= Color.black;
-        darkTier.dropletDisplayPrefab.GetComponentInChildren<TrailRenderer>().endColor= new Color(0,0,0,0);
+        CreateDropletPrefab();
         darkTier.highlightPrefab.GetComponent<HighlightRect>().highlightColor = Color.black;
         darkTier.isDroppable = true;
         darkTier.canScrap = false;
@@ -62,6 +58,37 @@ public class DarknessItems
         On.RoR2.CharacterBody.RecalculateStats += CharacterBodyOnRecalculateStats; 
         CharacterMaster.OnInventoryChanged += CharacterMasterOnOnInventoryChanged;
         HealthComponent.Heal += HealthComponentOnHeal;
+    }
+    
+    private void CreateDropletPrefab()
+    { 
+        GameObject Temp = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/LunarOrb.prefab").WaitForCompletion().InstantiateClone("Darkness Orb", true);
+        Gradient gradient = new Gradient();
+        var colors = new GradientColorKey[2]; 
+        colors[0] = new GradientColorKey(Color.black, 0.0f); 
+        colors[1] = new GradientColorKey(Color.black, 1.0f);
+        var alphas = new GradientAlphaKey[2]; 
+        alphas[0] = new GradientAlphaKey(1.0f, 0.0f); 
+        alphas[1] = new GradientAlphaKey(0.0f, 1.0f);
+        gradient.SetKeys(colors, alphas); 
+        Color c = Color.black; 
+        Temp.transform.GetChild(0).gameObject.GetComponent<TrailRenderer>().startColor = Color.black; 
+        Temp.transform.GetChild(0).gameObject.GetComponent<TrailRenderer>().set_startColor_Injected(ref c); 
+        Temp.transform.GetChild(0).gameObject.GetComponent<TrailRenderer>().SetColorGradient(gradient);
+        Light[] lights = Temp.GetComponentsInChildren<Light>(); 
+        foreach (Light thisLight in lights) 
+        { 
+            thisLight.color = c;
+        }
+        ParticleSystem[] array = Temp.GetComponentsInChildren<ParticleSystem>(); 
+        foreach (ParticleSystem obj in array) 
+        { 
+            ParticleSystem.MainModule main = obj.main; 
+            ParticleSystem.ColorOverLifetimeModule COL = obj.colorOverLifetime; 
+            main.startColor = new ParticleSystem.MinMaxGradient(c); 
+            COL.color = c;
+        } 
+        darkTier.dropletDisplayPrefab = Temp;
     }
 
     private void CharacterMasterOnOnInventoryChanged(CharacterMaster.orig_OnInventoryChanged orig, RoR2.CharacterMaster self)
