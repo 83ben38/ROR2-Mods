@@ -750,10 +750,10 @@ public class DarknessItems
         public static ItemDef darkLightningItem;
 
         private Sprite darkLightningSprite =
-            Addressables.LoadAssetAsync<Sprite>("RoR2/Base/ParentEgg/texParentEggIcon.png").WaitForCompletion();
+            Addressables.LoadAssetAsync<Sprite>("RoR2/Base/LightningStrikeOnHit/texLightningStrikeOnHit.png").WaitForCompletion();
 
         private GameObject darkLightningPickup = Addressables
-            .LoadAssetAsync<GameObject>("RoR2/Base/ParentEgg/PickupParentEgg.prefab")
+            .LoadAssetAsync<GameObject>("RoR2/Base/LightningStrikeOnHit/PickupChargedPerforator.prefab")
             .WaitForCompletion();
         
 
@@ -785,10 +785,10 @@ public class DarknessItems
         public static ItemDef darkFireItem;
 
         private Sprite darkFireSprite =
-            Addressables.LoadAssetAsync<Sprite>("RoR2/Base/ParentEgg/texParentEggIcon.png").WaitForCompletion();
+            Addressables.LoadAssetAsync<Sprite>("RoR2/Base/FireballsOnHit/texFireballsOnHitIcon.png").WaitForCompletion();
 
         private GameObject darkFirePickup = Addressables
-            .LoadAssetAsync<GameObject>("RoR2/Base/ParentEgg/PickupParentEgg.prefab")
+            .LoadAssetAsync<GameObject>("RoR2/Base/FireballsOnHit/PickupFireballsOnHit.prefab")
             .WaitForCompletion();
         
 
