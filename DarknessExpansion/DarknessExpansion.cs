@@ -6,8 +6,11 @@ using UnityEngine;
 
 namespace DarknessExpansion;
 [BepInPlugin("com.cybug.DarknessExpansion", "DarknessExpansion","0.0.1")]
-[BepInDependency(ItemAPI.PluginGUID,BepInDependency.DependencyFlags.HardDependency)]
-[BepInDependency(EliteAPI.PluginGUID,BepInDependency.DependencyFlags.HardDependency)]
+[BepInDependency(ItemAPI.PluginGUID)]
+[BepInDependency(EliteAPI.PluginGUID)]
+[BepInDependency(LanguageAPI.PluginGUID)]
+[BepInDependency(DirectorAPI.PluginGUID)]
+[BepInDependency(ColorsAPI.PluginGUID)]
 
 
 public class DarknessExpansion : BaseUnityPlugin
