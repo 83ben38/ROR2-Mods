@@ -11,6 +11,7 @@ namespace DarknessExpansion;
 [BepInDependency(LanguageAPI.PluginGUID)]
 [BepInDependency(DirectorAPI.PluginGUID)]
 [BepInDependency(ColorsAPI.PluginGUID)]
+[BepInDependency(RecalculateStatsAPI.PluginGUID)]
 
 
 public class DarknessExpansion : BaseUnityPlugin
