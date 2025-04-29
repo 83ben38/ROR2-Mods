@@ -55,6 +55,7 @@ public class DarknessItems
         new DarkConstructItem();
         new DarkCoreItem();
         new DarkParentItem();
+        new DarkLightningItem();
         new DarkStacksItem();
         Inventory.onServerItemGiven += InventoryOnonServerItemGiven;
         onKillDarknessEnemy += body => body.inventory.GiveItem(stackingDarkItem);
@@ -98,16 +99,18 @@ public class DarknessItems
             int numDarkBleedItems = self.inventory.GetItemCount(DarkBleedItem.darkBleedItem);
             int numDarkCoreItems = self.inventory.GetItemCount(DarkCoreItem.darkCoreItem);
             int numDarkParentItems = self.inventory.GetItemCount(DarkParentItem.darkParentItem);
+            int numDarkLightningItems = self.inventory.GetItemCount(DarkLightningItem.darkLightningItem);
+            int numDarkFires = self.inventory.GetItemCount(DarkFireItem.darkFireItem);
             orig(self);
             if (numDarkBleedItems > 0)
             {
                 self.crit += 20f;
             }
-
+            self.baseDamage += numDarkFires * numDarknessStacks * 0.5f;
             self.maxHealth += (numDarkGolems * 100) + (numDarkGolems * 5 * numDarknessStacks);
             self.healthComponent.Heal((numDarkGolems * 100) + (numDarkGolems * 5 * numDarknessStacks),
                 default, false);
-            self.regen += (numDarkGolems * 10) + (numDarkGolems * 1 * numDarknessStacks);
+            self.regen += (numDarkGolems * 10) + (numDarkGolems * numDarknessStacks);
             self.critMultiplier += (numDarkBleedItems * numDarknessStacks * .03f);
             self.armor += (numDarkParentItems * numDarknessStacks * 1.5f);
             self.attackSpeed *= 1 + (numDarkBeetles * numDarknessStacks * .03f);
@@ -117,6 +120,7 @@ public class DarknessItems
             self.maxHealth *= 1 + (numDarkPearls * numDarknessStacks * .02f);
             self.healthComponent.Heal(self.maxHealth-prevMaxHealth,
                 default, false);
+            self.damage *= 1 + (numDarknessStacks * .04f * numDarkLightningItems);
             float darkBetterPearlMultiplier = 1 + (numDarkBetterPearls * .5f);
             darkBetterPearlMultiplier *= 1 + (numDarkBetterPearls * numDarknessStacks * .01f);
             self.maxHealth *= darkBetterPearlMultiplier;
@@ -703,6 +707,77 @@ public class DarknessItems
             LanguageAPI.Add("DARK_PARENT_PICKUP",
                 "Heal from incoming damage and ignite nearby enemies. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkParentItem);
+        }
+    }
+
+    public class DarkLightningItem
+    {
+        public static ItemDef darkLightningItem;
+
+        private Sprite darkLightningSprite =
+            Addressables.LoadAssetAsync<Sprite>("RoR2/Base/ParentEgg/texParentEggIcon.png").WaitForCompletion();
+
+        private GameObject darkLightningPickup = Addressables
+            .LoadAssetAsync<GameObject>("RoR2/Base/ParentEgg/PickupParentEgg.prefab")
+            .WaitForCompletion();
+        
+
+        public DarkLightningItem()
+        {
+            darkLightningItem = ScriptableObject.CreateInstance<ItemDef>();
+            darkLightningItem.name = "DARK_LIGHTNING_NAME";
+            darkLightningItem.descriptionToken = "DARK_LIGHTNING_DESCRIPTION";
+            darkLightningItem.nameToken = "DARK_LIGHTNING_NAME";
+            darkLightningItem.loreToken = "DARK_LIGHTNING_LORE";
+            darkLightningItem.pickupToken = "DARK_LIGHTNING_PICKUP";
+            darkLightningItem.pickupIconSprite = darkLightningSprite;
+            darkLightningItem.pickupModelPrefab = darkLightningPickup;
+            darkLightningItem.canRemove = true;
+            darkLightningItem.hidden = false;
+            darkLightningItem._itemTierDef = darkTier;
+            var displayRules = new ItemDisplayRuleDict(null);
+            darkLightningItem.itemIndex = ItemIndex.Count;
+            ItemAPI.Add(new CustomItem(darkLightningItem, displayRules));
+            LanguageAPI.Add("DARK_LIGHTNING_NAME", "Charged Claw");
+            LanguageAPI.Add("DARK_LIGHTNING_DESCRIPTION", "10% chance on hit to down a lightning strike on the enemy and 2 (+2 per stack) enemies within 15m (+8m per stack), dealing 1000% (+1000% per stack) damage. Killing a dark enemy grants 4% (+4% per stack) damage.");
+            LanguageAPI.Add("DARK_LIGHTNING_PICKUP",
+                "Chance on hit to summon a lightning storm. Grows stronger as it absorbs darkness.");
+            darkItems.Add(darkLightningItem);
+        }
+    }
+    public class DarkFireItem
+    {
+        public static ItemDef darkFireItem;
+
+        private Sprite darkFireSprite =
+            Addressables.LoadAssetAsync<Sprite>("RoR2/Base/ParentEgg/texParentEggIcon.png").WaitForCompletion();
+
+        private GameObject darkFirePickup = Addressables
+            .LoadAssetAsync<GameObject>("RoR2/Base/ParentEgg/PickupParentEgg.prefab")
+            .WaitForCompletion();
+        
+
+        public DarkFireItem()
+        {
+            darkFireItem = ScriptableObject.CreateInstance<ItemDef>();
+            darkFireItem.name = "DARK_FIRE_NAME";
+            darkFireItem.descriptionToken = "DARK_FIRE_DESCRIPTION";
+            darkFireItem.nameToken = "DARK_FIRE_NAME";
+            darkFireItem.loreToken = "DARK_FIRE_LORE";
+            darkFireItem.pickupToken = "DARK_FIRE_PICKUP";
+            darkFireItem.pickupIconSprite = darkFireSprite;
+            darkFireItem.pickupModelPrefab = darkFirePickup;
+            darkFireItem.canRemove = true;
+            darkFireItem.hidden = false;
+            darkFireItem._itemTierDef = darkTier;
+            var displayRules = new ItemDisplayRuleDict(null);
+            darkFireItem.itemIndex = ItemIndex.Count;
+            ItemAPI.Add(new CustomItem(darkFireItem, displayRules));
+            LanguageAPI.Add("DARK_FIRE_NAME", "Molten Claw");
+            LanguageAPI.Add("DARK_FIRE_DESCRIPTION", "10% chance on hit to call forth 3 magma balls from an enemy, dealing (3000% (+3000% per stack) damage)% base damage. Killing a dark enemy grants 0.5 (+0.5 per stack) base damage.");
+            LanguageAPI.Add("DARK_FIRE_PICKUP",
+                "Chance on hit to summon fireballs. Grows stronger as it absorbs darkness.");
+            darkItems.Add(darkFireItem);
         }
     }
 }
