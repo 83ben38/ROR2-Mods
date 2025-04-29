@@ -29,7 +29,6 @@ public class DarknessItems
         darkTier = ScriptableObject.CreateInstance<ItemTierDef>();
         darkTier.tier = ItemTier.AssignedAtRuntime;
         darkTier.darkColorIndex = ci;
-        //figure out how to change the color
         darkTier.colorIndex = ci;
         darkTier.highlightPrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/Junk/UI/HighlightMisc.prefab")
             .WaitForCompletion().InstantiateClone("Dark Item Highlight");
@@ -52,6 +51,7 @@ public class DarknessItems
         new DarkCoreItem();
         new DarkParentItem();
         new DarkLightningItem();
+        new DarkFireItem();
         new DarkStacksItem();
         Inventory.onServerItemGiven += InventoryOnonServerItemGiven;
         onKillDarknessEnemy += body => body.inventory.GiveItem(stackingDarkItem);
@@ -59,7 +59,8 @@ public class DarknessItems
         CharacterMaster.OnInventoryChanged += CharacterMasterOnOnInventoryChanged;
         HealthComponent.Heal += HealthComponentOnHeal;
     }
-    
+
+    #region allItems
     private void CreateDropletPrefab()
     { 
         GameObject Temp = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/LunarOrb.prefab").WaitForCompletion().InstantiateClone("Darkness Orb", true);
@@ -206,7 +207,11 @@ public class DarknessItems
             Darkness.UpdateDarkness();
         }
     }
+    
 
+    #endregion
+
+    #region completedItems
     public class DarkStacksItem
     {
 
@@ -235,7 +240,6 @@ public class DarknessItems
             ItemAPI.Add(new CustomItem(stackingDarkItem, displayRules));
         }
     }
-
     public class DarkGolemItem
     {
         public static ItemDef darkGolemItem;
@@ -303,43 +307,7 @@ public class DarknessItems
             orig(self, damageinfo);
         }
     }
-
-    public class DarkBeetleItem
-    {
-        public static ItemDef darkBeetleItem;
-
-        private Sprite darkBeetleSprite =
-            Addressables.LoadAssetAsync<Sprite>("RoR2/Base/BeetleGland/texBeetleGlandIcon.png").WaitForCompletion();
-
-        private GameObject darkBeetlePickup = Addressables
-            .LoadAssetAsync<GameObject>("RoR2/Base/BeetleGland/PickupBeetleGland.prefab")
-            .WaitForCompletion();
-        
-
-        public DarkBeetleItem()
-        {
-            darkBeetleItem = ScriptableObject.CreateInstance<ItemDef>();
-            darkBeetleItem.name = "DARK_BEETLE_NAME";
-            darkBeetleItem.descriptionToken = "DARK_BEETLE_DESCRIPTION";
-            darkBeetleItem.nameToken = "DARK_BEETLE_NAME";
-            darkBeetleItem.loreToken = "DARK_BEETLE_LORE";
-            darkBeetleItem.pickupToken = "DARK_BEETLE_PICKUP";
-            darkBeetleItem.pickupIconSprite = darkBeetleSprite;
-            darkBeetleItem.pickupModelPrefab = darkBeetlePickup;
-            darkBeetleItem.canRemove = true;
-            darkBeetleItem.hidden = false;
-            darkBeetleItem._itemTierDef = darkTier;
-            var displayRules = new ItemDisplayRuleDict(null);
-            darkBeetleItem.itemIndex = ItemIndex.Count;
-            ItemAPI.Add(new CustomItem(darkBeetleItem, displayRules));
-            LanguageAPI.Add("DARK_BEETLE_NAME", "King's Gland");
-            LanguageAPI.Add("DARK_BEETLE_DESCRIPTION",
-                "Every 30 seconds, summon a Beetle Guard with 300% (+300% per stack) damage and 300% (+300% per stack) health. Beetle Guards apply 1 (+1 per stack) debuff on hit. Can have up to 1 (+1 per stack) beetle guard at a time. Give your beetles your attack speed. Upon killing a dark enemy, gain 3% (+3% per stack) attack speed.");
-            LanguageAPI.Add("DARK_BEETLE_PICKUP",
-                "Summon a beetle guard which applies random debuffs on hit. Grows stronger as it absorbs darkness.");
-            darkItems.Add(darkBeetleItem);
-        }
-    }
+    
     public class DarkPearlItem
     {
         public static ItemDef darkPearlItem;
@@ -410,78 +378,6 @@ public class DarknessItems
             LanguageAPI.Add("DARK_PEARL_PICKUP2",
                 "Increases all stats. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkPearlItem);
-        }
-    }
-    public class DarkJellyfishItem
-    {
-        public static ItemDef darkJellyfishItem;
-
-        private Sprite darkJellyfishSprite =
-            Addressables.LoadAssetAsync<Sprite>("RoR2/Base/NovaOnLowHealth/texJellyGutsIcon.png").WaitForCompletion();
-
-        private GameObject darkJellyfishPickup = Addressables
-            .LoadAssetAsync<GameObject>("RoR2/Base/NovaOnLowHealth/PickupJellyGuts.prefab")
-            .WaitForCompletion();
-        
-
-        public DarkJellyfishItem()
-        {
-            darkJellyfishItem = ScriptableObject.CreateInstance<ItemDef>();
-            darkJellyfishItem.name = "DARK_JELLYFISH_NAME";
-            darkJellyfishItem.descriptionToken = "DARK_JELLYFISH_DESCRIPTION";
-            darkJellyfishItem.nameToken = "DARK_JELLYFISH_NAME";
-            darkJellyfishItem.loreToken = "DARK_JELLYFISH_LORE";
-            darkJellyfishItem.pickupToken = "DARK_JELLYFISH_PICKUP";
-            darkJellyfishItem.pickupIconSprite = darkJellyfishSprite;
-            darkJellyfishItem.pickupModelPrefab = darkJellyfishPickup;
-            darkJellyfishItem.canRemove = true;
-            darkJellyfishItem.hidden = false;
-            darkJellyfishItem._itemTierDef = darkTier;
-            var displayRules = new ItemDisplayRuleDict(null);
-            darkJellyfishItem.itemIndex = ItemIndex.Count;
-            ItemAPI.Add(new CustomItem(darkJellyfishItem, displayRules));
-            LanguageAPI.Add("DARK_JELLYFISH_NAME", "Omega Loop");
-            LanguageAPI.Add("DARK_JELLYFISH_DESCRIPTION",
-                "When below 50% health, every 30 / 2 (+1 per stack) seconds, charge an explosion, dealing 6000% damage (+6000% per stack). Additionally, gain 3 (+3 per stack) charges. Upon using your secondary, release a ball of lightning that deaals 500% base damage (+500% per stack). Upon killing a dark enemy, gain 1% (+1% per stack) cooldown reduction, which affects this item.");
-            LanguageAPI.Add("DARK_JELLYFISH_PICKUP",
-                "Upon reaching low health, explode in an area. Upon using your secondary, release a ball of lightning. Grows stronger as it absorbs darkness.");
-            darkItems.Add(darkJellyfishItem);
-        }
-    }
-    public class DarkWispItem
-    {
-        public static ItemDef darkWispItem;
-
-        private Sprite darkWispSprite =
-            Addressables.LoadAssetAsync<Sprite>("RoR2/Base/SprintWisp/texBrokenMaskIcon.png").WaitForCompletion();
-
-        private GameObject darkWispPickup = Addressables
-            .LoadAssetAsync<GameObject>("RoR2/Base/SprintWisp/PickupBrokenMask.prefab")
-            .WaitForCompletion();
-        
-
-        public DarkWispItem()
-        {
-            darkWispItem = ScriptableObject.CreateInstance<ItemDef>();
-            darkWispItem.name = "DARK_WISP_NAME";
-            darkWispItem.descriptionToken = "DARK_WISP_DESCRIPTION";
-            darkWispItem.nameToken = "DARK_WISP_NAME";
-            darkWispItem.loreToken = "DARK_WISP_LORE";
-            darkWispItem.pickupToken = "DARK_WISP_PICKUP";
-            darkWispItem.pickupIconSprite = darkWispSprite;
-            darkWispItem.pickupModelPrefab = darkWispPickup;
-            darkWispItem.canRemove = true;
-            darkWispItem.hidden = false;
-            darkWispItem._itemTierDef = darkTier;
-            var displayRules = new ItemDisplayRuleDict(null);
-            darkWispItem.itemIndex = ItemIndex.Count;
-            ItemAPI.Add(new CustomItem(darkWispItem, displayRules));
-            LanguageAPI.Add("DARK_WISP_NAME", "Large Disciple");
-            LanguageAPI.Add("DARK_WISP_DESCRIPTION",
-                "Fire 3 (+3 per stack) tracking wisps for 300% (+300% per stack) base damage. Wisps have 3.0 (+3 per stack) proc coefficient. Fires every 1.6 seconds while sprinting. Fire rate increases with movement speed. Upon killing a dark enemy, gain 3% (+3% per stack) movement speed.");
-            LanguageAPI.Add("DARK_WISP_PICKUP",
-                "Fire 3 tracking wisps while sprinting. Fire rate scales with move speed. Grows stronger as it absorbs darkness.");
-            darkItems.Add(darkWispItem);
         }
     }
     public class DarkBleedItem
@@ -584,13 +480,125 @@ public class DarknessItems
                                 }
                                 for (int i = 0; i < numBleeds; i++)
                                 {
-                                    DotController.InflictDot(victim, damageinfo.attacker, DotController.DotIndex.Bleed, 3f * damageinfo.procCoefficient, 1f);
+                                    DotController.InflictDot(victim, damageinfo.attacker, DotController.DotIndex.Bleed, 3f * damageinfo.procCoefficient);
                                 }
                             }
                         }
                     }
                 }
             }
+        }
+    }
+    #endregion
+    
+    #region uncompleteItems
+    public class DarkBeetleItem
+    {
+        public static ItemDef darkBeetleItem;
+
+        private Sprite darkBeetleSprite =
+            Addressables.LoadAssetAsync<Sprite>("RoR2/Base/BeetleGland/texBeetleGlandIcon.png").WaitForCompletion();
+
+        private GameObject darkBeetlePickup = Addressables
+            .LoadAssetAsync<GameObject>("RoR2/Base/BeetleGland/PickupBeetleGland.prefab")
+            .WaitForCompletion();
+        
+
+        public DarkBeetleItem()
+        {
+            darkBeetleItem = ScriptableObject.CreateInstance<ItemDef>();
+            darkBeetleItem.name = "DARK_BEETLE_NAME";
+            darkBeetleItem.descriptionToken = "DARK_BEETLE_DESCRIPTION";
+            darkBeetleItem.nameToken = "DARK_BEETLE_NAME";
+            darkBeetleItem.loreToken = "DARK_BEETLE_LORE";
+            darkBeetleItem.pickupToken = "DARK_BEETLE_PICKUP";
+            darkBeetleItem.pickupIconSprite = darkBeetleSprite;
+            darkBeetleItem.pickupModelPrefab = darkBeetlePickup;
+            darkBeetleItem.canRemove = true;
+            darkBeetleItem.hidden = false;
+            darkBeetleItem._itemTierDef = darkTier;
+            var displayRules = new ItemDisplayRuleDict(null);
+            darkBeetleItem.itemIndex = ItemIndex.Count;
+            ItemAPI.Add(new CustomItem(darkBeetleItem, displayRules));
+            LanguageAPI.Add("DARK_BEETLE_NAME", "King's Gland");
+            LanguageAPI.Add("DARK_BEETLE_DESCRIPTION",
+                "Every 30 seconds, summon a Beetle Guard with 300% (+300% per stack) damage and 300% (+300% per stack) health. Beetle Guards apply 1 (+1 per stack) debuff on hit. Can have up to 1 (+1 per stack) beetle guard at a time. Give your beetles your attack speed. Upon killing a dark enemy, gain 3% (+3% per stack) attack speed.");
+            LanguageAPI.Add("DARK_BEETLE_PICKUP",
+                "Summon a beetle guard which applies random debuffs on hit. Grows stronger as it absorbs darkness.");
+            darkItems.Add(darkBeetleItem);
+        }
+    }
+    
+    public class DarkJellyfishItem
+    {
+        public static ItemDef darkJellyfishItem;
+
+        private Sprite darkJellyfishSprite =
+            Addressables.LoadAssetAsync<Sprite>("RoR2/Base/NovaOnLowHealth/texJellyGutsIcon.png").WaitForCompletion();
+
+        private GameObject darkJellyfishPickup = Addressables
+            .LoadAssetAsync<GameObject>("RoR2/Base/NovaOnLowHealth/PickupJellyGuts.prefab")
+            .WaitForCompletion();
+        
+
+        public DarkJellyfishItem()
+        {
+            darkJellyfishItem = ScriptableObject.CreateInstance<ItemDef>();
+            darkJellyfishItem.name = "DARK_JELLYFISH_NAME";
+            darkJellyfishItem.descriptionToken = "DARK_JELLYFISH_DESCRIPTION";
+            darkJellyfishItem.nameToken = "DARK_JELLYFISH_NAME";
+            darkJellyfishItem.loreToken = "DARK_JELLYFISH_LORE";
+            darkJellyfishItem.pickupToken = "DARK_JELLYFISH_PICKUP";
+            darkJellyfishItem.pickupIconSprite = darkJellyfishSprite;
+            darkJellyfishItem.pickupModelPrefab = darkJellyfishPickup;
+            darkJellyfishItem.canRemove = true;
+            darkJellyfishItem.hidden = false;
+            darkJellyfishItem._itemTierDef = darkTier;
+            var displayRules = new ItemDisplayRuleDict(null);
+            darkJellyfishItem.itemIndex = ItemIndex.Count;
+            ItemAPI.Add(new CustomItem(darkJellyfishItem, displayRules));
+            LanguageAPI.Add("DARK_JELLYFISH_NAME", "Omega Loop");
+            LanguageAPI.Add("DARK_JELLYFISH_DESCRIPTION",
+                "When below 50% health, every 30 / 2 (+1 per stack) seconds, charge an explosion, dealing 6000% damage (+6000% per stack). Additionally, gain 3 (+3 per stack) charges. Upon using your secondary, release a ball of lightning that deaals 500% base damage (+500% per stack). Upon killing a dark enemy, gain 1% (+1% per stack) cooldown reduction, which affects this item.");
+            LanguageAPI.Add("DARK_JELLYFISH_PICKUP",
+                "Upon reaching low health, explode in an area. Upon using your secondary, release a ball of lightning. Grows stronger as it absorbs darkness.");
+            darkItems.Add(darkJellyfishItem);
+        }
+    }
+    public class DarkWispItem
+    {
+        public static ItemDef darkWispItem;
+
+        private Sprite darkWispSprite =
+            Addressables.LoadAssetAsync<Sprite>("RoR2/Base/SprintWisp/texBrokenMaskIcon.png").WaitForCompletion();
+
+        private GameObject darkWispPickup = Addressables
+            .LoadAssetAsync<GameObject>("RoR2/Base/SprintWisp/PickupBrokenMask.prefab")
+            .WaitForCompletion();
+        
+
+        public DarkWispItem()
+        {
+            darkWispItem = ScriptableObject.CreateInstance<ItemDef>();
+            darkWispItem.name = "DARK_WISP_NAME";
+            darkWispItem.descriptionToken = "DARK_WISP_DESCRIPTION";
+            darkWispItem.nameToken = "DARK_WISP_NAME";
+            darkWispItem.loreToken = "DARK_WISP_LORE";
+            darkWispItem.pickupToken = "DARK_WISP_PICKUP";
+            darkWispItem.pickupIconSprite = darkWispSprite;
+            darkWispItem.pickupModelPrefab = darkWispPickup;
+            darkWispItem.canRemove = true;
+            darkWispItem.hidden = false;
+            darkWispItem._itemTierDef = darkTier;
+            var displayRules = new ItemDisplayRuleDict(null);
+            darkWispItem.itemIndex = ItemIndex.Count;
+            ItemAPI.Add(new CustomItem(darkWispItem, displayRules));
+            LanguageAPI.Add("DARK_WISP_NAME", "Large Disciple");
+            LanguageAPI.Add("DARK_WISP_DESCRIPTION",
+                "Fire 3 (+3 per stack) tracking wisps for 300% (+300% per stack) base damage. Wisps have 3.0 (+3 per stack) proc coefficient. Fires every 1.6 seconds while sprinting. Fire rate increases with movement speed. Upon killing a dark enemy, gain 3% (+3% per stack) movement speed.");
+            LanguageAPI.Add("DARK_WISP_PICKUP",
+                "Fire 3 tracking wisps while sprinting. Fire rate scales with move speed. Grows stronger as it absorbs darkness.");
+            darkItems.Add(darkWispItem);
         }
     }
     public class DarkClayItem
@@ -807,4 +815,5 @@ public class DarknessItems
             darkItems.Add(darkFireItem);
         }
     }
+    #endregion
 }
