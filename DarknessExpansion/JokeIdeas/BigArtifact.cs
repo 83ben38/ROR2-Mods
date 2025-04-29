@@ -8,8 +8,8 @@ namespace DarknessExpansion;
 public class BigArtifact
 {
     public static ArtifactDef bigArtifact;
-    public static Sprite iconDisabled = Addressables.LoadAssetAsync<Sprite>("RoR2/DLC1/EliteEarth/texBuffAffixEarth.tif").WaitForCompletion();
-    public static Sprite iconEnabled = Addressables.LoadAssetAsync<Sprite>("RoR2/Base/EliteIce/texBuffAffixWhite.tif").WaitForCompletion();
+    public static Sprite iconDisabled = Addressables.LoadAssetAsync<Sprite>("RoR2/Base/EliteOnly/texArtifactEliteOnlyDisabled.png").WaitForCompletion();
+    public static Sprite iconEnabled = Addressables.LoadAssetAsync<Sprite>("RoR2/Base/EliteOnly/texArtifactEliteOnlyEnabled.png").WaitForCompletion();
     public BigArtifact()
     {
         bigArtifact = ScriptableObject.CreateInstance<ArtifactDef>();
