@@ -71,7 +71,7 @@ public class Darkness
                 float itemChance = DarknessLevel / 10f;
                 if (Random.value < itemChance)
                 {
-                    List<ItemIndex> li = DarknessItems.darkItems;
+                    List<ItemDef> li = DarknessItems.darkItems;
                     i.GiveItem(li[(int)(li.Count * Random.value)]);
                     Log.Debug("Giving Item");
                     

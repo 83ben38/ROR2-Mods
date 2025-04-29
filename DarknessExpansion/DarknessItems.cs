@@ -19,7 +19,7 @@ public class DarknessItems
 {
     public static ItemTierDef darkTier;
     public static ItemDef testItem;
-    public static List<ItemIndex> darkItems = new();
+    public static List<ItemDef> darkItems = new();
     public static Action<CharacterBody> onKillDarknessEnemy;
     public static ItemDef stackingDarkItem;
     
@@ -73,10 +73,15 @@ public class DarknessItems
 
     private float HealthComponentOnHeal(HealthComponent.orig_Heal orig, RoR2.HealthComponent self, float amount, ProcChainMask procchainmask, bool nonregen)
     {
-        int numDarkClay = self.body.inventory.GetItemCount(DarkClayItem.darkClayItem);
-        int numDarknessStacks = self.body.inventory.GetItemCount(stackingDarkItem);
-        float healMultiplier = 1 + (numDarknessStacks * numDarkClay * .03f);
-        return orig(self, amount * healMultiplier, procchainmask, nonregen);
+        if (self.body.inventory)
+        {
+            int numDarkClay = self.body.inventory.GetItemCount(DarkClayItem.darkClayItem);
+            int numDarknessStacks = self.body.inventory.GetItemCount(stackingDarkItem);
+            float healMultiplier = 1 + (numDarknessStacks * numDarkClay * .03f);
+            return orig(self, amount * healMultiplier, procchainmask, nonregen);
+        }
+
+        return orig(self, amount, procchainmask, nonregen);
     }
 
     private void CharacterBodyOnRecalculateStats(On.RoR2.CharacterBody.orig_RecalculateStats orig, CharacterBody self)
@@ -164,12 +169,7 @@ public class DarknessItems
 
     private void InventoryOnonServerItemGiven(Inventory arg1, ItemIndex arg2, int arg3)
     {
-        Debug.Log(arg2);
-        for (int i = 0; i < darkItems.Count; i++)
-        {
-            Debug.Log(darkItems[i]);
-        }
-        if (darkItems.Contains(arg2))
+        if (darkItems.Contains(ItemCatalog.GetItemDef(arg2)))
         {
             Darkness.DarknessLevel += arg3;
             Darkness.UpdateDarkness();
@@ -189,17 +189,16 @@ public class DarknessItems
         public DarkStacksItem()
         {
             stackingDarkItem = ScriptableObject.CreateInstance<ItemDef>();
-            stackingDarkItem.name = "DARK_GOLEM_NAME";
-            stackingDarkItem.descriptionToken = "DARK_GOLEM_DESCRIPTION";
-            stackingDarkItem.nameToken = "DARK_GOLEM_NAME";
-            stackingDarkItem.loreToken = "DARK_GOLEM_LORE";
-            stackingDarkItem.pickupToken = "DARK_GOLEM_PICKUP";
+            stackingDarkItem.name = "DARK_STACK_NAME";
+            stackingDarkItem.descriptionToken = "DARK_STACK_DESCRIPTION";
+            stackingDarkItem.nameToken = "DARK_STACK_NAME";
+            stackingDarkItem.loreToken = "DARK_STACK_LORE";
+            stackingDarkItem.pickupToken = "DARK_STACK_PICKUP";
             stackingDarkItem.pickupIconSprite = darkGolemSprite;
             stackingDarkItem.pickupModelPrefab = darkGolemPickup;
             stackingDarkItem.canRemove = false;
             stackingDarkItem.hidden = true;
             stackingDarkItem._itemTierDef = darkTier;
-            stackingDarkItem.tier = (ItemTier)11;
             var displayRules = new ItemDisplayRuleDict(null);
             stackingDarkItem.itemIndex = ItemIndex.Count;
             ItemAPI.Add(new CustomItem(stackingDarkItem, displayRules));
@@ -232,7 +231,6 @@ public class DarknessItems
             darkGolemItem.canRemove = true;
             darkGolemItem.hidden = false;
             darkGolemItem._itemTierDef = darkTier;
-            darkGolemItem.tier = (ItemTier)11;
             var displayRules = new ItemDisplayRuleDict(null);
             darkGolemItem.itemIndex = ItemIndex.Count;
             ItemAPI.Add(new CustomItem(darkGolemItem, displayRules));
@@ -242,7 +240,7 @@ public class DarknessItems
                 "Gives 100 (+100 per stack) health and 10 (+10 per stack) regen. Upon taking damage, 20% chance to summon a fist for 200% (+200% per stack) damage + 100% damage (+100% per stack) per 500 health. Gives 5 (+5 per stack) health and 1 (+1 per stack) regen upon killing a dark enemy.");
             LanguageAPI.Add("DARK_GOLEM_PICKUP",
                 "Increases health and regen. Upon taking damage, chance to summon a fist. Fist damage scales with health. Grows stronger as it absorbs darkness.");
-            darkItems.Add(darkGolemItem.itemIndex);
+            darkItems.Add(darkGolemItem);
         }
 
         
@@ -300,7 +298,6 @@ public class DarknessItems
             darkBeetleItem.canRemove = true;
             darkBeetleItem.hidden = false;
             darkBeetleItem._itemTierDef = darkTier;
-            darkBeetleItem.tier = (ItemTier)11;
             var displayRules = new ItemDisplayRuleDict(null);
             darkBeetleItem.itemIndex = ItemIndex.Count;
             ItemAPI.Add(new CustomItem(darkBeetleItem, displayRules));
@@ -309,7 +306,7 @@ public class DarknessItems
                 "Every 30 seconds, summon a Beetle Guard with 300% (+300% per stack) damage and 300% (+300% per stack) health. Beetle Guards apply 1 (+1 per stack) debuff on hit. Can have up to 1 (+1 per stack) beetle guard at a time. Give your beetles your attack speed. Upon killing a dark enemy, gain 3% (+3% per stack) attack speed.");
             LanguageAPI.Add("DARK_BEETLE_PICKUP",
                 "Summon a beetle guard which applies random debuffs on hit. Grows stronger as it absorbs darkness.");
-            darkItems.Add(darkBeetleItem.itemIndex);
+            darkItems.Add(darkBeetleItem);
         }
     }
     public class DarkPearlItem
@@ -337,7 +334,6 @@ public class DarknessItems
             darkPearlItem.canRemove = true;
             darkPearlItem.hidden = false;
             darkPearlItem._itemTierDef = darkTier;
-            darkPearlItem.tier = (ItemTier)11;
             var displayRules = new ItemDisplayRuleDict(null);
             darkPearlItem.itemIndex = ItemIndex.Count;
             ItemAPI.Add(new CustomItem(darkPearlItem, displayRules));
@@ -346,7 +342,7 @@ public class DarknessItems
                 "Increases maximum health by 50% (+50% per stack). Upon killing a dark enemy, increases health by 2% (+2% per stack).");
             LanguageAPI.Add("DARK_PEARL_PICKUP",
                 "Increases health. Grows stronger as it absorbs darkness.");
-            darkItems.Add(darkPearlItem.itemIndex);
+            darkItems.Add(darkPearlItem);
         }
     }
     public class DarkPearlItem2
@@ -374,7 +370,6 @@ public class DarknessItems
             darkPearlItem.canRemove = true;
             darkPearlItem.hidden = false;
             darkPearlItem._itemTierDef = darkTier;
-            darkPearlItem.tier = (ItemTier)11;
             var displayRules = new ItemDisplayRuleDict(null);
             darkPearlItem.itemIndex = ItemIndex.Count;
             ItemAPI.Add(new CustomItem(darkPearlItem, displayRules));
@@ -383,7 +378,7 @@ public class DarknessItems
                 "Increases all stats by 50% (+50% per stack). Upon killing a dark enemy, increases all stats by 1% (+1% per stack).");
             LanguageAPI.Add("DARK_PEARL_PICKUP2",
                 "Increases all stats. Grows stronger as it absorbs darkness.");
-            darkItems.Add(darkPearlItem.itemIndex);
+            darkItems.Add(darkPearlItem);
         }
     }
     public class DarkJellyfishItem
@@ -411,7 +406,6 @@ public class DarknessItems
             darkJellyfishItem.canRemove = true;
             darkJellyfishItem.hidden = false;
             darkJellyfishItem._itemTierDef = darkTier;
-            darkJellyfishItem.tier = (ItemTier)11;
             var displayRules = new ItemDisplayRuleDict(null);
             darkJellyfishItem.itemIndex = ItemIndex.Count;
             ItemAPI.Add(new CustomItem(darkJellyfishItem, displayRules));
@@ -420,7 +414,7 @@ public class DarknessItems
                 "When below 50% health, every 30 / 2 (+1 per stack) seconds, charge an explosion, dealing 6000% damage (+6000% per stack). Additionally, gain 3 (+3 per stack) charges. Upon using your secondary, release a ball of lightning that deaals 500% base damage (+500% per stack). Upon killing a dark enemy, gain 1% (+1% per stack) cooldown reduction, which affects this item.");
             LanguageAPI.Add("DARK_JELLYFISH_PICKUP",
                 "Upon reaching low health, explode in an area. Upon using your secondary, release a ball of lightning. Grows stronger as it absorbs darkness.");
-            darkItems.Add(darkJellyfishItem.itemIndex);
+            darkItems.Add(darkJellyfishItem);
         }
     }
     public class DarkWispItem
@@ -448,7 +442,6 @@ public class DarknessItems
             darkWispItem.canRemove = true;
             darkWispItem.hidden = false;
             darkWispItem._itemTierDef = darkTier;
-            darkWispItem.tier = (ItemTier)11;
             var displayRules = new ItemDisplayRuleDict(null);
             darkWispItem.itemIndex = ItemIndex.Count;
             ItemAPI.Add(new CustomItem(darkWispItem, displayRules));
@@ -457,7 +450,7 @@ public class DarknessItems
                 "Fire 3 (+3 per stack) tracking wisps for 300% (+300% per stack) base damage. Wisps have 3.0 (+3 per stack) proc coefficient. Fires every 1.6 seconds while sprinting. Fire rate increases with movement speed. Upon killing a dark enemy, gain 3% (+3% per stack) movement speed.");
             LanguageAPI.Add("DARK_WISP_PICKUP",
                 "Fire 3 tracking wisps while sprinting. Fire rate scales with move speed. Grows stronger as it absorbs darkness.");
-            darkItems.Add(darkWispItem.itemIndex);
+            darkItems.Add(darkWispItem);
         }
     }
     public class DarkBleedItem
@@ -485,7 +478,6 @@ public class DarknessItems
             darkBleedItem.canRemove = true;
             darkBleedItem.hidden = false;
             darkBleedItem._itemTierDef = darkTier;
-            darkBleedItem.tier = (ItemTier)11;
             var displayRules = new ItemDisplayRuleDict(null);
             darkBleedItem.itemIndex = ItemIndex.Count;
             ItemAPI.Add(new CustomItem(darkBleedItem, displayRules));
@@ -497,7 +489,7 @@ public class DarknessItems
             On.RoR2.GlobalEventManager.ProcessHitEnemy += GlobalEventManagerOnProcessHitEnemy;
             GlobalEventManager.onCharacterDeathGlobal += GlobalEventManagerOnonCharacterDeathGlobal;
             testItem = darkBleedItem;
-            darkItems.Add(darkBleedItem.itemIndex);
+            darkItems.Add(darkBleedItem);
         }
 
         private void GlobalEventManagerOnonCharacterDeathGlobal(DamageReport obj)
@@ -595,7 +587,6 @@ public class DarknessItems
             darkClayItem.canRemove = true;
             darkClayItem.hidden = false;
             darkClayItem._itemTierDef = darkTier;
-            darkClayItem.tier = (ItemTier)11;
             var displayRules = new ItemDisplayRuleDict(null);
             darkClayItem.itemIndex = ItemIndex.Count;
             ItemAPI.Add(new CustomItem(darkClayItem, displayRules));
@@ -603,7 +594,7 @@ public class DarknessItems
             LanguageAPI.Add("DARK_CLAY_DESCRIPTION", "The nearest 1 (+1 per stack) enemies to you within 13m (+8m per stack) will be 'tethered' to you, applying tar. Deal 15% (+15% per stack) additional damage to enemies with tar applied, and heal for 5% (+5% per stack) of the damage dealt. Upon killing a dark enemy, gain 3% (+3% per stack) healing multiplier.");
             LanguageAPI.Add("DARK_CLAY_PICKUP",
                 "Tether yourself to nearby enemies, dealing bonus damage and healing for a portion of the damage dealt. Grows stronger as it absorbs darkness.");
-            darkItems.Add(darkClayItem.itemIndex);
+            darkItems.Add(darkClayItem);
         }
     }
     
@@ -632,7 +623,6 @@ public class DarknessItems
             darkConstructItem.canRemove = true;
             darkConstructItem.hidden = false;
             darkConstructItem._itemTierDef = darkTier;
-            darkConstructItem.tier = (ItemTier)11;
             var displayRules = new ItemDisplayRuleDict(null);
             darkConstructItem.itemIndex = ItemIndex.Count;
             ItemAPI.Add(new CustomItem(darkConstructItem, displayRules));
@@ -640,7 +630,7 @@ public class DarknessItems
             LanguageAPI.Add("DARK_CONSTRUCT_DESCRIPTION", "Killing an elite enemy spawns an Alpha Construct that attaches to you with 1000% (+1000% per stack) health. On hit, all Constructs attached to you have a 5% chance to fire at the enemy hit for 300% (+300% per stack) damage. Limit of 4 (+4 per stack) constructs. Upon killing a dark enemy, gain .03 luck.");
             LanguageAPI.Add("DARK_CONSTRUCT_PICKUP",
                 "Upon killing an elite, gain an alpha construct that attaches to you and fires at enemies you fire at. Grows stronger as it absorbs darkness.");
-            darkItems.Add(darkConstructItem.itemIndex);
+            darkItems.Add(darkConstructItem);
         }
     }
     
@@ -669,7 +659,6 @@ public class DarknessItems
             darkCoreItem.canRemove = true;
             darkCoreItem.hidden = false;
             darkCoreItem._itemTierDef = darkTier;
-            darkCoreItem.tier = (ItemTier)11;
             var displayRules = new ItemDisplayRuleDict(null);
             darkCoreItem.itemIndex = ItemIndex.Count;
             ItemAPI.Add(new CustomItem(darkCoreItem, displayRules));
@@ -677,7 +666,7 @@ public class DarknessItems
             LanguageAPI.Add("DARK_CORE_DESCRIPTION", "Every 10 seconds, summon two Solus Probes. All allies gain +100% (+100% per stack) health and damage per ally on your team. Upon killing a dark enemy, increase all of your allies stats by 2% (+2% per stack).");
             LanguageAPI.Add("DARK_CORE_PICKUP",
                 "Summon probes. All allies gain stats per ally on your team. Grows stronger as it absorbs darkness.");
-            darkItems.Add(darkCoreItem.itemIndex);
+            darkItems.Add(darkCoreItem);
         }
     }
     
@@ -706,7 +695,6 @@ public class DarknessItems
             darkParentItem.canRemove = true;
             darkParentItem.hidden = false;
             darkParentItem._itemTierDef = darkTier;
-            darkParentItem.tier = (ItemTier)11;
             var displayRules = new ItemDisplayRuleDict(null);
             darkParentItem.itemIndex = ItemIndex.Count;
             ItemAPI.Add(new CustomItem(darkParentItem, displayRules));
@@ -714,7 +702,7 @@ public class DarknessItems
             LanguageAPI.Add("DARK_PARENT_DESCRIPTION", "Heal from incoming damage equal to 100% (+100% per stack) armor. On taking damage, ignite enemies within a 13m (+8m per stack) radius. Upon killing a dark enemy, gain 1.5 (+1.5 per stack) armor.");
             LanguageAPI.Add("DARK_PARENT_PICKUP",
                 "Heal from incoming damage and ignite nearby enemies. Grows stronger as it absorbs darkness.");
-            darkItems.Add(darkParentItem.itemIndex);
+            darkItems.Add(darkParentItem);
         }
     }
 }

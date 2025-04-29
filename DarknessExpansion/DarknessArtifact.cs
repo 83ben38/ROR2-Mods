@@ -33,7 +33,7 @@ public class DarknessArtifact
             Darkness.UpdateDarkness();
             foreach (var cm in CharacterMaster.instancesList)
             {
-                List<ItemIndex> li = DarknessItems.darkItems;
+                List<ItemDef> li = DarknessItems.darkItems;
                 if (cm._teamIndex == TeamIndex.Player)
                 {
                     cm.inventory.GiveItem(li[(int)(li.Count * Random.value)]);

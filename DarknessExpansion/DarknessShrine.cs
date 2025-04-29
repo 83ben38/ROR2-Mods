@@ -6,6 +6,7 @@ using RoR2.Navigation;
 using RoR2.UI;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.Events;
 using UnityEngine.Networking;
 using Random = UnityEngine.Random;
 
@@ -129,6 +130,7 @@ public class DarknessShrine
         public PurchaseInteraction purchaseInteraction;
         private GameObject shrineUseEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/ShrineUseEffect.prefab").WaitForCompletion();
         private GameObject[] terminalGameObjects;
+        public List<ItemIndex> sacrificedItems = new List<ItemIndex>();
         public void Start()
         {
             purchaseInteraction.SetAvailableTrue();
@@ -166,70 +168,93 @@ public class DarknessShrine
         public PurchaseInteraction purchaseInteraction;
         public DarknessShrineManager parent;
         public NetworkUIPromptController networkUIPromptController;
-        public GameObject UIObject;
-        public PickupPickerPanel panelController;
-        public Interactor interactor;
+        public PickupPickerController ppc;
+        private Interactor interactor;
+        private GameObject UIObject;
+        private int shrinking = -1;
         public void Start()
         {
             purchaseInteraction.SetAvailableTrue();
             purchaseInteraction.onPurchase.AddListener(OnPurchase);
             networkUIPromptController = gameObject.AddComponent<NetworkUIPromptController>();
-            networkUIPromptController.onDisplayBegin += onDisplayBegin;
-            networkUIPromptController.onDisplayEnd += onDisplayEnd;
+            ppc = gameObject.AddComponent<PickupPickerController>();
+            networkUIPromptController.onDisplayBegin += ppc.OnDisplayBegin;
+            networkUIPromptController.onDisplayEnd += ppc.OnDisplayEnd;
+            networkUIPromptController.onDisplayEnd += (controller, user, arg3) => Log.Debug("HERE");
+            ppc.panelPrefab = itemSelectionScreen;
+            ppc.onPickupSelected = new PickupPickerController.PickupIndexUnityEvent();
+            ppc.onPickupSelected.AddListener(OnPickupSelected);
+            
         }
 
-        private void onDisplayEnd(NetworkUIPromptController arg1, LocalUser arg2, RoR2.CameraRigController arg3)
+        
+
+        // private void onDisplayEnd(NetworkUIPromptController arg1, LocalUser arg2, RoR2.CameraRigController arg3)
+        // {
+        //     Log.Debug("Display Ending");
+        //     Destroy(UIObject);
+        //     UIObject = null;
+        //     panelController = null;
+        // }
+        //
+        // private void onDisplayBegin(NetworkUIPromptController arg1, LocalUser arg2, CameraRigController arg3)
+        // {
+        //     Log.Debug("Display Starting");
+        //     List<PickupPickerController.Option> list = new List<PickupPickerController.Option>();
+        //     foreach (var item in arg2.cachedMaster.inventory.itemAcquisitionOrder)
+        //     {
+        //         ItemDef id = ItemCatalog.GetItemDef(item);
+        //         if (id)
+        //         {
+        //             ItemTierDef itd = ItemTierCatalog.GetItemTierDef(id.tier);
+        //             if (itd) if (itd.canScrap)
+        //             {
+        //                 PickupIndex pickupIndex = PickupCatalog.FindPickupIndex(item);
+        //                 if (pickupIndex != PickupIndex.none)
+        //                 {
+        //
+        //                     list.Add(new PickupPickerController.Option()
+        //                     {
+        //                         available = true,
+        //                         pickupIndex = pickupIndex
+        //                     });
+        //                     
+        //                 }
+        //             }
+        //         }
+        //     }  
+        //     ppc.SetOptionsInternal(list.ToArray());
+        // }
+
+        private void OnPickupSelected(int arg0)
         {
-            Log.Debug("Display Ending");
-            Destroy(UIObject);
-            UIObject = null;
-            panelController = null;
+            FindObjectOfType<PickupPickerPanel>().DestroyIt();
+            ItemIndex ii = PickupCatalog.GetPickupDef(new PickupIndex(arg0)).itemIndex;
+            parent.GetComponent<DarknessShrineManager>().sacrificedItems.Add(ii);
+            purchaseInteraction.SetAvailable(false);
+            Inventory inventory = interactor.GetComponent<CharacterBody>().inventory;
+            inventory.RemoveItem(ii);
+            shrinking = 0;
         }
 
-        private void onDisplayBegin(NetworkUIPromptController arg1, LocalUser arg2, RoR2.CameraRigController arg3)
-        {
-            Log.Debug("Display Starting");
-            UIObject = Instantiate(itemSelectionScreen, arg3.hud.mainContainer.transform);
-            panelController = UIObject.GetComponent<PickupPickerPanel>();
-            PickupPickerController.Option[] list = new PickupPickerController.Option[arg2.cachedMaster.inventory.itemAcquisitionOrder.Count];
-            int i = 0;
-            foreach (var item in arg2.cachedMaster.inventory.itemAcquisitionOrder)
-            {
-                PickupIndex pickupIndex = PickupCatalog.FindPickupIndex(item);
-                if (pickupIndex != PickupIndex.none)
-                {
-                    list[i]=new PickupPickerController.Option()
-                    {
-                        available = true,
-                        pickupIndex = pickupIndex
-                    };
-                    i++;
-                }
-            }
-            panelController.SetPickupOptions(list);
-        }
 
         public void OnPurchase(Interactor interactor)
         {
             this.interactor = interactor;
+            ppc.SetOptionsFromInteractor(interactor);
             networkUIPromptController.SetParticipantMasterFromInteractor(interactor);
         }
 
         private void FixedUpdate()
         {
-            CharacterMaster currentParticipantMaster = networkUIPromptController.currentParticipantMaster;
-            if (currentParticipantMaster)
+            if (shrinking > -1)
             {
-                CharacterBody body = currentParticipantMaster.GetBody();
-                if (!body || (body.inputBank.aimOrigin - transform.position).sqrMagnitude > 10f)
+                shrinking++;
+                gameObject.transform.localScale *= 0.95f;
+                if (shrinking > 20)
                 {
-                    networkUIPromptController.SetParticipantMaster(null);
+                    Destroy(gameObject);
                 }
-            }
-
-            if (!UIObject)
-            {
-                networkUIPromptController.SetParticipantMaster(null);
             }
         }
     }
