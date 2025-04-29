@@ -180,51 +180,11 @@ public class DarknessShrine
             ppc = gameObject.AddComponent<PickupPickerController>();
             networkUIPromptController.onDisplayBegin += ppc.OnDisplayBegin;
             networkUIPromptController.onDisplayEnd += ppc.OnDisplayEnd;
-            networkUIPromptController.onDisplayEnd += (controller, user, arg3) => Log.Debug("HERE");
             ppc.panelPrefab = itemSelectionScreen;
             ppc.onPickupSelected = new PickupPickerController.PickupIndexUnityEvent();
             ppc.onPickupSelected.AddListener(OnPickupSelected);
             
         }
-
-        
-
-        // private void onDisplayEnd(NetworkUIPromptController arg1, LocalUser arg2, RoR2.CameraRigController arg3)
-        // {
-        //     Log.Debug("Display Ending");
-        //     Destroy(UIObject);
-        //     UIObject = null;
-        //     panelController = null;
-        // }
-        //
-        // private void onDisplayBegin(NetworkUIPromptController arg1, LocalUser arg2, CameraRigController arg3)
-        // {
-        //     Log.Debug("Display Starting");
-        //     List<PickupPickerController.Option> list = new List<PickupPickerController.Option>();
-        //     foreach (var item in arg2.cachedMaster.inventory.itemAcquisitionOrder)
-        //     {
-        //         ItemDef id = ItemCatalog.GetItemDef(item);
-        //         if (id)
-        //         {
-        //             ItemTierDef itd = ItemTierCatalog.GetItemTierDef(id.tier);
-        //             if (itd) if (itd.canScrap)
-        //             {
-        //                 PickupIndex pickupIndex = PickupCatalog.FindPickupIndex(item);
-        //                 if (pickupIndex != PickupIndex.none)
-        //                 {
-        //
-        //                     list.Add(new PickupPickerController.Option()
-        //                     {
-        //                         available = true,
-        //                         pickupIndex = pickupIndex
-        //                     });
-        //                     
-        //                 }
-        //             }
-        //         }
-        //     }  
-        //     ppc.SetOptionsInternal(list.ToArray());
-        // }
 
         private void OnPickupSelected(int arg0)
         {
@@ -251,7 +211,7 @@ public class DarknessShrine
             {
                 shrinking++;
                 gameObject.transform.localScale *= 0.95f;
-                if (shrinking > 20)
+                if (shrinking > 30)
                 {
                     Destroy(gameObject);
                 }
