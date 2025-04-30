@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using BepInEx;
 using R2API;
 using RoR2;
@@ -183,6 +184,22 @@ public class DarknessShrine
             boss.transform.localScale *= 1.5f;
             bossInventory.GiveRandomItems(5,false,false);
             bossInventory.GiveItemString("ShinyPearl",Darkness.DarknessLevel);
+            bossBody = boss.GetComponent<CharacterBody>();
+            bossBody.master.isBoss = true;
+        }
+
+        public CharacterBody bossBody;
+
+        private void FixedUpdate()
+        {
+            if (bossBody)
+            {
+                if (bossBody.master.IsDeadAndOutOfLivesServer())
+                {
+                    //win
+                    bossBody = null;
+                }
+            }
         }
     }
 
