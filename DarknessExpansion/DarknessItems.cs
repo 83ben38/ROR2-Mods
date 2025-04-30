@@ -134,10 +134,13 @@ public class DarknessItems
 
     private void InventoryOnonServerItemGiven(Inventory arg1, ItemIndex arg2, int arg3)
     {
-        if (darkItems.Contains(ItemCatalog.GetItemDef(arg2)))
+        if (arg1.currentEquipmentIndex != Darkness.DarknessEquipment.equipmentIndex)
         {
-            Darkness.DarknessLevel += arg3;
-            Darkness.UpdateDarkness();
+            if (darkItems.Contains(ItemCatalog.GetItemDef(arg2)))
+            {
+                Darkness.DarknessLevel += arg3;
+                Darkness.UpdateDarkness();
+            }
         }
     }
     private void RecalculateStatsAPIOnGetStatCoefficients(CharacterBody self, RecalculateStatsAPI.StatHookEventArgs args)
@@ -183,7 +186,7 @@ public class DarknessItems
             args.armorAdd += darkBetterPearlMultiplier * (self.armor+args.armorAdd);
             //check if this actually works
             float cooldownMult = Mathf.Pow(1-(.01f*numDarkJellyfish),numDarknessStacks);
-            args.cooldownMultAdd = (1 / cooldownMult) - 1;
+            args.cooldownMultAdd =cooldownMult - 1;
         }
     }
 
