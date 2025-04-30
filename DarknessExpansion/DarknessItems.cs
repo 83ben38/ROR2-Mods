@@ -393,7 +393,6 @@ public class DarknessItems
                 "All hits apply bleed, and crits apply extra. Bleeding enemies explode, dealing damage to nearby enemies. Grows stronger as it absorbs darkness.");
             On.RoR2.GlobalEventManager.ProcessHitEnemy += GlobalEventManagerOnProcessHitEnemy;
             GlobalEventManager.onCharacterDeathGlobal += GlobalEventManagerOnonCharacterDeathGlobal;
-            testItem = darkBleedItem;
             darkItems.Add(darkBleedItem);
         }
 
@@ -541,6 +540,7 @@ public class DarknessItems
             LanguageAPI.Add("DARK_JELLYFISH_PICKUP",
                 "Upon reaching low health, explode in an area. Upon using your secondary, release a ball of lightning. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkJellyfishItem);
+            testItem = darkJellyfishItem;
         }
     }
     public class DarkWispItem
