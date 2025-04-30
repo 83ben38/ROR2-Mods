@@ -155,6 +155,7 @@ public class DarknessShrine
         private GameObject shrineUseEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/ShrineUseEffect.prefab").WaitForCompletion();
         private GameObject[] terminalGameObjects;
         public List<ItemIndex> sacrificedItems = new List<ItemIndex>();
+        private ItemIndex bonusItemToGive;
         public void Start()
         {
             purchaseInteraction.SetAvailable(false);
@@ -194,7 +195,78 @@ public class DarknessShrine
                 }
             }
 
+            bonusItemToGive = ItemIndex.None;
             int bossToSpawn = (int)((bosses.Length-1) * Random.value);
+            if (sacrificedItems.Count == 3)
+            {
+                if (sacrificedItems[0] == sacrificedItems[1] && sacrificedItems[0] == sacrificedItems[2])
+                {
+                    if (sacrificedItems[0] == ItemCatalog.itemNameToIndex["BeetleGland"])
+                    {
+                        bossToSpawn = 0;
+                        bonusItemToGive = DarknessItems.DarkBeetleItem.darkBeetleItem.itemIndex;
+                    }
+                    if (sacrificedItems[0] == ItemCatalog.itemNameToIndex["Knurl"])
+                    {
+                        bossToSpawn = 1;
+                        bonusItemToGive = DarknessItems.DarkGolemItem.darkGolemItem.itemIndex;
+                    }
+                    if (sacrificedItems[0] == ItemCatalog.itemNameToIndex["NovaOnLowHealth"])
+                    {
+                        bossToSpawn = 2;
+                        bonusItemToGive = DarknessItems.DarkJellyfishItem.darkJellyfishItem.itemIndex;
+                    }
+                    if (sacrificedItems[0] == ItemCatalog.itemNameToIndex["SprintWisp"])
+                    {
+                        bossToSpawn = 3;
+                        bonusItemToGive = DarknessItems.DarkWispItem.darkWispItem.itemIndex;
+                    }
+                    if (sacrificedItems[0] == ItemCatalog.itemNameToIndex["BleedOnHitAndExplode"])
+                    {
+                        bossToSpawn = 4;
+                        bonusItemToGive = DarknessItems.DarkBleedItem.darkBleedItem.itemIndex;
+                    }
+                    if (sacrificedItems[0] == ItemCatalog.itemNameToIndex["SiphonOnLowHealth"])
+                    {
+                        bossToSpawn = 5;
+                        bonusItemToGive = DarknessItems.DarkClayItem.darkClayItem.itemIndex;
+                    }
+                    if (sacrificedItems[0] == ItemCatalog.itemNameToIndex["MinorConstructOnKill"])
+                    {
+                        bossToSpawn = 6;
+                        bonusItemToGive = DarknessItems.DarkConstructItem.darkConstructItem.itemIndex;
+                    }
+                    if (sacrificedItems[0] == ItemCatalog.itemNameToIndex["RoboBallBuddy"])
+                    {
+                        bossToSpawn = 7;
+                        bonusItemToGive = DarknessItems.DarkCoreItem.darkCoreItem.itemIndex;
+                    }
+                    if (sacrificedItems[0] == ItemCatalog.itemNameToIndex["ParentEgg"])
+                    {
+                        bossToSpawn = 8;
+                        bonusItemToGive = DarknessItems.DarkParentItem.darkParentItem.itemIndex;
+                    }
+                    if (sacrificedItems[0] == ItemCatalog.itemNameToIndex["LightningStrikeOnHit"])
+                    {
+                        bossToSpawn = 9;
+                        bonusItemToGive = DarknessItems.DarkLightningItem.darkLightningItem.itemIndex;
+                    }
+                    if (sacrificedItems[0] == ItemCatalog.itemNameToIndex["FireballsOnHit"])
+                    {
+                        bossToSpawn = 10;
+                        bonusItemToGive = DarknessItems.DarkFireItem.darkFireItem.itemIndex;
+                    }
+                    if (sacrificedItems[0] == ItemCatalog.itemNameToIndex["Pearl"])
+                    {
+                        bonusItemToGive = DarknessItems.DarkPearlItem.darkPearlItem.itemIndex;
+                    }
+                    if (sacrificedItems[0] == ItemCatalog.itemNameToIndex["ShinyPearl"])
+                    {
+                        bossToSpawn = 11;
+                        bonusItemToGive = DarknessItems.DarkPearlItem2.darkPearlItem.itemIndex;
+                    }
+                }
+            }
             GameObject boss = DirectorCore.instance.TrySpawnObject(new DirectorSpawnRequest(bosses[bossToSpawn],new DirectorPlacementRule() {placementMode = DirectorPlacementRule.PlacementMode.NearestNode,position = gameObject.transform.position},new Xoroshiro128Plus((ulong)(Random.value * ulong.MaxValue))){teamIndexOverride = TeamIndex.Monster, ignoreTeamMemberLimit = true});
             Inventory bossInventory = boss.GetComponent<Inventory>();
             bossInventory.SetEquipmentIndex(Darkness.DarknessEquipment.equipmentIndex);
@@ -213,6 +285,11 @@ public class DarknessShrine
                     numItems = 3;
                 }
                 bossInventory.GiveItem(ii,numItems);
+            }
+
+            if (bonusItemToGive != ItemIndex.None)
+            {
+                bossInventory.GiveItem(bonusItemToGive);
             }
             bossInventory.GiveItemString("ShinyPearl",Darkness.DarknessLevel);
             bossBody = boss.GetComponent<CharacterBody>();
