@@ -27,11 +27,23 @@ public class DarknessShrine
 
     private InteractableSpawnCard spawnCard;
 
-    public static SpawnCard[] bosses = new[]
+    public static String[] bossLocations = new[]
     {
-        Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/Beetle/cscBeetleQueen.asset")
-            .WaitForCompletion()
+        "RoR2/Base/Beetle/cscBeetleQueen.asset",
+        "RoR2/Base/Titan/cscTitanGolemPlains.asset",
+        "RoR2/Base/Vagrant/cscVagrant.asset",
+        "RoR2/Base/Gravekeeper/cscGravekeeper.asset",
+        "RoR2/Base/ImpBoss/cscImpBoss.asset",
+        "RoR2/Base/ClayBoss/cscClayBoss.asset",
+        "RoR2/DLC1/MajorAndMinorConstruct/cscMegaConstruct.asset",
+        "RoR2/Base/RoboBallBoss/cscRoboBallBoss.asset",
+        "RoR2/Base/Grandparent/cscGrandparent.asset",
+        "RoR2/Base/ElectricWorm/cscElectricWorm.asset",
+        "RoR2/Base/MagmaWorm/cscMagmaWorm.asset",
+        "RoR2/Base/Scav/cscScavBoss.asset"
     };
+
+    public static SpawnCard[] bosses;
     public DarknessShrine()
     {
         shrine1.name = "Shrine of Darkness";
@@ -108,7 +120,12 @@ public class DarknessShrine
         GameObject trigger2 = BaseUnityPlugin.Instantiate(new GameObject(), shrine2.transform);
         trigger2.AddComponent<BoxCollider>().isTrigger = true;
         trigger2.AddComponent<EntityLocator>().entity = shrine2;
-        
+
+        bosses = new SpawnCard[bossLocations.Length];
+        for (int i = 0; i < bosses.Length; i++)
+        {
+            bosses[i] = Addressables.LoadAssetAsync<SpawnCard>(bossLocations[i]).WaitForCompletion();
+        }
     }
 
     private void SpawnCardOnonSpawnedServerGlobal(SpawnCard.SpawnResult obj)
@@ -177,15 +194,28 @@ public class DarknessShrine
                 }
             }
 
-            int bossToSpawn = (int)(bosses.Length * Random.value);
+            int bossToSpawn = (int)((bosses.Length-1) * Random.value);
             GameObject boss = DirectorCore.instance.TrySpawnObject(new DirectorSpawnRequest(bosses[bossToSpawn],new DirectorPlacementRule() {placementMode = DirectorPlacementRule.PlacementMode.NearestNode,position = gameObject.transform.position},new Xoroshiro128Plus((ulong)(Random.value * ulong.MaxValue))){teamIndexOverride = TeamIndex.Monster, ignoreTeamMemberLimit = true});
             Inventory bossInventory = boss.GetComponent<Inventory>();
             bossInventory.SetEquipmentIndex(Darkness.DarknessEquipment.equipmentIndex);
             boss.transform.localScale *= 1.5f;
-            bossInventory.GiveRandomItems(5,false,false);
+            for (int i = 0; i < sacrificedItems.Count; i++)
+            {
+                ItemIndex ii = sacrificedItems[i];
+                int numItems = 1;
+                if (ItemCatalog.tier1ItemList.Contains(ii))
+                {
+                    numItems = 5;
+                }
+
+                if (ItemCatalog.tier2ItemList.Contains(ii))
+                {
+                    numItems = 3;
+                }
+                bossInventory.GiveItem(ii,numItems);
+            }
             bossInventory.GiveItemString("ShinyPearl",Darkness.DarknessLevel);
             bossBody = boss.GetComponent<CharacterBody>();
-            bossBody.master.isBoss = true;
         }
 
         public CharacterBody bossBody;
