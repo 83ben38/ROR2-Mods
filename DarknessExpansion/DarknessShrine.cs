@@ -43,6 +43,24 @@ public class DarknessShrine
         "RoR2/Base/Scav/cscScavBoss.asset"
     };
 
+    public static String[] yellowItemNames = new[]
+    {
+        "BeetleGland",
+        "Knurl",
+        "NovaOnLowHealth",
+        "SprintWisp",
+        "BleedOnHitAndExplode",
+        "SiphonOnLowHealth",
+        "MinorConstructOnKill",
+        "RoboBallBuddy",
+        "ParentEgg",
+        "LightningStrikeOnHit",
+        "FireballsOnHit",
+        "Pearl",
+        "ShinyPearl"
+    };
+
+
     public static SpawnCard[] bosses;
     public DarknessShrine()
     {
@@ -304,6 +322,49 @@ public class DarknessShrine
                 if (bossBody.master.IsDeadAndOutOfLivesServer())
                 {
                     //win
+                    List<ItemIndex> toGive = new List<ItemIndex>();
+                    if (bonusItemToGive != ItemIndex.None)
+                    {
+                        toGive.Add(bonusItemToGive);
+                    }
+                    else
+                    {
+                        for (int i = 0; i < sacrificedItems.Count; i++)
+                        {
+                            ItemIndex ii = sacrificedItems[i];
+                            ItemIndex nii;
+                            int itemCount = 1;
+                            if (ItemCatalog.tier1ItemList.Contains(ii))
+                            {
+                                nii = ItemCatalog.tier2ItemList[(int)(ItemCatalog.tier2ItemList.Count * Random.value)];
+                            }
+                            else if (ItemCatalog.tier2ItemList.Contains(ii))
+                            {
+                                nii = ItemCatalog.itemNameToIndex[
+                                    yellowItemNames[(int)(yellowItemNames.Length * Random.value)]];
+                            }
+                            else if (ItemCatalog.tier3ItemList.Contains(ii))
+                            {
+                                nii = ItemCatalog.tier1ItemList[(int)(ItemCatalog.tier1ItemList.Count * Random.value)];
+                                itemCount = 5;
+                            }
+                            else
+                            {
+                                nii = ItemCatalog.tier3ItemList[(int)(ItemCatalog.tier3ItemList.Count * Random.value)];
+                            }
+                            for (int j = 0; j < itemCount; j++)
+                            {
+                                toGive.Add(nii);
+                            }
+                        }
+                    }
+
+                    for (int i = 0; i < toGive.Count; i++)
+                    {
+                        float degrees = i * 2 * Mathf.PI / toGive.Count;
+                        Vector3 direction = new Vector3(Mathf.Sin(degrees),1,Mathf.Cos(degrees));
+                        PickupDropletController.CreatePickupDroplet(PickupCatalog.FindPickupIndex(toGive[i]),transform.position + (Vector3.up * 5f),direction*20f);
+                    }
                     bossBody = null;
                 }
             }
