@@ -6,7 +6,6 @@ using RoR2.Navigation;
 using RoR2.UI;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
-using UnityEngine.Events;
 using UnityEngine.Networking;
 using Random = UnityEngine.Random;
 
@@ -26,6 +25,12 @@ public class DarknessShrine
         .InstantiateClone("Darkness Item Selector");
 
     private InteractableSpawnCard spawnCard;
+
+    public static SpawnCard[] bosses = new[]
+    {
+        Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/Beetle/cscBeetleQueen.asset")
+            .WaitForCompletion()
+    };
     public DarknessShrine()
     {
         shrine1.name = "Shrine of Darkness";
@@ -102,6 +107,7 @@ public class DarknessShrine
         GameObject trigger2 = BaseUnityPlugin.Instantiate(new GameObject(), shrine2.transform);
         trigger2.AddComponent<BoxCollider>().isTrigger = true;
         trigger2.AddComponent<EntityLocator>().entity = shrine2;
+        
     }
 
     private void SpawnCardOnonSpawnedServerGlobal(SpawnCard.SpawnResult obj)
@@ -133,7 +139,7 @@ public class DarknessShrine
         public List<ItemIndex> sacrificedItems = new List<ItemIndex>();
         public void Start()
         {
-            purchaseInteraction.SetAvailableTrue();
+            purchaseInteraction.SetAvailable(false);
             purchaseInteraction.onPurchase.AddListener(OnPurchase);
         }
 
@@ -156,10 +162,27 @@ public class DarknessShrine
                 scale = 1f,
                 color = Color.black
             },true);
-            Chat.SendBroadcastChat(new Chat.SimpleChatMessage(){baseToken = "<style=cEvent><color=#000000>Darkness Increased!</color></style>"});
+            Chat.SendBroadcastChat(new Chat.SimpleChatMessage(){baseToken = "<style=cEvent><color=#000000>The Darkness Increases!</color></style>"});
             purchaseInteraction.SetAvailable(false);
             Darkness.DarknessLevel++;
             Darkness.UpdateDarkness();
+            for (int i = 0; i < 3; i++)
+            {
+                if (terminalGameObjects[i])
+                {
+                    DarknessPotentialManager dpm = terminalGameObjects[i].GetComponent<DarknessPotentialManager>();
+                    dpm.shrinking = 0;
+                    dpm.purchaseInteraction.SetAvailable(false);
+                }
+            }
+
+            int bossToSpawn = (int)(bosses.Length * Random.value);
+            GameObject boss = DirectorCore.instance.TrySpawnObject(new DirectorSpawnRequest(bosses[bossToSpawn],new DirectorPlacementRule() {placementMode = DirectorPlacementRule.PlacementMode.NearestNode,position = gameObject.transform.position},new Xoroshiro128Plus((ulong)(Random.value * ulong.MaxValue))){teamIndexOverride = TeamIndex.Monster, ignoreTeamMemberLimit = true});
+            Inventory bossInventory = boss.GetComponent<Inventory>();
+            bossInventory.SetEquipmentIndex(Darkness.DarknessEquipment.equipmentIndex);
+            boss.transform.localScale *= 1.5f;
+            bossInventory.GiveRandomItems(5,false,false);
+            bossInventory.GiveItemString("ShinyPearl",Darkness.DarknessLevel);
         }
     }
 
@@ -171,7 +194,7 @@ public class DarknessShrine
         public PickupPickerController ppc;
         private Interactor interactor;
         private GameObject UIObject;
-        private int shrinking = -1;
+        public int shrinking = -1;
         public void Start()
         {
             purchaseInteraction.SetAvailableTrue();
@@ -195,6 +218,7 @@ public class DarknessShrine
             Inventory inventory = interactor.GetComponent<CharacterBody>().inventory;
             inventory.RemoveItem(ii);
             shrinking = 0;
+            parent.purchaseInteraction.SetAvailableTrue();
         }
 
 
