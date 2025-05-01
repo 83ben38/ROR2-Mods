@@ -357,7 +357,6 @@ public class DarknessShrine
                 }
                 if (bossSquad.defeatedServer)
                 {
-                    Log.Debug("Here");
                     //win
                     List<ItemIndex> toGive = new List<ItemIndex>();
                     if (bonusItemToGive != ItemIndex.None)

@@ -1,16 +1,18 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using EntityStates.TitanMonster;
 using R2API;
 using RoR2;
+using RoR2.Items;
 using RoR2.Projectile;
 using RoR2.UI;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
-using CharacterMaster = On.RoR2.CharacterMaster;
 using HealthComponent = On.RoR2.HealthComponent;
 using Object = UnityEngine.Object;
+using Random = UnityEngine.Random;
 
 
 namespace DarknessExpansion;
@@ -55,11 +57,34 @@ public class DarknessItems
         new DarkStacksItem();
         Inventory.onServerItemGiven += InventoryOnonServerItemGiven;
         onKillDarknessEnemy += body => body.inventory.GiveItem(stackingDarkItem);
-        CharacterMaster.OnInventoryChanged += CharacterMasterOnOnInventoryChanged;
+        On.RoR2.CharacterMaster.OnInventoryChanged += CharacterMasterOnOnInventoryChanged;
         HealthComponent.Heal += HealthComponentOnHeal;
         RecalculateStatsAPI.GetStatCoefficients += RecalculateStatsAPIOnGetStatCoefficients;
+
+        On.RoR2.Items.BaseItemBodyBehavior.Init += BaseItemBodyBehaviorOnInit;
     }
-    
+
+    private void BaseItemBodyBehaviorOnInit(On.RoR2.Items.BaseItemBodyBehavior.orig_Init orig)
+    {
+        orig();
+        List<BaseItemBodyBehavior.ItemTypePair> itemTypePairs = BaseItemBodyBehavior.server.itemTypePairs.ToList();
+        itemTypePairs.Add(new BaseItemBodyBehavior.ItemTypePair()
+        {
+            behaviorType = typeof(DarkBeetleItem.DarkBeetleBodyBehavior),
+            itemIndex = DarkBeetleItem.darkBeetleItem.itemIndex
+        });
+        BaseItemBodyBehavior.server.SetItemTypePairs(itemTypePairs);
+        itemTypePairs = BaseItemBodyBehavior.shared.itemTypePairs.ToList();
+        itemTypePairs.Add(new BaseItemBodyBehavior.ItemTypePair()
+        {
+            behaviorType = typeof(DarkBeetleItem.DarkBeetleBodyBehavior),
+            itemIndex = DarkBeetleItem.darkBeetleItem.itemIndex
+        });
+        BaseItemBodyBehavior.shared.SetItemTypePairs(itemTypePairs);
+        itemTypePairs = BaseItemBodyBehavior.client.itemTypePairs.ToList();
+        BaseItemBodyBehavior.client.SetItemTypePairs(itemTypePairs);
+    }
+
 
     #region allItems
     private void CreateDropletPrefab()
@@ -93,7 +118,7 @@ public class DarknessItems
         darkTier.dropletDisplayPrefab = Temp;
     }
 
-    private void CharacterMasterOnOnInventoryChanged(CharacterMaster.orig_OnInventoryChanged orig, RoR2.CharacterMaster self)
+    private void CharacterMasterOnOnInventoryChanged(On.RoR2.CharacterMaster.orig_OnInventoryChanged orig, RoR2.CharacterMaster self)
     {
         int numDarknessStacks = self.inventory.GetItemCount(stackingDarkItem);
         int numDarkConstructItems = self.inventory.GetItemCount(DarkConstructItem.darkConstructItem);
@@ -486,8 +511,8 @@ public class DarknessItems
         private GameObject darkBeetlePickup = Addressables
             .LoadAssetAsync<GameObject>("RoR2/Base/BeetleGland/PickupBeetleGland.prefab")
             .WaitForCompletion();
-        
 
+        private static BuffDef debuffApplier;
         public DarkBeetleItem()
         {
             darkBeetleItem = ScriptableObject.CreateInstance<ItemDef>();
@@ -510,6 +535,109 @@ public class DarknessItems
             LanguageAPI.Add("DARK_BEETLE_PICKUP",
                 "Summon a beetle guard which applies random debuffs on hit. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkBeetleItem);
+
+            debuffApplier = ScriptableObject.CreateInstance<BuffDef>();
+            debuffApplier.isHidden = true;
+            debuffApplier.canStack = true;
+            debuffApplier.isCooldown = false;
+            ContentAddition.AddBuffDef(debuffApplier);
+            testItem = darkBeetleItem;
+            On.RoR2.GlobalEventManager.ProcessHitEnemy += GlobalEventManagerOnProcessHitEnemy;
+            On.RoR2.CharacterMaster.GetDeployableSameSlotLimit += CharacterMasterOnGetDeployableSameSlotLimit;
+        }
+
+        private int CharacterMasterOnGetDeployableSameSlotLimit(On.RoR2.CharacterMaster.orig_GetDeployableSameSlotLimit orig, CharacterMaster self, DeployableSlot slot)
+        {
+            if (slot == DeployableSlot.BeetleGuardAlly)
+            {
+                int num = 1;
+                if (RunArtifactManager.instance.IsArtifactEnabled(RoR2Content.Artifacts.swarmsArtifactDef))
+                {
+                    num = 2;
+                }
+
+                return num * (self.inventory.GetItemCount(RoR2Content.Items.BeetleGland) + self.inventory.GetItemCount(darkBeetleItem));
+            }
+
+            return orig(self, slot);
+        }
+        private void GlobalEventManagerOnProcessHitEnemy(On.RoR2.GlobalEventManager.orig_ProcessHitEnemy orig, GlobalEventManager self, DamageInfo damageinfo, GameObject victim)
+        {
+            CharacterBody cb = damageinfo.attacker.GetComponent<CharacterBody>();
+            if (cb.HasBuff(debuffApplier))
+            {
+                int numBuffStacks = cb.GetBuffCount(debuffApplier);
+                for (int i = 0; i < numBuffStacks; i++)
+                {
+                    CharacterBody cb2 = victim.GetComponent<CharacterBody>();
+                    BuffDef bd = BuffCatalog.buffDefs[(int)(BuffCatalog.buffDefs.Length * Random.value)];
+                    while (!bd.isDebuff)
+                    {
+                        bd = BuffCatalog.buffDefs[(int)(BuffCatalog.buffDefs.Length * Random.value)];
+                    }
+                    cb2.AddBuff(bd);
+                }
+            }
+
+            orig(self, damageinfo, victim);
+        }
+
+        public class DarkBeetleBodyBehavior : BaseItemBodyBehavior
+        {
+            [ItemDefAssociation(useOnServer = true, useOnClient = false)]
+            private static ItemDef GetItemDef()
+            {
+                return darkBeetleItem;
+            }
+
+            private void Start()
+            {
+                cm = body.master;
+                guardResummonCooldown = 0f;
+            }
+
+            private void FixedUpdate()
+            {
+                int deployableCount = cm.GetDeployableCount(DeployableSlot.BeetleGuardAlly);
+                if (deployableCount < stack)
+                {
+                    guardResummonCooldown -= Time.fixedDeltaTime;
+                    if (guardResummonCooldown <= 0f)
+                    {
+                        DirectorSpawnRequest directorSpawnRequest = new DirectorSpawnRequest(LegacyResourcesAPI.Load<SpawnCard>("SpawnCards/CharacterSpawnCards/cscBeetleGuardAlly"), new DirectorPlacementRule
+                        {
+                            placementMode = DirectorPlacementRule.PlacementMode.Approximate,
+                            minDistance = 3f,
+                            maxDistance = 40f,
+                            spawnOnTarget = transform
+                        }, RoR2Application.rng);
+                        directorSpawnRequest.summonerBodyObject = gameObject;
+                        directorSpawnRequest.onSpawnedServer = OnSpawned;
+                        DirectorCore.instance.TrySpawnObject(directorSpawnRequest);
+                        if (deployableCount < stack)
+                        {
+                            guardResummonCooldown = 1f;
+                            return;
+                        }
+                        guardResummonCooldown = 30f;
+                    }
+                }
+            }
+
+            private void OnSpawned(SpawnCard.SpawnResult obj)
+            {
+                Deployable d = obj.spawnedInstance.GetComponent<Deployable>();
+                cm.AddDeployable(d,DeployableSlot.BeetleGuardAlly);
+                obj.spawnedInstance.GetComponent<CharacterMaster>().GetBody().baseDamage *= stack * 3;
+                obj.spawnedInstance.GetComponent<CharacterMaster>().GetBody().baseMaxHealth *= stack * 3;
+                for (int i = 0; i < stack; i++)
+                {
+                    obj.spawnedInstance.GetComponent<CharacterMaster>().GetBody().AddBuff(debuffApplier);
+                }
+            }
+            
+            private CharacterMaster cm;
+            private float guardResummonCooldown;
         }
     }
     
