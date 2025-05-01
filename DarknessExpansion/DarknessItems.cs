@@ -63,7 +63,10 @@ public class DarknessItems
 
         On.RoR2.Items.BaseItemBodyBehavior.Init += BaseItemBodyBehaviorOnInit;
     }
+    
 
+
+    #region allItems
     private void BaseItemBodyBehaviorOnInit(On.RoR2.Items.BaseItemBodyBehavior.orig_Init orig)
     {
         orig();
@@ -84,9 +87,6 @@ public class DarknessItems
         itemTypePairs = BaseItemBodyBehavior.client.itemTypePairs.ToList();
         BaseItemBodyBehavior.client.SetItemTypePairs(itemTypePairs);
     }
-
-
-    #region allItems
     private void CreateDropletPrefab()
     { 
         GameObject Temp = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/LunarOrb.prefab").WaitForCompletion().InstantiateClone("Darkness Orb", true);
@@ -182,7 +182,7 @@ public class DarknessItems
             int numDarkJellyfish = self.inventory.GetItemCount(DarkJellyfishItem.darkJellyfishItem);
             int numDarkWisps = self.inventory.GetItemCount(DarkWispItem.darkWispItem);
             int numDarkBleedItems = self.inventory.GetItemCount(DarkBleedItem.darkBleedItem);
-            int numDarkCoreItems = self.inventory.GetItemCount(DarkCoreItem.darkCoreItem);
+            int numDarkCoreStacks = self.inventory.GetItemCount(DarkCoreItem.DarkStacksItem.stackingDarkItem);
             int numDarkParentItems = self.inventory.GetItemCount(DarkParentItem.darkParentItem);
             int numDarkLightningItems = self.inventory.GetItemCount(DarkLightningItem.darkLightningItem);
             int numDarkFires = self.inventory.GetItemCount(DarkFireItem.darkFireItem);
@@ -202,6 +202,7 @@ public class DarknessItems
             float darkBetterPearlMultiplier = 1 + (numDarkBetterPearls * .5f);
             darkBetterPearlMultiplier *= 1 + (numDarkBetterPearls * numDarknessStacks * .01f);
             darkBetterPearlMultiplier -= 1;
+            darkBetterPearlMultiplier += .02f * numDarkCoreStacks;
             args.healthMultAdd += darkBetterPearlMultiplier;
             args.regenMultAdd += darkBetterPearlMultiplier;
             args.moveSpeedMultAdd += darkBetterPearlMultiplier;
@@ -651,9 +652,86 @@ public class DarknessItems
     }
     #endregion
     
+    
     #region uncompleteItems
    
-    
+    public class DarkCoreItem
+    {
+        public static ItemDef darkCoreItem;
+
+        private Sprite darkCoreSprite =
+            Addressables.LoadAssetAsync<Sprite>("RoR2/Base/RoboBallBuddy/texEmpathyChip.png").WaitForCompletion();
+
+        private GameObject darkCorePickup = Addressables
+            .LoadAssetAsync<GameObject>("RoR2/Base/RoboBallBuddy/PickupEmpathyChip.prefab")
+            .WaitForCompletion();
+        
+        public class DarkStacksItem
+        {
+            public static ItemDef stackingDarkItem;
+            private Sprite darkGolemSprite =
+                Addressables.LoadAssetAsync<Sprite>("RoR2/Base/Knurl/texKnurlIcon.png").WaitForCompletion();
+
+            private GameObject darkGolemPickup = Addressables
+                .LoadAssetAsync<GameObject>("RoR2/Base/Knurl/PickupKnurl.prefab")
+                .WaitForCompletion();
+
+            public DarkStacksItem()
+            {
+                stackingDarkItem = ScriptableObject.CreateInstance<ItemDef>();
+                stackingDarkItem.name = "DARK_STACK_NAME";
+                stackingDarkItem.descriptionToken = "DARK_STACK_DESCRIPTION";
+                stackingDarkItem.nameToken = "DARK_STACK_NAME";
+                stackingDarkItem.loreToken = "DARK_STACK_LORE";
+                stackingDarkItem.pickupToken = "DARK_STACK_PICKUP";
+                stackingDarkItem.pickupIconSprite = darkGolemSprite;
+                stackingDarkItem.pickupModelPrefab = darkGolemPickup;
+                stackingDarkItem.canRemove = false;
+                stackingDarkItem.hidden = true;
+                stackingDarkItem._itemTierDef = darkTier;
+                var displayRules = new ItemDisplayRuleDict(null);
+                stackingDarkItem.itemIndex = ItemIndex.Count;
+                ItemAPI.Add(new CustomItem(stackingDarkItem, displayRules));
+            }
+        }
+        public DarkCoreItem()
+        {
+            darkCoreItem = ScriptableObject.CreateInstance<ItemDef>();
+            darkCoreItem.name = "DARK_CORE_NAME";
+            darkCoreItem.descriptionToken = "DARK_CORE_DESCRIPTION";
+            darkCoreItem.nameToken = "DARK_CORE_NAME";
+            darkCoreItem.loreToken = "DARK_CORE_LORE";
+            darkCoreItem.pickupToken = "DARK_CORE_PICKUP";
+            darkCoreItem.pickupIconSprite = darkCoreSprite;
+            darkCoreItem.pickupModelPrefab = darkCorePickup;
+            darkCoreItem.canRemove = true;
+            darkCoreItem.hidden = false;
+            darkCoreItem._itemTierDef = darkTier;
+            var displayRules = new ItemDisplayRuleDict(null);
+            darkCoreItem.itemIndex = ItemIndex.Count;
+            ItemAPI.Add(new CustomItem(darkCoreItem, displayRules));
+            LanguageAPI.Add("DARK_CORE_NAME", "Sympathy Cores");
+            LanguageAPI.Add("DARK_CORE_DESCRIPTION", "Every 10 seconds, summon two Solus Probes. All allies gain +100% (+100% per stack) health and damage per ally on your team. Upon killing a dark enemy, increase all of your allies stats by 2% (+2% per stack).");
+            LanguageAPI.Add("DARK_CORE_PICKUP",
+                "Summon probes. All allies gain stats per ally on your team. Grows stronger as it absorbs darkness.");
+            darkItems.Add(darkCoreItem);
+            new DarkStacksItem();
+            MasterSummon.onServerMasterSummonGlobal+= MasterSummonOnonServerMasterSummonGlobal;
+        }
+
+        private void MasterSummonOnonServerMasterSummonGlobal(MasterSummon.MasterSummonReport obj)
+        {
+            if (obj.leaderMasterInstance.inventory.GetItemCount(darkCoreItem) > 0)
+            {
+                int stack = obj.leaderMasterInstance.inventory.GetItemCount(darkCoreItem);
+                int numAllies = obj.leaderMasterInstance.deployablesList.Count + 2;
+                int numStacks = stack * obj.leaderMasterInstance.inventory.GetItemCount(stackingDarkItem);
+                obj.summonMasterInstance.inventory.GiveItem(DarkStacksItem.stackingDarkItem,numStacks);
+                obj.summonMasterInstance.GetBody().baseDamage *= stack * numAllies; 
+                obj.summonMasterInstance.GetBody().baseMaxHealth *= stack * numAllies; 
+            }
+        }
+    }
     public class DarkJellyfishItem
     {
         public static ItemDef darkJellyfishItem;
@@ -798,41 +876,6 @@ public class DarknessItems
         }
     }
     
-    public class DarkCoreItem
-    {
-        public static ItemDef darkCoreItem;
-
-        private Sprite darkCoreSprite =
-            Addressables.LoadAssetAsync<Sprite>("RoR2/Base/RoboBallBuddy/texEmpathyChip.png").WaitForCompletion();
-
-        private GameObject darkCorePickup = Addressables
-            .LoadAssetAsync<GameObject>("RoR2/Base/RoboBallBuddy/PickupEmpathyChip.prefab")
-            .WaitForCompletion();
-        
-
-        public DarkCoreItem()
-        {
-            darkCoreItem = ScriptableObject.CreateInstance<ItemDef>();
-            darkCoreItem.name = "DARK_CORE_NAME";
-            darkCoreItem.descriptionToken = "DARK_CORE_DESCRIPTION";
-            darkCoreItem.nameToken = "DARK_CORE_NAME";
-            darkCoreItem.loreToken = "DARK_CORE_LORE";
-            darkCoreItem.pickupToken = "DARK_CORE_PICKUP";
-            darkCoreItem.pickupIconSprite = darkCoreSprite;
-            darkCoreItem.pickupModelPrefab = darkCorePickup;
-            darkCoreItem.canRemove = true;
-            darkCoreItem.hidden = false;
-            darkCoreItem._itemTierDef = darkTier;
-            var displayRules = new ItemDisplayRuleDict(null);
-            darkCoreItem.itemIndex = ItemIndex.Count;
-            ItemAPI.Add(new CustomItem(darkCoreItem, displayRules));
-            LanguageAPI.Add("DARK_CORE_NAME", "Sympathy Cores");
-            LanguageAPI.Add("DARK_CORE_DESCRIPTION", "Every 10 seconds, summon two Solus Probes. All allies gain +100% (+100% per stack) health and damage per ally on your team. Upon killing a dark enemy, increase all of your allies stats by 2% (+2% per stack).");
-            LanguageAPI.Add("DARK_CORE_PICKUP",
-                "Summon probes. All allies gain stats per ally on your team. Grows stronger as it absorbs darkness.");
-            darkItems.Add(darkCoreItem);
-        }
-    }
     
     public class DarkParentItem
     {
