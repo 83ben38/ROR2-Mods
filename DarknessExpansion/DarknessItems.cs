@@ -498,10 +498,8 @@ public class DarknessItems
             }
         }
     }
-    #endregion
     
-    #region uncompleteItems
-    public class DarkBeetleItem
+     public class DarkBeetleItem
     {
         public static ItemDef darkBeetleItem;
 
@@ -544,6 +542,17 @@ public class DarknessItems
             testItem = darkBeetleItem;
             On.RoR2.GlobalEventManager.ProcessHitEnemy += GlobalEventManagerOnProcessHitEnemy;
             On.RoR2.CharacterMaster.GetDeployableSameSlotLimit += CharacterMasterOnGetDeployableSameSlotLimit;
+            MasterSummon.onServerMasterSummonGlobal += MasterSummonOnonServerMasterSummonGlobal;
+        }
+
+        private void MasterSummonOnonServerMasterSummonGlobal(MasterSummon.MasterSummonReport obj)
+        {
+            if (obj.leaderMasterInstance.inventory.GetItemCount(darkBeetleItem) > 0)
+            {
+                float leaderAttackSpeed = obj.leaderMasterInstance.GetBody().attackSpeed;
+                int numSyringes = (int)((leaderAttackSpeed - 1) / .15f);
+                obj.summonMasterInstance.inventory.GiveItemString("Syringe",numSyringes);
+            }
         }
 
         private int CharacterMasterOnGetDeployableSameSlotLimit(On.RoR2.CharacterMaster.orig_GetDeployableSameSlotLimit orig, CharacterMaster self, DeployableSlot slot)
@@ -640,6 +649,10 @@ public class DarknessItems
             private float guardResummonCooldown;
         }
     }
+    #endregion
+    
+    #region uncompleteItems
+   
     
     public class DarkJellyfishItem
     {
