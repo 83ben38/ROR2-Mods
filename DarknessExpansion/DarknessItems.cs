@@ -271,6 +271,10 @@ public class DarknessItems
                     {
                         bool isCrit = self.body.RollCrit();
                         float damageValue = self.body.damage * (self.body.maxHealth + 1000f) * numDarkGolems / 500f;
+                        if (self.body.teamComponent.teamIndex != TeamIndex.Player)
+                        {
+                            damageValue = self.body.damage * (self.body.maxHealth + 10000f) * numDarkGolems / 5000f;
+                        }
                         FireProjectileInfo fireProjectileInfo = default(FireProjectileInfo);
                         fireProjectileInfo.projectilePrefab = fistProjectilePrefab;
                         fireProjectileInfo.position = damageinfo.attacker.transform.position;
