@@ -69,7 +69,8 @@ public class DarknessShrine
         shrine1.AddComponent<NetworkIdentity>();
         shrine1.GetComponent<MeshRenderer>().sharedMaterial = darkMaterial;
         shrine1.AddComponent<MeshCollider>();
-
+        shrine1.AddComponent<CombatDirector>().enabled = false;
+        
         DarknessShrineManager dsm = shrine1.AddComponent<DarknessShrineManager>();
         PurchaseInteraction interaction = shrine1.AddComponent<PurchaseInteraction>();
         interaction.contextToken = "Reckon with the powers of Darkness (E)";
@@ -214,7 +215,7 @@ public class DarknessShrine
             }
 
             bonusItemToGive = ItemIndex.None;
-            int bossToSpawn = (int)((bosses.Length-1) * Random.value);
+            int bossToSpawn = -1;
             if (sacrificedItems.Count == 3)
             {
                 if (sacrificedItems[0] == sacrificedItems[1] && sacrificedItems[0] == sacrificedItems[2])
@@ -285,42 +286,78 @@ public class DarknessShrine
                     }
                 }
             }
-            GameObject boss = DirectorCore.instance.TrySpawnObject(new DirectorSpawnRequest(bosses[bossToSpawn],new DirectorPlacementRule() {placementMode = DirectorPlacementRule.PlacementMode.NearestNode,position = gameObject.transform.position},new Xoroshiro128Plus((ulong)(Random.value * ulong.MaxValue))){teamIndexOverride = TeamIndex.Monster, ignoreTeamMemberLimit = true});
-            Inventory bossInventory = boss.GetComponent<Inventory>();
-            bossInventory.SetEquipmentIndex(Darkness.DarknessEquipment.equipmentIndex);
-            boss.transform.localScale *= 1.5f;
-            for (int i = 0; i < sacrificedItems.Count; i++)
-            {
-                ItemIndex ii = sacrificedItems[i];
-                int numItems = 1;
-                if (ItemCatalog.tier1ItemList.Contains(ii))
-                {
-                    numItems = 5;
-                }
 
-                if (ItemCatalog.tier2ItemList.Contains(ii))
-                {
-                    numItems = 3;
-                }
-                bossInventory.GiveItem(ii,numItems);
-            }
-
-            if (bonusItemToGive != ItemIndex.None)
+            CombatDirector bossSpawner = gameObject.GetComponent<CombatDirector>();
+            bossSpawner.monsterCardsSelection = new WeightedSelection<DirectorCard>();
+            if (bossToSpawn == -1)
             {
-                bossInventory.GiveItem(bonusItemToGive);
+                for (int i = 0; i < bosses.Length; i++)
+                {
+                    bossSpawner.monsterCardsSelection.AddChoice(new DirectorCard(){spawnCard = bosses[i], selectionWeight = 1},1);
+                }
             }
-            bossInventory.GiveItemString("ShinyPearl",Darkness.DarknessLevel);
-            bossBody = boss.GetComponent<CharacterBody>();
+            else
+            {
+                bossSpawner.monsterCardsSelection.AddChoice(new DirectorCard(){spawnCard = bosses[bossToSpawn], selectionWeight = 1},1);
+            }
+            bossSpawner.rng = new Xoroshiro128Plus((ulong)(Random.value * ulong.MaxValue));
+            CombatSquad squad = gameObject.AddComponent<CombatSquad>();
+            bossSpawner.combatSquad = squad;
+            bossSpawner.teamIndex = TeamIndex.Monster;
+            bossSpawner.currentSpawnTarget = gameObject;
+            bossSpawner.ignoreTeamSizeLimit = true;
+            bossSpawner.shouldSpawnOneWave = true;
+            bossSpawner.enabled = true;
+            bossSpawner.monsterCredit +=
+                (int)(600f * Mathf.Pow(Run.instance.compensatedDifficultyCoefficient, 0.5f));
+            bossSpawner.SetNextSpawnAsBoss();
+            
+
+            bossSquad = squad;
         }
 
-        public CharacterBody bossBody;
+        public CombatSquad bossSquad;
+        public bool changedEnemies = false;
 
         private void FixedUpdate()
         {
-            if (bossBody)
+            if (bossSquad)
             {
-                if (bossBody.master.IsDeadAndOutOfLivesServer())
+                if (!changedEnemies && bossSquad.membersList.Count > 0)
                 {
+                    List<CharacterMaster> boss = bossSquad.membersList;
+                    for (int j = 0; j < boss.Count; j++)
+                    {
+                        boss[j].isBoss = true;
+                        boss[j].transform.localScale *= 1.5f;
+                        Inventory bossInventory = boss[j].inventory;
+                        bossInventory.SetEquipmentIndex(Darkness.DarknessEquipment.equipmentIndex);
+                        for (int i = 0; i < sacrificedItems.Count; i++)
+                        {
+                            ItemIndex ii = sacrificedItems[i];
+                            int numItems = 1;
+                            if (ItemCatalog.tier1ItemList.Contains(ii))
+                            {
+                                numItems = 5;
+                            }
+
+                            if (ItemCatalog.tier2ItemList.Contains(ii))
+                            {
+                                numItems = 3;
+                            }
+                            bossInventory.GiveItem(ii,numItems);
+                        }
+
+                        if (bonusItemToGive != ItemIndex.None)
+                        {
+                            bossInventory.GiveItem(bonusItemToGive);
+                        }
+                        bossInventory.GiveItemString("ShinyPearl",Darkness.DarknessLevel);
+                    }
+                }
+                if (bossSquad.defeatedServer)
+                {
+                    Log.Debug("Here");
                     //win
                     List<ItemIndex> toGive = new List<ItemIndex>();
                     if (bonusItemToGive != ItemIndex.None)
@@ -365,7 +402,8 @@ public class DarknessShrine
                         Vector3 direction = new Vector3(Mathf.Sin(degrees),1,Mathf.Cos(degrees));
                         PickupDropletController.CreatePickupDroplet(PickupCatalog.FindPickupIndex(toGive[i]),transform.position + (Vector3.up * 5f),direction*20f);
                     }
-                    bossBody = null;
+
+                    bossSquad = null;
                 }
             }
         }

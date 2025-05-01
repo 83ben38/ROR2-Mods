@@ -543,7 +543,6 @@ public class DarknessItems
             LanguageAPI.Add("DARK_JELLYFISH_PICKUP",
                 "Upon reaching low health, explode in an area. Upon using your secondary, release a ball of lightning. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkJellyfishItem);
-            testItem = darkJellyfishItem;
         }
     }
     public class DarkWispItem
