@@ -89,7 +89,7 @@ public class DarknessShrine
         card.nodeGraphType = MapNodeGroup.GraphType.Ground;
         card.requiredFlags = NodeFlags.None;
         card.forbiddenFlags = NodeFlags.NoShrineSpawn;
-        card.directorCreditCost = 20;
+        card.directorCreditCost = 10;
         card.occupyPosition = true;
         card.orientToFloor = false;
         card.skipSpawnWhenSacrificeArtifactEnabled = false;
@@ -97,7 +97,7 @@ public class DarknessShrine
 
         DirectorCard dc = new DirectorCard()
         {
-            selectionWeight = 500,
+            selectionWeight = 100,
             spawnCard = card
         };
 
