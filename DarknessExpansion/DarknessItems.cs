@@ -679,11 +679,11 @@ public class DarknessItems
             public DarkStacksItem()
             {
                 stackingDarkItem = ScriptableObject.CreateInstance<ItemDef>();
-                stackingDarkItem.name = "DARK_STACK_NAME";
-                stackingDarkItem.descriptionToken = "DARK_STACK_DESCRIPTION";
-                stackingDarkItem.nameToken = "DARK_STACK_NAME";
-                stackingDarkItem.loreToken = "DARK_STACK_LORE";
-                stackingDarkItem.pickupToken = "DARK_STACK_PICKUP";
+                stackingDarkItem.name = "DARK_STACK_NAME2";
+                stackingDarkItem.descriptionToken = "DARK_STACK_DESCRIPTION2";
+                stackingDarkItem.nameToken = "DARK_STACK_NAME2";
+                stackingDarkItem.loreToken = "DARK_STACK_LORE2";
+                stackingDarkItem.pickupToken = "DARK_STACK_PICKUP2";
                 stackingDarkItem.pickupIconSprite = darkGolemSprite;
                 stackingDarkItem.pickupModelPrefab = darkGolemPickup;
                 stackingDarkItem.canRemove = false;

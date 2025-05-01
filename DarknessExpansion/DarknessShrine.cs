@@ -415,7 +415,6 @@ public class DarknessShrine
         public NetworkUIPromptController networkUIPromptController;
         public PickupPickerController ppc;
         private Interactor interactor;
-        private GameObject UIObject;
         public int shrinking = -1;
         public void Start()
         {
