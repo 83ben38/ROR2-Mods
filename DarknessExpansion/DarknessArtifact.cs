@@ -26,7 +26,6 @@ public class DarknessArtifact
 
     private void RunOnonRunStartGlobal(Run obj)
     {
-        
         if (RunArtifactManager.instance.IsArtifactEnabled(darknessArtifact))
         {
             Darkness.DarknessLevel += 3;

@@ -63,18 +63,21 @@ public class Darkness
 
     private void SpawnCardOnonSpawnedServerGlobal(SpawnCard.SpawnResult obj)
     {
-        Inventory i = obj.spawnedInstance.GetComponent<Inventory>();
-        if (i != null)
+        if (obj.spawnedInstance)
         {
-            if (i.GetEquipmentIndex() == DarknessEquipment.equipmentIndex)
+            Inventory i = obj.spawnedInstance.GetComponent<Inventory>();
+            if (i)
             {
-                float itemChance = DarknessLevel / 10f;
-                if (Random.value < itemChance)
+                if (i.GetEquipmentIndex() == DarknessEquipment.equipmentIndex)
                 {
-                    List<ItemDef> li = DarknessItems.darkItems;
-                    i.GiveItem(li[(int)(li.Count * Random.value)]);
-                    Log.Debug("Giving Item");
-                    
+                    float itemChance = DarknessLevel / 10f;
+                    if (Random.value < itemChance)
+                    {
+                        List<ItemDef> li = DarknessItems.darkItems;
+                        i.GiveItem(li[(int)(li.Count * Random.value)]);
+                        Log.Debug("Giving Item");
+
+                    }
                 }
             }
         }

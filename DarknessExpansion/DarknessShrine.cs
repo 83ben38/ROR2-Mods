@@ -149,21 +149,23 @@ public class DarknessShrine
 
     private void SpawnCardOnonSpawnedServerGlobal(SpawnCard.SpawnResult obj)
     {
-        DarknessShrineManager dsm = obj.spawnedInstance.GetComponent<DarknessShrineManager>();
-        if (dsm != null)
-        {
-            Log.Debug("Darkness Shrine Found");
-            dsm.transform.Rotate(-90,-90,-90);
-            dsm.purchaseInteraction.SetAvailable(true);
-            dsm.createPotentials(shrine2,spawnCard);
-        }
+        if (obj.spawnedInstance) {
+            DarknessShrineManager dsm = obj.spawnedInstance.GetComponent<DarknessShrineManager>();
+            if (dsm)
+            {
+                Log.Debug("Darkness Shrine Found");
+                dsm.transform.Rotate(-90,-90,-90);
+                dsm.purchaseInteraction.SetAvailable(true);
+                dsm.createPotentials(shrine2,spawnCard);
+            }
 
-        DarknessPotentialManager dpm = obj.spawnedInstance.GetComponent<DarknessPotentialManager>();
-        if (dpm != null)
-        {
-            Log.Debug("Darkness Potential Found");
-            dpm.transform.Rotate(-90,-90,-90);
-            dpm.purchaseInteraction.SetAvailable(true);
+            DarknessPotentialManager dpm = obj.spawnedInstance.GetComponent<DarknessPotentialManager>();
+            if (dpm)
+            {
+                Log.Debug("Darkness Potential Found");
+                dpm.transform.Rotate(-90,-90,-90);
+                dpm.purchaseInteraction.SetAvailable(true);
+            }
         }
     }
 
@@ -328,8 +330,6 @@ public class DarknessShrine
                     List<CharacterMaster> boss = bossSquad.membersList;
                     for (int j = 0; j < boss.Count; j++)
                     {
-                        boss[j].isBoss = true;
-                        boss[j].transform.localScale *= 1.5f;
                         Inventory bossInventory = boss[j].inventory;
                         bossInventory.SetEquipmentIndex(Darkness.DarknessEquipment.equipmentIndex);
                         for (int i = 0; i < sacrificedItems.Count; i++)

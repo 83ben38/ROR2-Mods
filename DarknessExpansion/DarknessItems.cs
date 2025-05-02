@@ -120,22 +120,24 @@ public class DarknessItems
 
     private void CharacterMasterOnOnInventoryChanged(On.RoR2.CharacterMaster.orig_OnInventoryChanged orig, RoR2.CharacterMaster self)
     {
-        int numDarknessStacks = self.inventory.GetItemCount(stackingDarkItem);
-        int numDarkConstructItems = self.inventory.GetItemCount(DarkConstructItem.darkConstructItem);
-        orig(self);
-        self.luck += numDarknessStacks * numDarkConstructItems * .03f;
+        if (self) if (self.inventory)
+        {
+            int numDarknessStacks = self.inventory.GetItemCount(stackingDarkItem);
+            int numDarkConstructItems = self.inventory.GetItemCount(DarkConstructItem.darkConstructItem);
+            orig(self);
+            self.luck += numDarknessStacks * numDarkConstructItems * .03f;
+        }
     }
 
     private float HealthComponentOnHeal(HealthComponent.orig_Heal orig, RoR2.HealthComponent self, float amount, ProcChainMask procchainmask, bool nonregen)
     {
-        if (self.body.inventory)
+        if (self) if (self.body) if (self.body.inventory)
         {
-            int numDarkClay = self.body.inventory.GetItemCount(DarkClayItem.darkClayItem);
+            int numDarkClay = self.body.inventory.GetItemCount(DarkClayItem.darkClayItem); 
             int numDarknessStacks = self.body.inventory.GetItemCount(stackingDarkItem);
             float healMultiplier = 1 + (numDarknessStacks * numDarkClay * .03f);
             return orig(self, amount * healMultiplier, procchainmask, nonregen);
         }
-
         return orig(self, amount, procchainmask, nonregen);
     }
     
@@ -159,7 +161,7 @@ public class DarknessItems
 
     private void InventoryOnonServerItemGiven(Inventory arg1, ItemIndex arg2, int arg3)
     {
-        if (arg1.currentEquipmentIndex != Darkness.DarknessEquipment.equipmentIndex)
+        if (arg1) if (arg1.currentEquipmentIndex != Darkness.DarknessEquipment.equipmentIndex)
         {
             if (darkItems.Contains(ItemCatalog.GetItemDef(arg2)))
             {
@@ -288,7 +290,7 @@ public class DarknessItems
         
         private void HealthComponentOnTakeDamageProcess(HealthComponent.orig_TakeDamageProcess orig, RoR2.HealthComponent self, DamageInfo damageinfo)
         {
-            if (self.body.inventory)
+            if (self) if (self.body) if (self.body.inventory)
             {
                 int numDarkGolems = self.body.inventory.GetItemCount(darkGolemItem);
                 if (numDarkGolems > 0)
@@ -548,7 +550,7 @@ public class DarknessItems
 
         private void MasterSummonOnonServerMasterSummonGlobal(MasterSummon.MasterSummonReport obj)
         {
-            if (obj.leaderMasterInstance.inventory.GetItemCount(darkBeetleItem) > 0)
+            if (obj.leaderMasterInstance) if (obj.leaderMasterInstance.inventory) if (obj.leaderMasterInstance.inventory.GetItemCount(darkBeetleItem) > 0)
             {
                 float leaderAttackSpeed = obj.leaderMasterInstance.GetBody().attackSpeed;
                 int numSyringes = (int)((leaderAttackSpeed - 1) / .15f);
@@ -573,19 +575,23 @@ public class DarknessItems
         }
         private void GlobalEventManagerOnProcessHitEnemy(On.RoR2.GlobalEventManager.orig_ProcessHitEnemy orig, GlobalEventManager self, DamageInfo damageinfo, GameObject victim)
         {
-            CharacterBody cb = damageinfo.attacker.GetComponent<CharacterBody>();
-            if (cb.HasBuff(debuffApplier))
+            if (damageinfo.attacker)
             {
-                int numBuffStacks = cb.GetBuffCount(debuffApplier);
-                for (int i = 0; i < numBuffStacks; i++)
+                CharacterBody cb = damageinfo.attacker.GetComponent<CharacterBody>();
+                if (cb) if (cb.HasBuff(debuffApplier))
                 {
-                    CharacterBody cb2 = victim.GetComponent<CharacterBody>();
-                    BuffDef bd = BuffCatalog.buffDefs[(int)(BuffCatalog.buffDefs.Length * Random.value)];
-                    while (!bd.isDebuff)
+                    int numBuffStacks = cb.GetBuffCount(debuffApplier);
+                    for (int i = 0; i < numBuffStacks; i++)
                     {
-                        bd = BuffCatalog.buffDefs[(int)(BuffCatalog.buffDefs.Length * Random.value)];
+                        CharacterBody cb2 = victim.GetComponent<CharacterBody>();
+                        BuffDef bd = BuffCatalog.buffDefs[(int)(BuffCatalog.buffDefs.Length * Random.value)];
+                        while (!bd.isDebuff)
+                        {
+                            bd = BuffCatalog.buffDefs[(int)(BuffCatalog.buffDefs.Length * Random.value)];
+                        }
+
+                        cb2.AddTimedBuff(bd, 10f);
                     }
-                    cb2.AddTimedBuff(bd,10f);
                 }
             }
 
@@ -636,13 +642,16 @@ public class DarknessItems
 
             private void OnSpawned(SpawnCard.SpawnResult obj)
             {
-                Deployable d = obj.spawnedInstance.GetComponent<Deployable>();
-                cm.AddDeployable(d,DeployableSlot.BeetleGuardAlly);
-                obj.spawnedInstance.GetComponent<CharacterMaster>().GetBody().baseDamage *= stack * 3;
-                obj.spawnedInstance.GetComponent<CharacterMaster>().GetBody().baseMaxHealth *= stack * 3;
-                for (int i = 0; i < stack; i++)
+                if (obj.spawnedInstance)
                 {
-                    obj.spawnedInstance.GetComponent<CharacterMaster>().GetBody().AddBuff(debuffApplier);
+                    Deployable d = obj.spawnedInstance.GetComponent<Deployable>();
+                    cm.AddDeployable(d, DeployableSlot.BeetleGuardAlly);
+                    obj.spawnedInstance.GetComponent<CharacterMaster>().GetBody().baseDamage *= stack * 3;
+                    obj.spawnedInstance.GetComponent<CharacterMaster>().GetBody().baseMaxHealth *= stack * 3;
+                    for (int i = 0; i < stack; i++)
+                    {
+                        obj.spawnedInstance.GetComponent<CharacterMaster>().GetBody().AddBuff(debuffApplier);
+                    }
                 }
             }
             
@@ -721,7 +730,7 @@ public class DarknessItems
 
         private void MasterSummonOnonServerMasterSummonGlobal(MasterSummon.MasterSummonReport obj)
         {
-            if (obj.leaderMasterInstance.inventory.GetItemCount(darkCoreItem) > 0)
+            if (obj.leaderMasterInstance) if (obj.leaderMasterInstance.inventory) if (obj.leaderMasterInstance.inventory.GetItemCount(darkCoreItem) > 0)
             {
                 int stack = obj.leaderMasterInstance.inventory.GetItemCount(darkCoreItem);
                 int numAllies = obj.leaderMasterInstance.deployablesList.Count + 2;
