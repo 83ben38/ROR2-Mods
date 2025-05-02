@@ -23,13 +23,19 @@ public class BigArtifact
 
     private void SpawnCardOnonSpawnedServerGlobal(SpawnCard.SpawnResult obj)
     {
-        if (RunArtifactManager.instance.IsArtifactEnabled(bigArtifact))
+        if (obj.spawnedInstance)
         {
-            obj.spawnedInstance.transform.localScale *= 3;
-            CharacterMaster cm = obj.spawnedInstance.GetComponent<CharacterMaster>();
-            if (cm != null)
+            if (RunArtifactManager.instance.IsArtifactEnabled(bigArtifact))
             {
-                cm.GetBody().transform.localScale *= 3;
+                obj.spawnedInstance.transform.localScale *= 3;
+                CharacterMaster cm = obj.spawnedInstance.GetComponent<CharacterMaster>();
+                if (cm)
+                {
+                    if (cm.GetBody())
+                    {
+                        cm.GetBody().transform.localScale *= 3;
+                    }
+                }
             }
         }
     }

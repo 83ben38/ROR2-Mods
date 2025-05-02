@@ -22,25 +22,23 @@ public class DarknessExpansion : BaseUnityPlugin
     private void Awake()
     {
         Log.Init(Logger);
-        new Darkness();
-        new DarknessShrine();
-        new DarknessArtifact();
-        new DarknessItems();
+        new BigArtifact();
+        new RandomArtifact();
     }
     
-    private void Update()
-    {
-        // This if statement checks if the player has currently pressed F2.
-        if (Input.GetKeyDown(KeyCode.F2))
-        {
-            var transform = PlayerCharacterMasterController.instances[0].master.GetBodyObject().transform;
-            PickupDropletController.CreatePickupDroplet(PickupCatalog.FindPickupIndex(DarknessItems.testItem.itemIndex),transform.position,transform.forward*20f);
-            for (int i = 0; i < BaseItemBodyBehavior.server.itemTypePairs.Length; i++)
-            {
-                Log.Debug(BaseItemBodyBehavior.server.itemTypePairs[i].behaviorType);
-            }
-            
-        }
-    }
+    // private void Update()
+    // {
+    //     // This if statement checks if the player has currently pressed F2.
+    //     if (Input.GetKeyDown(KeyCode.F2))
+    //     {
+    //         var transform = PlayerCharacterMasterController.instances[0].master.GetBodyObject().transform;
+    //         PickupDropletController.CreatePickupDroplet(PickupCatalog.FindPickupIndex(DarknessItems.testItem.itemIndex),transform.position,transform.forward*20f);
+    //         for (int i = 0; i < BaseItemBodyBehavior.server.itemTypePairs.Length; i++)
+    //         {
+    //             Log.Debug(BaseItemBodyBehavior.server.itemTypePairs[i].behaviorType);
+    //         }
+    //         
+    //     }
+    // }
 
 }

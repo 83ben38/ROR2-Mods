@@ -1,0 +1,7 @@
+﻿{
+  "name": "Joke_Artifacts",
+  "description" : "Crazy Artifacts.",
+  "version_number" : "1.0.0",
+  "dependencies" : ["tristanmcpherson-R2API-5.0.5"],
+  "website_url": ""
+}
