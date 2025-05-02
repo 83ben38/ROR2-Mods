@@ -155,7 +155,6 @@ public class DarknessShrine
             {
                 Log.Debug("Darkness Shrine Found");
                 dsm.transform.Rotate(-90,-90,-90);
-                dsm.purchaseInteraction.SetAvailable(true);
                 dsm.createPotentials(shrine2,spawnCard);
             }
 
