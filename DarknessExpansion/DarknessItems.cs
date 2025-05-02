@@ -585,7 +585,7 @@ public class DarknessItems
                     {
                         bd = BuffCatalog.buffDefs[(int)(BuffCatalog.buffDefs.Length * Random.value)];
                     }
-                    cb2.AddBuff(bd);
+                    cb2.AddTimedBuff(bd,10f);
                 }
             }
 
