@@ -8,7 +8,7 @@ using RoR2.Items;
 using UnityEngine;
 
 namespace DarknessExpansion;
-[BepInPlugin("com.cybug.DarknessExpansion", "DarknessExpansion","0.0.1")]
+[BepInPlugin("com.cybug.Joke_Artifacts", "Joke_Artifacts","1.0.0")]
 [BepInDependency(ItemAPI.PluginGUID)]
 [BepInDependency(EliteAPI.PluginGUID)]
 [BepInDependency(LanguageAPI.PluginGUID)]
