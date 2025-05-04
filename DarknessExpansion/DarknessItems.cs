@@ -72,7 +72,7 @@ public class DarknessItems
         float newChance = 1 - Mathf.Pow(1 - (percentChance/100f), luck);
         if (luck < 0.0f)
         {
-            newChance = Mathf.Pow(percentChance / 100f,luck);
+            newChance = Mathf.Pow(percentChance / 100f,-luck);
         }
         bool rolled = Random.value < newChance;
         if (!rolled)
