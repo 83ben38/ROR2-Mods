@@ -60,10 +60,40 @@ public class DarknessItems
         On.RoR2.CharacterMaster.OnInventoryChanged += CharacterMasterOnOnInventoryChanged;
         HealthComponent.Heal += HealthComponentOnHeal;
         RecalculateStatsAPI.GetStatCoefficients += RecalculateStatsAPIOnGetStatCoefficients;
-
+        On.RoR2.Util.CheckRoll_float_float_CharacterMaster += CalculateDecimalLuck;
         On.RoR2.Items.BaseItemBodyBehavior.Init += BaseItemBodyBehaviorOnInit;
     }
-    
+    private bool CalculateDecimalLuck(On.RoR2.Util.orig_CheckRoll_float_float_CharacterMaster orig, float percentChance, float luck, CharacterMaster effectOriginMaster)
+    {
+        if (percentChance <= 0.0f)
+        {
+            return false;
+        }
+        float newChance = 1 - Mathf.Pow(1 - (percentChance/100f), luck);
+        if (luck < 0.0f)
+        {
+            newChance = Mathf.Pow(percentChance / 100f,luck);
+        }
+        bool rolled = Random.value < newChance;
+        if (!rolled)
+        {
+            return false;
+        }
+        if (luck > 0) if (effectOriginMaster)
+        {
+            GameObject bodyObject = effectOriginMaster.GetBodyObject();
+            if (bodyObject)
+            {
+                CharacterBody component = bodyObject.GetComponent<CharacterBody>();
+                if (component)
+                {
+                    component.wasLucky = true;
+                }
+            }
+        }
+        return true;
+    }
+
 
 
     #region allItems
