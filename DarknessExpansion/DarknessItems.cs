@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using EntityStates.TitanMonster;
+using EntityStates.VagrantNovaItem;
 using R2API;
 using RoR2;
 using RoR2.Items;
@@ -10,9 +11,12 @@ using RoR2.UI;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
+using BaseVagrantNovaItemState = On.EntityStates.VagrantNovaItem.BaseVagrantNovaItemState;
 using HealthComponent = On.RoR2.HealthComponent;
 using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
+using ReadyState = On.EntityStates.VagrantNovaItem.ReadyState;
+using RechargeState = On.EntityStates.VagrantNovaItem.RechargeState;
 
 
 namespace DarknessExpansion;
@@ -111,12 +115,22 @@ public class DarknessItems
             behaviorType = typeof(DarkCoreItem.DarkCoreBodyBehavior),
             itemIndex = DarkCoreItem.darkCoreItem.itemIndex
         });
+        itemTypePairs.Add(new BaseItemBodyBehavior.ItemTypePair()
+        {
+            behaviorType = typeof(DarkJellyfishItem.DarkJellyfishItemBehavior),
+            itemIndex = DarkJellyfishItem.darkJellyfishItem.itemIndex
+        });
         BaseItemBodyBehavior.server.SetItemTypePairs(itemTypePairs);
         itemTypePairs = BaseItemBodyBehavior.shared.itemTypePairs.ToList();
         itemTypePairs.Add(new BaseItemBodyBehavior.ItemTypePair()
         {
             behaviorType = typeof(DarkBeetleItem.DarkBeetleBodyBehavior),
             itemIndex = DarkBeetleItem.darkBeetleItem.itemIndex
+        });
+        itemTypePairs.Add(new BaseItemBodyBehavior.ItemTypePair()
+        {
+            behaviorType = typeof(DarkJellyfishItem.DarkJellyfishItemBehavior),
+            itemIndex = DarkJellyfishItem.darkJellyfishItem.itemIndex
         });
         itemTypePairs.Add(new BaseItemBodyBehavior.ItemTypePair()
         {
@@ -761,7 +775,7 @@ public class DarknessItems
             darkItems.Add(darkCoreItem);
             new DarkStacksItem();
             MasterSummon.onServerMasterSummonGlobal+= MasterSummonOnonServerMasterSummonGlobal;
-            testItem = darkCoreItem;
+
         }
 
         private void MasterSummonOnonServerMasterSummonGlobal(MasterSummon.MasterSummonReport obj)
@@ -858,13 +872,7 @@ public class DarknessItems
 
          
     }
-    #endregion
-    
-    
-    #region uncompleteItems
-   
-    
-    public class DarkJellyfishItem
+     public class DarkJellyfishItem
     {
         public static ItemDef darkJellyfishItem;
 
@@ -874,7 +882,8 @@ public class DarknessItems
         private GameObject darkJellyfishPickup = Addressables
             .LoadAssetAsync<GameObject>("RoR2/Base/NovaOnLowHealth/PickupJellyGuts.prefab")
             .WaitForCompletion();
-        
+
+        private static BuffDef chargeBuff;
 
         public DarkJellyfishItem()
         {
@@ -898,8 +907,172 @@ public class DarknessItems
             LanguageAPI.Add("DARK_JELLYFISH_PICKUP",
                 "Upon reaching low health, explode in an area. Upon using your secondary, release a ball of lightning. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkJellyfishItem);
+            testItem = darkJellyfishItem;
+            chargeBuff = ScriptableObject.CreateInstance<BuffDef>();
+            chargeBuff.canStack = true;
+            chargeBuff.isHidden = true;
+            BaseVagrantNovaItemState.GetItemStack += BaseVagrantNovaItemStateOnGetItemStack;
+            ReadyState.FixedUpdate += ReadyStateOnFixedUpdate;
+            RechargeState.FixedUpdate += RechargeStateOnFixedUpdate;
+            ContentAddition.AddBuffDef(chargeBuff);
+        }
+
+        private void RechargeStateOnFixedUpdate(RechargeState.orig_FixedUpdate orig, EntityStates.VagrantNovaItem.RechargeState self)
+        {
+            if (self.attachedBody.inventory.GetItemCount(darkJellyfishItem) > 0)
+            {
+                self.fixedAge += self.GetDeltaTime();
+                if (self.isAuthority)
+                {
+                    int itemStack = self.GetItemStack();
+                    float num = EntityStates.VagrantNovaItem.RechargeState.baseDuration / (itemStack + 1);
+                    num *= self.attachedBody.skillLocator.primary.cooldownScale;
+                    float num2 = self.fixedAge / num;
+                    if (num2 >= 1f)
+                    {
+                        num2 = 1f;
+                        self.outer.SetNextState(new EntityStates.VagrantNovaItem.ReadyState());
+                    }
+                    self.SetChargeSparkEmissionRateMultiplier(EntityStates.VagrantNovaItem.RechargeState.particleEmissionCurve.Evaluate(num2));
+                }
+            }
+            else
+            {
+                orig(self);
+            }
+        }
+
+        private void ReadyStateOnFixedUpdate(ReadyState.orig_FixedUpdate orig, EntityStates.VagrantNovaItem.ReadyState self)
+        {
+            if (self.attachedBody.inventory.GetItemCount(darkJellyfishItem) > 0)
+            {
+                if (self.isAuthority && (self.attachedHealthComponent.health + self.attachedHealthComponent.shield) /
+                    self.attachedHealthComponent.fullCombinedHealth <= 0.5f)
+                {
+                    self.outer.SetNextState(new ChargeState());
+                }
+            }
+            else
+            {
+                orig(self);
+            }
+        }
+        
+
+        private int BaseVagrantNovaItemStateOnGetItemStack(BaseVagrantNovaItemState.orig_GetItemStack orig, EntityStates.VagrantNovaItem.BaseVagrantNovaItemState self)
+        {
+            if (!self.attachedBody || !self.attachedBody.inventory)
+            {
+                return 1;
+            }
+            return self.attachedBody.inventory.GetItemCount(RoR2Content.Items.NovaOnLowHealth) + self.attachedBody.inventory.GetItemCount(darkJellyfishItem);
+        }
+
+        public class DarkJellyfishItemBehavior : BaseItemBodyBehavior
+        {
+            [ItemDefAssociation(useOnServer = true, useOnClient = false)]
+            private static ItemDef GetItemDef()
+            {
+                return darkJellyfishItem;
+            }
+            
+            private void Start()
+            {
+                attachment = Instantiate(LegacyResourcesAPI.Load<GameObject>("Prefabs/NetworkedObjects/BodyAttachments/VagrantNovaItemBodyAttachment")).GetComponent<NetworkedBodyAttachment>();
+                attachment.AttachToGameObjectAndSpawn(body.gameObject);
+                projectilePrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Vagrant/VagrantCannon.prefab").WaitForCompletion();
+                if (body)
+                {
+                    body.onSkillActivatedServer += OnSkillActivated;
+                    skillLocator = body.GetComponent<SkillLocator>();
+                    inputBank = body.GetComponent<InputBankTest>();
+                }
+            }
+            private void FixedUpdate()
+            {
+                if (!body.healthComponent.alive)
+                {
+                    Destroy(this);
+                }
+                int num = stack * 3;
+                if (body.GetBuffCount(chargeBuff) < num)
+                {
+                    float num2 = 10f * skillLocator.primary.cooldownScale / num;
+                    reloadTimer += Time.fixedDeltaTime;
+                    while (reloadTimer > num2 && body.GetBuffCount(chargeBuff) < num)
+                    {
+                        body.AddBuff(chargeBuff);
+                        reloadTimer -= num2;
+                    }
+                }
+            }
+
+            private void OnSkillActivated(GenericSkill skill)
+            {
+                if ((skillLocator  ?   skillLocator.secondary : null) == skill && body.GetBuffCount(chargeBuff) > 0)
+                {
+                    if (NetworkServer.active)
+                    {
+                        body.RemoveBuff(chargeBuff);
+                    }
+                    FireLightning();
+                }
+            }
+    
+            private void FireLightning()
+            {
+                Log.Debug("Firing");
+                Ray aimRay = GetAimRay();
+                ProjectileManager.instance.FireProjectileWithoutDamageType(projectilePrefab, aimRay.origin, Util.QuaternionSafeLookRotation(aimRay.direction) * GetRandomRollPitch(), gameObject, body.damage * (5f * stack), 0f, Util.CheckRoll(body.crit, body.master), DamageColorIndex.Item);
+            }
+            Quaternion GetRandomRollPitch()
+            {
+                Quaternion lhs = Quaternion.AngleAxis(Random.Range(0, 360), Vector3.forward);
+                Quaternion rhs = Quaternion.AngleAxis(0f + Random.Range(0f, 1f), Vector3.left);
+                return lhs * rhs;
+            }
+
+            private Ray GetAimRay()
+            {
+                if (inputBank)
+                {
+                    return new Ray(inputBank.aimOrigin, inputBank.aimDirection);
+                }
+                return new Ray(transform.position, transform.forward);
+            }
+            private void OnDestroy()
+            {
+                if (attachment)
+                {
+                    Destroy(attachment.gameObject);
+                    attachment = null;
+                }
+
+                if (body)
+                {
+                    body.onSkillActivatedServer -= OnSkillActivated;
+                    while (body.HasBuff(chargeBuff))
+                    {
+                        body.RemoveBuff(chargeBuff);
+                    }
+                }
+            }
+
+            // Token: 0x04005527 RID: 21799
+            private NetworkedBodyAttachment attachment;
+            private GameObject projectilePrefab;
+            private SkillLocator skillLocator;
+            private InputBankTest inputBank;
+            private float reloadTimer = 0f;
         }
     }
+    #endregion
+    
+    
+    #region uncompleteItems
+   
+    
+    
     public class DarkWispItem
     {
         public static ItemDef darkWispItem;
