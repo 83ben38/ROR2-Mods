@@ -106,12 +106,22 @@ public class DarknessItems
             behaviorType = typeof(DarkBeetleItem.DarkBeetleBodyBehavior),
             itemIndex = DarkBeetleItem.darkBeetleItem.itemIndex
         });
+        itemTypePairs.Add(new BaseItemBodyBehavior.ItemTypePair()
+        {
+            behaviorType = typeof(DarkCoreItem.DarkCoreBodyBehavior),
+            itemIndex = DarkCoreItem.darkCoreItem.itemIndex
+        });
         BaseItemBodyBehavior.server.SetItemTypePairs(itemTypePairs);
         itemTypePairs = BaseItemBodyBehavior.shared.itemTypePairs.ToList();
         itemTypePairs.Add(new BaseItemBodyBehavior.ItemTypePair()
         {
             behaviorType = typeof(DarkBeetleItem.DarkBeetleBodyBehavior),
             itemIndex = DarkBeetleItem.darkBeetleItem.itemIndex
+        });
+        itemTypePairs.Add(new BaseItemBodyBehavior.ItemTypePair()
+        {
+            behaviorType = typeof(DarkCoreItem.DarkCoreBodyBehavior),
+            itemIndex = DarkCoreItem.darkCoreItem.itemIndex
         });
         BaseItemBodyBehavior.shared.SetItemTypePairs(itemTypePairs);
         itemTypePairs = BaseItemBodyBehavior.client.itemTypePairs.ToList();
@@ -572,7 +582,6 @@ public class DarknessItems
             debuffApplier.canStack = true;
             debuffApplier.isCooldown = false;
             ContentAddition.AddBuffDef(debuffApplier);
-            testItem = darkBeetleItem;
             On.RoR2.GlobalEventManager.ProcessHitEnemy += GlobalEventManagerOnProcessHitEnemy;
             On.RoR2.CharacterMaster.GetDeployableSameSlotLimit += CharacterMasterOnGetDeployableSameSlotLimit;
             MasterSummon.onServerMasterSummonGlobal += MasterSummonOnonServerMasterSummonGlobal;
@@ -689,12 +698,8 @@ public class DarknessItems
             private float guardResummonCooldown;
         }
     }
-    #endregion
-    
-    
-    #region uncompleteItems
-   
-    public class DarkCoreItem
+     
+     public class DarkCoreItem
     {
         public static ItemDef darkCoreItem;
 
@@ -750,27 +755,115 @@ public class DarknessItems
             darkCoreItem.itemIndex = ItemIndex.Count;
             ItemAPI.Add(new CustomItem(darkCoreItem, displayRules));
             LanguageAPI.Add("DARK_CORE_NAME", "Sympathy Cores");
-            LanguageAPI.Add("DARK_CORE_DESCRIPTION", "Every 10 seconds, summon two Solus Probes. All allies gain +100% (+100% per stack) health and damage per ally on your team. Upon killing a dark enemy, increase all of your allies stats by 2% (+2% per stack).");
+            LanguageAPI.Add("DARK_CORE_DESCRIPTION", "Every 10 seconds, summon two Solus Probes. All summons gain +200% (+200% per stack) damage per ally on your team. Upon killing a dark enemy, increase all of your allies stats by 2% (+2% per stack).");
             LanguageAPI.Add("DARK_CORE_PICKUP",
                 "Summon probes. All allies gain stats per ally on your team. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkCoreItem);
             new DarkStacksItem();
             MasterSummon.onServerMasterSummonGlobal+= MasterSummonOnonServerMasterSummonGlobal;
+            testItem = darkCoreItem;
         }
 
         private void MasterSummonOnonServerMasterSummonGlobal(MasterSummon.MasterSummonReport obj)
         {
             if (obj.leaderMasterInstance) if (obj.leaderMasterInstance.inventory) if (obj.leaderMasterInstance.inventory.GetItemCount(darkCoreItem) > 0)
             {
-                int stack = obj.leaderMasterInstance.inventory.GetItemCount(darkCoreItem);
-                int numAllies = obj.leaderMasterInstance.deployablesList.Count + 2;
-                int numStacks = stack * obj.leaderMasterInstance.inventory.GetItemCount(stackingDarkItem);
-                obj.summonMasterInstance.inventory.GiveItem(DarkStacksItem.stackingDarkItem,numStacks);
-                obj.summonMasterInstance.GetBody().baseDamage *= stack * numAllies; 
-                obj.summonMasterInstance.GetBody().baseMaxHealth *= stack * numAllies; 
+                if (obj.summonMasterInstance)
+                {
+                    CharacterMaster component = obj.summonMasterInstance;
+                    if (component)
+                    {
+                        Inventory inventory = obj.leaderMasterInstance.GetBody().inventory;
+                        Inventory inventory2 = component.inventory;
+                        if (inventory)
+                        {
+                            InventorySync inventorySync = obj.summonMasterInstance.gameObject.AddComponent<InventorySync>();
+                            inventorySync.srcInventory = inventory;
+                            inventorySync.destInventory = inventory2;
+                        }
+                    }
+                }
             }
         }
+
+        private class InventorySync : MonoBehaviour
+        {
+            private void FixedUpdate()
+            {
+                if (srcInventory && destInventory)
+                {
+                    int itemCount = srcInventory.GetItemCount(darkCoreItem)*2;
+                    int num = itemCount - granted;
+                    if (num != 0)
+                    {
+                        destInventory.GiveItem(RoR2Content.Items.TeamSizeDamageBonus,num);
+                        granted = itemCount;
+                    }
+
+                    itemCount = srcInventory.GetItemCount(darkCoreItem) * srcInventory.GetItemCount(stackingDarkItem);
+                    num = itemCount - granted2;
+                    if (num != 0)
+                    {
+                        destInventory.GiveItem(DarkStacksItem.stackingDarkItem,num);
+                        granted = itemCount;
+                    }
+                }
+            }
+
+            public Inventory srcInventory;
+            public Inventory destInventory;
+            private int granted;
+            private int granted2;
+        }
+         public class DarkCoreBodyBehavior : BaseItemBodyBehavior
+        {
+            [ItemDefAssociation(useOnServer = true, useOnClient = false)]
+            private static ItemDef GetItemDef()
+            {
+                return darkCoreItem;
+            }
+
+            private void Start()
+            {
+                cm = body.master;
+            }
+
+            private void FixedUpdate()
+            {
+                if (redBuddySpawner == null && isActiveAndEnabled)
+                {
+                    CreateSpawners();
+                }
+            }
+
+            private void CreateSpawners()
+            {
+                CreateSpawner(ref redBuddySpawner,DeployableSlot.RoboBallRedBuddy,Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/RoboBallBuddy/cscRoboBallRedBuddy.asset").WaitForCompletion());
+                CreateSpawner(ref greenBuddySpawner,DeployableSlot.RoboBallGreenBuddy,Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/RoboBallBuddy/cscRoboBallGreenBuddy.asset").WaitForCompletion());
+            }
+
+            private void CreateSpawner(ref DeployableMinionSpawner dms, DeployableSlot ds, SpawnCard sc)
+            {
+                dms = new DeployableMinionSpawner(cm, ds, new Xoroshiro128Plus((ulong)Random.value * ulong.MaxValue))
+                {
+                    respawnInterval = 30f,
+                    spawnCard = sc
+                };
+            }
+            
+            private DeployableMinionSpawner redBuddySpawner;
+            private DeployableMinionSpawner greenBuddySpawner;
+            private CharacterMaster cm;
+        }
+
+         
     }
+    #endregion
+    
+    
+    #region uncompleteItems
+   
+    
     public class DarkJellyfishItem
     {
         public static ItemDef darkJellyfishItem;
