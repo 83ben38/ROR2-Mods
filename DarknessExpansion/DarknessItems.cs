@@ -6,6 +6,7 @@ using EntityStates.VagrantNovaItem;
 using R2API;
 using RoR2;
 using RoR2.Items;
+using RoR2.Orbs;
 using RoR2.Projectile;
 using RoR2.UI;
 using UnityEngine;
@@ -120,6 +121,11 @@ public class DarknessItems
             behaviorType = typeof(DarkJellyfishItem.DarkJellyfishItemBehavior),
             itemIndex = DarkJellyfishItem.darkJellyfishItem.itemIndex
         });
+        itemTypePairs.Add(new BaseItemBodyBehavior.ItemTypePair()
+        {
+            behaviorType = typeof(DarkWispItem.DarkWispItemBehavior),
+            itemIndex = DarkWispItem.darkWispItem.itemIndex
+        });
         BaseItemBodyBehavior.server.SetItemTypePairs(itemTypePairs);
         itemTypePairs = BaseItemBodyBehavior.shared.itemTypePairs.ToList();
         itemTypePairs.Add(new BaseItemBodyBehavior.ItemTypePair()
@@ -136,6 +142,11 @@ public class DarknessItems
         {
             behaviorType = typeof(DarkCoreItem.DarkCoreBodyBehavior),
             itemIndex = DarkCoreItem.darkCoreItem.itemIndex
+        });
+        itemTypePairs.Add(new BaseItemBodyBehavior.ItemTypePair()
+        {
+            behaviorType = typeof(DarkWispItem.DarkWispItemBehavior),
+            itemIndex = DarkWispItem.darkWispItem.itemIndex
         });
         BaseItemBodyBehavior.shared.SetItemTypePairs(itemTypePairs);
         itemTypePairs = BaseItemBodyBehavior.client.itemTypePairs.ToList();
@@ -907,7 +918,6 @@ public class DarknessItems
             LanguageAPI.Add("DARK_JELLYFISH_PICKUP",
                 "Upon reaching low health, explode in an area. Upon using your secondary, release a ball of lightning. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkJellyfishItem);
-            testItem = darkJellyfishItem;
             chargeBuff = ScriptableObject.CreateInstance<BuffDef>();
             chargeBuff.canStack = true;
             chargeBuff.isHidden = true;
@@ -1066,14 +1076,7 @@ public class DarknessItems
             private float reloadTimer = 0f;
         }
     }
-    #endregion
-    
-    
-    #region uncompleteItems
-   
-    
-    
-    public class DarkWispItem
+     public class DarkWispItem
     {
         public static ItemDef darkWispItem;
 
@@ -1107,8 +1110,66 @@ public class DarknessItems
             LanguageAPI.Add("DARK_WISP_PICKUP",
                 "Fire 3 tracking wisps while sprinting. Fire rate scales with move speed. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkWispItem);
+            testItem = darkWispItem;
+        }
+        public class DarkWispItemBehavior : BaseItemBodyBehavior{
+
+            [ItemDefAssociation(useOnServer = true, useOnClient = false)]
+            private static ItemDef GetItemDef()
+            {
+                return darkWispItem;
+            }
+
+            private void FixedUpdate()
+            {
+                if (body.isSprinting)
+                {
+                    fireTimer -= Time.fixedDeltaTime;
+                    if (fireTimer <= 0f && body.moveSpeed > 0f)
+                    {
+                        fireTimer += 1f / (0.08571429f * body.moveSpeed);
+                        Fire();
+                    }
+                }
+            }
+
+        
+            private void Fire()
+            {
+                for (int i = 0; i < 3 * stack; i++)
+                {
+                    DevilOrb devilOrb = new DevilOrb
+                    {
+                        origin = body.corePosition,
+                        damageValue = body.damage * 3f * stack,
+                        teamIndex = body.teamComponent.teamIndex,
+                        attacker = gameObject,
+                        damageColorIndex = DamageColorIndex.Item,
+                        scale = 3f,
+                        effectType = DevilOrb.EffectType.Wisp,
+                        procCoefficient = 3f * stack
+                    };
+                    
+                    if (devilOrb.target = devilOrb.PickNextTarget(devilOrb.origin, 40f))
+                    {
+                        devilOrb.isCrit = Util.CheckRoll(body.crit, body.master);
+                        OrbManager.instance.AddOrb(devilOrb);
+                    }
+                }
+            }
+        
+            private float fireTimer;
         }
     }
+    #endregion
+    
+    
+    #region uncompleteItems
+   
+    
+    
+    
+    
     public class DarkClayItem
     {
         public static ItemDef darkClayItem;
