@@ -1343,7 +1343,7 @@ public class DarknessItems
             darkFireItem.itemIndex = ItemIndex.Count;
             ItemAPI.Add(new CustomItem(darkFireItem, displayRules));
             LanguageAPI.Add("DARK_FIRE_NAME", "Molten Claw");
-            LanguageAPI.Add("DARK_FIRE_DESCRIPTION", "10% chance on hit to call forth 3 magma balls from an enemy, dealing (3000% (+3000% per stack) damage)% base damage. Killing a dark enemy grants 0.5 (+0.5 per stack) base damage.");
+            LanguageAPI.Add("DARK_FIRE_DESCRIPTION", "10% chance on hit to call forth 3 homing magma balls from an enemy, dealing (3000% (+3000% per stack) damage)% base damage. Killing a dark enemy grants 0.5 (+0.5 per stack) base damage.");
             LanguageAPI.Add("DARK_FIRE_PICKUP",
                 "Chance on hit to summon fireballs. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkFireItem);

@@ -309,6 +309,7 @@ public class DarknessShrine
             bossSpawner.ignoreTeamSizeLimit = true;
             bossSpawner.shouldSpawnOneWave = true;
             bossSpawner.enabled = true;
+            bossSpawner.maxSpawnDistance = 30f;
             bossSpawner.monsterCredit +=
                 (int)(600f * Mathf.Pow(Run.instance.compensatedDifficultyCoefficient, 0.5f));
             bossSpawner.SetNextSpawnAsBoss();
