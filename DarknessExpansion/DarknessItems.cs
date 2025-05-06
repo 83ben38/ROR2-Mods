@@ -56,7 +56,7 @@ public class DarknessItems
         new DarkClayItem();
         new DarkConstructItem();
         new DarkCoreItem();
-        new DarkParentItem();
+        new DarkParentItem();       
         new DarkLightningItem();
         new DarkFireItem();
         new DarkStacksItem();
@@ -74,10 +74,10 @@ public class DarknessItems
         {
             return false;
         }
-        float newChance = 1 - Mathf.Pow(1 - (percentChance/100f), luck);
+        float newChance = 1 - Mathf.Pow(1 - (percentChance/100f), luck+1);
         if (luck < 0.0f)
         {
-            newChance = Mathf.Pow(percentChance / 100f,-luck);
+            newChance = Mathf.Pow(percentChance / 100f,-luck+1);
         }
         bool rolled = Random.value < newChance;
         if (!rolled)
@@ -350,6 +350,7 @@ public class DarknessItems
             LanguageAPI.Add("DARK_GOLEM_PICKUP",
                 "Increases health and regen. Upon taking damage, chance to summon a fist. Fist damage scales with health. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkGolemItem);
+            testItem = darkGolemItem;
         }
 
         
@@ -360,7 +361,7 @@ public class DarknessItems
                 int numDarkGolems = self.body.inventory.GetItemCount(darkGolemItem);
                 if (numDarkGolems > 0)
                 {
-                    if (Util.CheckRoll(20, self.body._master))
+                    if (Util.CheckRoll(20, self.body.master))
                     {
                         bool isCrit = self.body.RollCrit();
                         float damageValue = self.body.damage * (self.body.maxHealth + 1000f) * numDarkGolems / 500f;
@@ -1110,7 +1111,6 @@ public class DarknessItems
             LanguageAPI.Add("DARK_WISP_PICKUP",
                 "Fire 3 tracking wisps while sprinting. Fire rate scales with move speed. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkWispItem);
-            testItem = darkWispItem;
         }
         public class DarkWispItemBehavior : BaseItemBodyBehavior{
 

@@ -330,28 +330,29 @@ public class DarknessShrine
                     for (int j = 0; j < boss.Count; j++)
                     {
                         Inventory bossInventory = boss[j].inventory;
-                        bossInventory.SetEquipmentIndex(Darkness.DarknessEquipment.equipmentIndex);
-                        for (int i = 0; i < sacrificedItems.Count; i++)
-                        {
-                            ItemIndex ii = sacrificedItems[i];
-                            int numItems = 1;
-                            if (ItemCatalog.tier1ItemList.Contains(ii))
-                            {
-                                numItems = 5;
-                            }
-
-                            if (ItemCatalog.tier2ItemList.Contains(ii))
-                            {
-                                numItems = 3;
-                            }
-                            bossInventory.GiveItem(ii,numItems);
-                        }
-
-                        if (bonusItemToGive != ItemIndex.None)
-                        {
-                            bossInventory.GiveItem(bonusItemToGive);
-                        }
-                        bossInventory.GiveItemString("ShinyPearl",Darkness.DarknessLevel);
+                        //boss[j].GetBody().AddOrRemoveEliteItemBehavior(Darkness.DarknessBuff,true);
+                        //bossInventory.SetEquipmentIndex(Darkness.DarknessEquipment.equipmentIndex);
+                        // for (int i = 0; i < sacrificedItems.Count; i++)
+                        // {
+                        //     ItemIndex ii = sacrificedItems[i];
+                        //     int numItems = 1;
+                        //     if (ItemCatalog.tier1ItemList.Contains(ii))
+                        //     {
+                        //         numItems = 5;
+                        //     }
+                        //
+                        //     if (ItemCatalog.tier2ItemList.Contains(ii))
+                        //     {
+                        //         numItems = 3;
+                        //     }
+                        //     bossInventory.GiveItem(ii,numItems);
+                        // }
+                        //
+                        // if (bonusItemToGive != ItemIndex.None)
+                        // {
+                        //     bossInventory.GiveItem(bonusItemToGive);
+                        // }
+                        //bossInventory.GiveItemString("ShinyPearl",Darkness.DarknessLevel);
                     }
                 }
                 if (bossSquad.defeatedServer)
