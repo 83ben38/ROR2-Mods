@@ -126,6 +126,11 @@ public class DarknessItems
             behaviorType = typeof(DarkWispItem.DarkWispItemBehavior),
             itemIndex = DarkWispItem.darkWispItem.itemIndex
         });
+        itemTypePairs.Add(new BaseItemBodyBehavior.ItemTypePair()
+        {
+            behaviorType = typeof(DarkClayItem.DarkClayItemBehavior),
+            itemIndex = DarkClayItem.darkClayItem.itemIndex
+        });
         BaseItemBodyBehavior.server.SetItemTypePairs(itemTypePairs);
         itemTypePairs = BaseItemBodyBehavior.shared.itemTypePairs.ToList();
         itemTypePairs.Add(new BaseItemBodyBehavior.ItemTypePair()
@@ -147,6 +152,11 @@ public class DarknessItems
         {
             behaviorType = typeof(DarkWispItem.DarkWispItemBehavior),
             itemIndex = DarkWispItem.darkWispItem.itemIndex
+        });
+        itemTypePairs.Add(new BaseItemBodyBehavior.ItemTypePair()
+        {
+            behaviorType = typeof(DarkClayItem.DarkClayItemBehavior),
+            itemIndex = DarkClayItem.darkClayItem.itemIndex
         });
         BaseItemBodyBehavior.shared.SetItemTypePairs(itemTypePairs);
         itemTypePairs = BaseItemBodyBehavior.client.itemTypePairs.ToList();
@@ -350,7 +360,6 @@ public class DarknessItems
             LanguageAPI.Add("DARK_GOLEM_PICKUP",
                 "Increases health and regen. Upon taking damage, chance to summon a fist. Fist damage scales with health. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkGolemItem);
-            testItem = darkGolemItem;
         }
 
         
@@ -1161,16 +1170,7 @@ public class DarknessItems
             private float fireTimer;
         }
     }
-    #endregion
-    
-    
-    #region uncompleteItems
-   
-    
-    
-    
-    
-    public class DarkClayItem
+     public class DarkClayItem
     {
         public static ItemDef darkClayItem;
 
@@ -1199,12 +1199,87 @@ public class DarknessItems
             darkClayItem.itemIndex = ItemIndex.Count;
             ItemAPI.Add(new CustomItem(darkClayItem, displayRules));
             LanguageAPI.Add("DARK_CLAY_NAME", "Polished Urn");
-            LanguageAPI.Add("DARK_CLAY_DESCRIPTION", "The nearest 1 (+1 per stack) enemies to you within 13m (+8m per stack) will be 'tethered' to you, applying tar. Deal 15% (+15% per stack) additional damage to enemies with tar applied, and heal for 5% (+5% per stack) of the damage dealt. Upon killing a dark enemy, gain 3% (+3% per stack) healing multiplier.");
+            LanguageAPI.Add("DARK_CLAY_DESCRIPTION", "The nearest 1 (+1 per stack) enemies to you within 13m will be 'tethered' to you, applying tar. Deal 15% (+15% per stack) additional damage to enemies with tar applied, and heal for 5% (+5% per stack) of the damage dealt. Upon killing a dark enemy, gain 3% (+3% per stack) healing multiplier.");
             LanguageAPI.Add("DARK_CLAY_PICKUP",
                 "Tether yourself to nearby enemies, dealing bonus damage and healing for a portion of the damage dealt. Grows stronger as it absorbs darkness.");
+            HealthComponent.TakeDamageProcess += HealthComponentOnTakeDamageProcess;
+            testItem = darkClayItem;
             darkItems.Add(darkClayItem);
         }
+
+        private void HealthComponentOnTakeDamageProcess(HealthComponent.orig_TakeDamageProcess orig, RoR2.HealthComponent self, DamageInfo damageinfo)
+        {
+            if (self.body) if (self.body.inventory) if (damageinfo.attacker)
+            {
+                CharacterBody cb = damageinfo.attacker.GetComponent<CharacterBody>();
+                if (cb)
+                {
+                    int num = cb.inventory.GetItemCount(darkClayItem);
+                    if (num > 0)
+                    {
+                        if (self.body.HasBuff(RoR2Content.Buffs.ClayGoo))
+                        {
+                            damageinfo.damage *= 1 + (num * 0.15f);
+                            cb.healthComponent.Heal(damageinfo.damage * 0.05f * num, new ProcChainMask(), false);
+                        }
+                    }
+                }
+            }
+
+            orig(self, damageinfo);
+        }
+
+        public class DarkClayItemBehavior : BaseItemBodyBehavior
+        {
+            [ItemDefAssociation(useOnServer = true, useOnClient = false)]
+            private static ItemDef GetItemDef()
+            {
+                return darkClayItem;
+            }
+
+            private void OnEnable()
+            {
+                attachment = Instantiate(LegacyResourcesAPI.Load<GameObject>("Prefabs/NetworkedObjects/BodyAttachments/SiphonNearbyBodyAttachment")).GetComponent<NetworkedBodyAttachment>();
+                attachment.AttachToGameObjectAndSpawn(body.gameObject);
+                siphonNearbyController = attachment.GetComponent<SiphonNearbyController>();
+            }
+
+            private void OnDisable()
+            {
+                DestroyAttachment();
+            }
+            
+            private void FixedUpdate()
+            {
+                siphonNearbyController.NetworkmaxTargets = (body.healthComponent.alive ? stack : 0);
+            }
+
+            private void DestroyAttachment()
+            {
+                if (attachment)
+                {
+                    Destroy(attachment.gameObject);
+                }
+                attachment = null;
+                siphonNearbyController = null;
+            }
+
+            private NetworkedBodyAttachment attachment;
+
+            private SiphonNearbyController siphonNearbyController;
+        }
+        
     }
+    #endregion
+    
+    
+    #region uncompleteItems
+   
+    
+    
+    
+    
+    
     
     public class DarkConstructItem
     {
