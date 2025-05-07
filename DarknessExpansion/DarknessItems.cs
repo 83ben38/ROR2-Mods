@@ -1388,7 +1388,6 @@ public class DarknessItems
                 "Chance on hit to summon a lightning storm. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkLightningItem);
             On.RoR2.GlobalEventManager.ProcessHitEnemy += GlobalEventManagerOnProcessHitEnemy;
-            testItem = darkLightningItem;
         }
 
         private void GlobalEventManagerOnProcessHitEnemy(On.RoR2.GlobalEventManager.orig_ProcessHitEnemy orig, GlobalEventManager self, DamageInfo damageInfo, GameObject victim)
@@ -1457,6 +1456,102 @@ public class DarknessItems
             orig(self, damageInfo, victim);
         }
     }
+     public class DarkFireItem
+    {
+        public static ItemDef darkFireItem;
+
+        private Sprite darkFireSprite =
+            Addressables.LoadAssetAsync<Sprite>("RoR2/Base/FireballsOnHit/texFireballsOnHitIcon.png").WaitForCompletion();
+
+        private GameObject darkFirePickup = Addressables
+            .LoadAssetAsync<GameObject>("RoR2/Base/FireballsOnHit/PickupFireballsOnHit.prefab")
+            .WaitForCompletion();
+        
+
+        public DarkFireItem()
+        {
+            darkFireItem = ScriptableObject.CreateInstance<ItemDef>();
+            darkFireItem.name = "DARK_FIRE_NAME";
+            darkFireItem.descriptionToken = "DARK_FIRE_DESCRIPTION";
+            darkFireItem.nameToken = "DARK_FIRE_NAME";
+            darkFireItem.loreToken = "DARK_FIRE_LORE";
+            darkFireItem.pickupToken = "DARK_FIRE_PICKUP";
+            darkFireItem.pickupIconSprite = darkFireSprite;
+            darkFireItem.pickupModelPrefab = darkFirePickup;
+            darkFireItem.canRemove = true;
+            darkFireItem.hidden = false;
+            darkFireItem._itemTierDef = darkTier;
+            var displayRules = new ItemDisplayRuleDict(null);
+            darkFireItem.itemIndex = ItemIndex.Count;
+            ItemAPI.Add(new CustomItem(darkFireItem, displayRules));
+            LanguageAPI.Add("DARK_FIRE_NAME", "Molten Claw");
+            LanguageAPI.Add("DARK_FIRE_DESCRIPTION", "10% chance on hit to call forth 6 (+3 per stack) magma balls from an enemy, dealing (3000% (+3000% per stack) damage)% base damage. Killing a dark enemy grants 0.5 (+0.5 per stack) base damage.");
+            LanguageAPI.Add("DARK_FIRE_PICKUP",
+                "Chance on hit to summon fireballs. Grows stronger as it absorbs darkness.");
+            darkItems.Add(darkFireItem);
+            On.RoR2.GlobalEventManager.ProcessHitEnemy += GlobalEventManagerOnProcessHitEnemy;
+            testItem = darkFireItem;
+        }
+        private void GlobalEventManagerOnProcessHitEnemy(On.RoR2.GlobalEventManager.orig_ProcessHitEnemy orig, GlobalEventManager self, DamageInfo damageInfo, GameObject victim)
+        {
+            if (damageInfo.attacker)
+            {
+                CharacterBody cb = damageInfo.attacker.GetComponent<CharacterBody>();
+                CharacterBody cb2 = victim.GetComponent<CharacterBody>();
+                if (cb && cb2)
+                {
+                    int numFireItems = cb.inventory.GetItemCount(darkFireItem);
+                    if (numFireItems > 0 && !damageInfo.procChainMask.HasProc(ProcType.Meatball))
+                    {
+                        Vector3 vector = cb2.characterMotor ? victim.transform.position + Vector3.up * (cb2.characterMotor.capsuleHeight * 0.5f + 2f) : victim.transform.position + Vector3.up * 2f;
+                        Vector3 forward =  Vector3.up;
+                        float variation = 1f;
+                        if (Util.CheckRoll(10f * damageInfo.procCoefficient, cb.master))
+                        {
+                            EffectData effectData = new EffectData
+                            {
+                                scale = 1f,
+                                origin = vector
+                            };
+                            EffectManager.SpawnEffect(LegacyResourcesAPI.Load<GameObject>("Prefabs/Effects/MuzzleFlashes/MuzzleflashFireMeatBall"), effectData, true);
+                            int numFireballs = 3 + 3 * numFireItems;
+                            float damageCoefficient = 0.3f * cb.damage * numFireItems;
+                            float damage = Util.OnHitProcDamage(damageInfo.damage, cb.damage, damageCoefficient);
+                            float minInclusive = 15f;
+                            float maxInclusive = 30f;
+                            ProcChainMask procChainMask = damageInfo.procChainMask;
+                            procChainMask.AddProc(ProcType.Meatball);
+                            float speedOverride = Random.Range(minInclusive, maxInclusive);
+                            for (int k = 0; k < numFireballs; k++)
+                            {
+                                float angle = k * 3.1415927f * 2f / numFireballs;
+                                FireProjectileInfo fireProjectileInfo = new FireProjectileInfo
+                                {
+                                    projectilePrefab = LegacyResourcesAPI.Load<GameObject>("Prefabs/Projectiles/FireMeatBall"),
+                                    position = vector + new Vector3( Mathf.Sin(angle), 0f, Mathf.Cos(angle)),
+                                    rotation = Util.QuaternionSafeLookRotation(forward),
+                                    procChainMask = procChainMask,
+                                    target = victim,
+                                    owner = cb.gameObject,
+                                    damage = damage,
+                                    crit = damageInfo.crit,
+                                    force = 200f,
+                                    damageColorIndex = DamageColorIndex.Item,
+                                    speedOverride = speedOverride,
+                                    useSpeedOverride = true
+                                };
+                                ProjectileManager.instance.FireProjectile(fireProjectileInfo);
+                                forward.x += Mathf.Sin(angle + Random.Range(-variation, variation));
+                                forward.z += Mathf.Cos(angle + Random.Range(-variation, variation));
+                            }
+                        }
+                    }
+                }
+            }
+
+            orig(self, damageInfo, victim);
+        }
+    }
     #endregion
     
     
@@ -1508,40 +1603,6 @@ public class DarknessItems
     
 
     
-    public class DarkFireItem
-    {
-        public static ItemDef darkFireItem;
 
-        private Sprite darkFireSprite =
-            Addressables.LoadAssetAsync<Sprite>("RoR2/Base/FireballsOnHit/texFireballsOnHitIcon.png").WaitForCompletion();
-
-        private GameObject darkFirePickup = Addressables
-            .LoadAssetAsync<GameObject>("RoR2/Base/FireballsOnHit/PickupFireballsOnHit.prefab")
-            .WaitForCompletion();
-        
-
-        public DarkFireItem()
-        {
-            darkFireItem = ScriptableObject.CreateInstance<ItemDef>();
-            darkFireItem.name = "DARK_FIRE_NAME";
-            darkFireItem.descriptionToken = "DARK_FIRE_DESCRIPTION";
-            darkFireItem.nameToken = "DARK_FIRE_NAME";
-            darkFireItem.loreToken = "DARK_FIRE_LORE";
-            darkFireItem.pickupToken = "DARK_FIRE_PICKUP";
-            darkFireItem.pickupIconSprite = darkFireSprite;
-            darkFireItem.pickupModelPrefab = darkFirePickup;
-            darkFireItem.canRemove = true;
-            darkFireItem.hidden = false;
-            darkFireItem._itemTierDef = darkTier;
-            var displayRules = new ItemDisplayRuleDict(null);
-            darkFireItem.itemIndex = ItemIndex.Count;
-            ItemAPI.Add(new CustomItem(darkFireItem, displayRules));
-            LanguageAPI.Add("DARK_FIRE_NAME", "Molten Claw");
-            LanguageAPI.Add("DARK_FIRE_DESCRIPTION", "10% chance on hit to call forth 3 homing magma balls from an enemy, dealing (3000% (+3000% per stack) damage)% base damage. Killing a dark enemy grants 0.5 (+0.5 per stack) base damage.");
-            LanguageAPI.Add("DARK_FIRE_PICKUP",
-                "Chance on hit to summon fireballs. Grows stronger as it absorbs darkness.");
-            darkItems.Add(darkFireItem);
-        }
-    }
     #endregion
 }
