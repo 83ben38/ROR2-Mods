@@ -1303,7 +1303,6 @@ public class DarknessItems
                 "Heal from incoming damage and ignite nearby enemies. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkParentItem);
             HealthComponent.TakeDamageProcess += HealthComponentOnTakeDamageProcess;
-            testItem = darkParentItem;
         }
 
         private void HealthComponentOnTakeDamageProcess(HealthComponent.orig_TakeDamageProcess orig, RoR2.HealthComponent self, DamageInfo damageinfo)
@@ -1315,7 +1314,7 @@ public class DarknessItems
                     if (numItems > 0)
                     {
                         self.Heal(self.body.armor * numItems, default, false);
-                        float radius = 13f + 8f * numItems;
+                        float radius = 5f + 8f * numItems;
                         Vector3 corePosition = self.body.corePosition;
                         GlobalEventManager.igniteOnKillSphereSearch.origin = corePosition;
                         GlobalEventManager.igniteOnKillSphereSearch.mask = LayerIndex.entityPrecise.mask;
@@ -1353,6 +1352,109 @@ public class DarknessItems
                 }
 
             orig(self, damageinfo);
+        }
+    }
+     public class DarkLightningItem
+    {
+        public static ItemDef darkLightningItem;
+
+        private Sprite darkLightningSprite =
+            Addressables.LoadAssetAsync<Sprite>("RoR2/Base/LightningStrikeOnHit/texLightningStrikeOnHit.png").WaitForCompletion();
+
+        private GameObject darkLightningPickup = Addressables
+            .LoadAssetAsync<GameObject>("RoR2/Base/LightningStrikeOnHit/PickupChargedPerforator.prefab")
+            .WaitForCompletion();
+        
+
+        public DarkLightningItem()
+        {
+            darkLightningItem = ScriptableObject.CreateInstance<ItemDef>();
+            darkLightningItem.name = "DARK_LIGHTNING_NAME";
+            darkLightningItem.descriptionToken = "DARK_LIGHTNING_DESCRIPTION";
+            darkLightningItem.nameToken = "DARK_LIGHTNING_NAME";
+            darkLightningItem.loreToken = "DARK_LIGHTNING_LORE";
+            darkLightningItem.pickupToken = "DARK_LIGHTNING_PICKUP";
+            darkLightningItem.pickupIconSprite = darkLightningSprite;
+            darkLightningItem.pickupModelPrefab = darkLightningPickup;
+            darkLightningItem.canRemove = true;
+            darkLightningItem.hidden = false;
+            darkLightningItem._itemTierDef = darkTier;
+            var displayRules = new ItemDisplayRuleDict(null);
+            darkLightningItem.itemIndex = ItemIndex.Count;
+            ItemAPI.Add(new CustomItem(darkLightningItem, displayRules));
+            LanguageAPI.Add("DARK_LIGHTNING_NAME", "Charged Claw");
+            LanguageAPI.Add("DARK_LIGHTNING_DESCRIPTION", "10% chance on hit to down a lightning strike on the enemy and 2 (+2 per stack) enemies within 15m (+8m per stack), dealing 1000% (+1000% per stack) damage. Killing a dark enemy grants 4% (+4% per stack) damage.");
+            LanguageAPI.Add("DARK_LIGHTNING_PICKUP",
+                "Chance on hit to summon a lightning storm. Grows stronger as it absorbs darkness.");
+            darkItems.Add(darkLightningItem);
+            On.RoR2.GlobalEventManager.ProcessHitEnemy += GlobalEventManagerOnProcessHitEnemy;
+            testItem = darkLightningItem;
+        }
+
+        private void GlobalEventManagerOnProcessHitEnemy(On.RoR2.GlobalEventManager.orig_ProcessHitEnemy orig, GlobalEventManager self, DamageInfo damageInfo, GameObject victim)
+        {
+            if (damageInfo.attacker)
+            {
+                CharacterBody cb = damageInfo.attacker.GetComponent<CharacterBody>();
+                CharacterBody cb2 = victim.GetComponent<CharacterBody>();
+                if (cb && cb2)
+                {
+                    int numLightningItems = cb.inventory.GetItemCount(darkLightningItem);
+                    if (numLightningItems > 0 && !damageInfo.procChainMask.HasProc(ProcType.LightningStrikeOnHit) &&
+                        Util.CheckRoll(10f * damageInfo.procCoefficient, cb.master))
+                    {
+                        float damageValue =
+                            Util.OnHitProcDamage(damageInfo.damage, cb.damage, 10f * numLightningItems);
+                        ProcChainMask procChainMask = damageInfo.procChainMask;
+                        procChainMask.AddProc(ProcType.LightningStrikeOnHit);
+                        HurtBox target = cb2.mainHurtBox;
+                        if (cb2.hurtBoxGroup)
+                        {
+                            target = cb2.hurtBoxGroup.hurtBoxes[
+                                Random.Range(0, cb2.hurtBoxGroup.hurtBoxes.Length)];
+                        }
+
+                        OrbManager.instance.AddOrb(new SimpleLightningStrikeOrb
+                        {
+                            attacker = cb.gameObject,
+                            damageColorIndex = DamageColorIndex.Item,
+                            damageValue = damageValue,
+                            isCrit = Util.CheckRoll(cb.crit, cb.master),
+                            procChainMask = procChainMask,
+                            procCoefficient = 1f,
+                            target = target
+                        });
+                        BullseyeSearch bullseyeSearch = new BullseyeSearch();
+                        bullseyeSearch.searchOrigin = victim.transform.position;
+                        bullseyeSearch.searchDirection = Vector3.zero;
+                        bullseyeSearch.teamMaskFilter = TeamMask.allButNeutral;
+                        bullseyeSearch.teamMaskFilter.RemoveTeam(cb.teamComponent.teamIndex);
+                        bullseyeSearch.filterByLoS = false;
+                        bullseyeSearch.sortMode = BullseyeSearch.SortMode.Distance;
+                        bullseyeSearch.maxDistanceFilter = 7f + 8f * numLightningItems;
+                        bullseyeSearch.RefreshCandidates();
+                        List<HurtBox> list = bullseyeSearch.GetResults().ToList();
+                        for (int i = 0; i < numLightningItems*2 && list.Count > 0; i++)
+                        {
+                            int x = Random.Range(0, list.Count);
+                            HurtBox hb = list[x];
+                            list.RemoveAt(x);
+                            OrbManager.instance.AddOrb(new SimpleLightningStrikeOrb
+                            {
+                                attacker = cb.gameObject,
+                                damageColorIndex = DamageColorIndex.Item,
+                                damageValue = damageValue,
+                                isCrit = Util.CheckRoll(cb.crit, cb.master),
+                                procChainMask = procChainMask,
+                                procCoefficient = 1f,
+                                target = hb
+                            });
+                        }
+                    }
+                }
+            }
+
+            orig(self, damageInfo, victim);
         }
     }
     #endregion
@@ -1405,41 +1507,7 @@ public class DarknessItems
     
     
 
-    public class DarkLightningItem
-    {
-        public static ItemDef darkLightningItem;
-
-        private Sprite darkLightningSprite =
-            Addressables.LoadAssetAsync<Sprite>("RoR2/Base/LightningStrikeOnHit/texLightningStrikeOnHit.png").WaitForCompletion();
-
-        private GameObject darkLightningPickup = Addressables
-            .LoadAssetAsync<GameObject>("RoR2/Base/LightningStrikeOnHit/PickupChargedPerforator.prefab")
-            .WaitForCompletion();
-        
-
-        public DarkLightningItem()
-        {
-            darkLightningItem = ScriptableObject.CreateInstance<ItemDef>();
-            darkLightningItem.name = "DARK_LIGHTNING_NAME";
-            darkLightningItem.descriptionToken = "DARK_LIGHTNING_DESCRIPTION";
-            darkLightningItem.nameToken = "DARK_LIGHTNING_NAME";
-            darkLightningItem.loreToken = "DARK_LIGHTNING_LORE";
-            darkLightningItem.pickupToken = "DARK_LIGHTNING_PICKUP";
-            darkLightningItem.pickupIconSprite = darkLightningSprite;
-            darkLightningItem.pickupModelPrefab = darkLightningPickup;
-            darkLightningItem.canRemove = true;
-            darkLightningItem.hidden = false;
-            darkLightningItem._itemTierDef = darkTier;
-            var displayRules = new ItemDisplayRuleDict(null);
-            darkLightningItem.itemIndex = ItemIndex.Count;
-            ItemAPI.Add(new CustomItem(darkLightningItem, displayRules));
-            LanguageAPI.Add("DARK_LIGHTNING_NAME", "Charged Claw");
-            LanguageAPI.Add("DARK_LIGHTNING_DESCRIPTION", "10% chance on hit to down a lightning strike on the enemy and 2 (+2 per stack) enemies within 15m (+8m per stack), dealing 1000% (+1000% per stack) damage. Killing a dark enemy grants 4% (+4% per stack) damage.");
-            LanguageAPI.Add("DARK_LIGHTNING_PICKUP",
-                "Chance on hit to summon a lightning storm. Grows stronger as it absorbs darkness.");
-            darkItems.Add(darkLightningItem);
-        }
-    }
+    
     public class DarkFireItem
     {
         public static ItemDef darkFireItem;
