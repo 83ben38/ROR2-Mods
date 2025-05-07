@@ -1203,7 +1203,6 @@ public class DarknessItems
             LanguageAPI.Add("DARK_CLAY_PICKUP",
                 "Tether yourself to nearby enemies, dealing bonus damage and healing for a portion of the damage dealt. Grows stronger as it absorbs darkness.");
             HealthComponent.TakeDamageProcess += HealthComponentOnTakeDamageProcess;
-            testItem = darkClayItem;
             darkItems.Add(darkClayItem);
         }
 
@@ -1220,7 +1219,7 @@ public class DarknessItems
                         if (self.body.HasBuff(RoR2Content.Buffs.ClayGoo))
                         {
                             damageinfo.damage *= 1 + (num * 0.15f);
-                            cb.healthComponent.Heal(damageinfo.damage * 0.05f * num, new ProcChainMask(), false);
+                            cb.healthComponent.Heal(damageinfo.damage * 0.05f * num, default, false);
                         }
                     }
                 }
@@ -1270,6 +1269,92 @@ public class DarknessItems
         }
         
     }
+     public class DarkParentItem
+    {
+        public static ItemDef darkParentItem;
+
+        private Sprite darkParentSprite =
+            Addressables.LoadAssetAsync<Sprite>("RoR2/Base/ParentEgg/texParentEggIcon.png").WaitForCompletion();
+
+        private GameObject darkParentPickup = Addressables
+            .LoadAssetAsync<GameObject>("RoR2/Base/ParentEgg/PickupParentEgg.prefab")
+            .WaitForCompletion();
+        
+
+        public DarkParentItem()
+        {
+            darkParentItem = ScriptableObject.CreateInstance<ItemDef>();
+            darkParentItem.name = "DARK_PARENT_NAME";
+            darkParentItem.descriptionToken = "DARK_PARENT_DESCRIPTION";
+            darkParentItem.nameToken = "DARK_PARENT_NAME";
+            darkParentItem.loreToken = "DARK_PARENT_LORE";
+            darkParentItem.pickupToken = "DARK_PARENT_PICKUP";
+            darkParentItem.pickupIconSprite = darkParentSprite;
+            darkParentItem.pickupModelPrefab = darkParentPickup;
+            darkParentItem.canRemove = true;
+            darkParentItem.hidden = false;
+            darkParentItem._itemTierDef = darkTier;
+            var displayRules = new ItemDisplayRuleDict(null);
+            darkParentItem.itemIndex = ItemIndex.Count;
+            ItemAPI.Add(new CustomItem(darkParentItem, displayRules));
+            LanguageAPI.Add("DARK_PARENT_NAME", "Dark Planula");
+            LanguageAPI.Add("DARK_PARENT_DESCRIPTION", "Heal from incoming damage equal to 100% (+100% per stack) armor. On taking damage, ignite enemies within a 13m (+8m per stack) radius. Upon killing a dark enemy, gain 1.5 (+1.5 per stack) armor.");
+            LanguageAPI.Add("DARK_PARENT_PICKUP",
+                "Heal from incoming damage and ignite nearby enemies. Grows stronger as it absorbs darkness.");
+            darkItems.Add(darkParentItem);
+            HealthComponent.TakeDamageProcess += HealthComponentOnTakeDamageProcess;
+            testItem = darkParentItem;
+        }
+
+        private void HealthComponentOnTakeDamageProcess(HealthComponent.orig_TakeDamageProcess orig, RoR2.HealthComponent self, DamageInfo damageinfo)
+        {
+            if (self) if (self.body)
+                if (self.body.inventory)
+                {
+                    int numItems = self.body.inventory.GetItemCount(darkParentItem);
+                    if (numItems > 0)
+                    {
+                        self.Heal(self.body.armor * numItems, default, false);
+                        float radius = 13f + 8f * numItems;
+                        Vector3 corePosition = self.body.corePosition;
+                        GlobalEventManager.igniteOnKillSphereSearch.origin = corePosition;
+                        GlobalEventManager.igniteOnKillSphereSearch.mask = LayerIndex.entityPrecise.mask;
+                        GlobalEventManager.igniteOnKillSphereSearch.radius = radius;
+                        GlobalEventManager.igniteOnKillSphereSearch.RefreshCandidates();
+                        GlobalEventManager.igniteOnKillSphereSearch.FilterCandidatesByHurtBoxTeam(
+                            TeamMask.GetUnprotectedTeams(self.body.teamComponent.teamIndex));
+                        GlobalEventManager.igniteOnKillSphereSearch.FilterCandidatesByDistinctHurtBoxEntities();
+                        GlobalEventManager.igniteOnKillSphereSearch.OrderCandidatesByDistance();
+                        GlobalEventManager.igniteOnKillSphereSearch.GetHurtBoxes(GlobalEventManager
+                            .igniteOnKillHurtBoxBuffer);
+                        GlobalEventManager.igniteOnKillSphereSearch.ClearCandidates();
+                        float value = numItems * 0.1f * self.body.armor * self.body.damage;
+                        for (int i = 0; i < GlobalEventManager.igniteOnKillHurtBoxBuffer.Count; i++)
+                        {
+                            HurtBox hurtBox = GlobalEventManager.igniteOnKillHurtBoxBuffer[i];
+                            if (hurtBox.healthComponent)
+                            {
+                                InflictDotInfo inflictDotInfo = new InflictDotInfo
+                                {
+                                    victimObject = hurtBox.healthComponent.gameObject,
+                                    attackerObject = self.gameObject,
+                                    totalDamage = value,
+                                    dotIndex = DotController.DotIndex.Burn,
+                                    damageMultiplier = 1f
+                                };
+                                StrengthenBurnUtils.CheckDotForUpgrade(self.body.inventory, ref inflictDotInfo);
+
+                                DotController.InflictDot(ref inflictDotInfo);
+                            }
+                        }
+
+                        GlobalEventManager.igniteOnKillHurtBoxBuffer.Clear();
+                    }
+                }
+
+            orig(self, damageinfo);
+        }
+    }
     #endregion
     
     
@@ -1318,41 +1403,7 @@ public class DarknessItems
     }
     
     
-    public class DarkParentItem
-    {
-        public static ItemDef darkParentItem;
-
-        private Sprite darkParentSprite =
-            Addressables.LoadAssetAsync<Sprite>("RoR2/Base/ParentEgg/texParentEggIcon.png").WaitForCompletion();
-
-        private GameObject darkParentPickup = Addressables
-            .LoadAssetAsync<GameObject>("RoR2/Base/ParentEgg/PickupParentEgg.prefab")
-            .WaitForCompletion();
-        
-
-        public DarkParentItem()
-        {
-            darkParentItem = ScriptableObject.CreateInstance<ItemDef>();
-            darkParentItem.name = "DARK_PARENT_NAME";
-            darkParentItem.descriptionToken = "DARK_PARENT_DESCRIPTION";
-            darkParentItem.nameToken = "DARK_PARENT_NAME";
-            darkParentItem.loreToken = "DARK_PARENT_LORE";
-            darkParentItem.pickupToken = "DARK_PARENT_PICKUP";
-            darkParentItem.pickupIconSprite = darkParentSprite;
-            darkParentItem.pickupModelPrefab = darkParentPickup;
-            darkParentItem.canRemove = true;
-            darkParentItem.hidden = false;
-            darkParentItem._itemTierDef = darkTier;
-            var displayRules = new ItemDisplayRuleDict(null);
-            darkParentItem.itemIndex = ItemIndex.Count;
-            ItemAPI.Add(new CustomItem(darkParentItem, displayRules));
-            LanguageAPI.Add("DARK_PARENT_NAME", "Dark Planula");
-            LanguageAPI.Add("DARK_PARENT_DESCRIPTION", "Heal from incoming damage equal to 100% (+100% per stack) armor. On taking damage, ignite enemies within a 13m (+8m per stack) radius. Upon killing a dark enemy, gain 1.5 (+1.5 per stack) armor.");
-            LanguageAPI.Add("DARK_PARENT_PICKUP",
-                "Heal from incoming damage and ignite nearby enemies. Grows stronger as it absorbs darkness.");
-            darkItems.Add(darkParentItem);
-        }
-    }
+    
 
     public class DarkLightningItem
     {
