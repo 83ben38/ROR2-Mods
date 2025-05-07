@@ -309,7 +309,7 @@ public class DarknessShrine
             bossSpawner.ignoreTeamSizeLimit = true;
             bossSpawner.shouldSpawnOneWave = true;
             bossSpawner.enabled = true;
-            bossSpawner.maxSpawnDistance = 30f;
+            bossSpawner.maxSpawnDistance = 60f;
             bossSpawner.monsterCredit +=
                 (int)(600f * Mathf.Pow(Run.instance.compensatedDifficultyCoefficient, 0.5f));
             bossSpawner.SetNextSpawnAsBoss();
@@ -331,29 +331,64 @@ public class DarknessShrine
                     for (int j = 0; j < boss.Count; j++)
                     {
                         Inventory bossInventory = boss[j].inventory;
-                        //boss[j].GetBody().AddOrRemoveEliteItemBehavior(Darkness.DarknessBuff,true);
-                        //bossInventory.SetEquipmentIndex(Darkness.DarknessEquipment.equipmentIndex);
-                        // for (int i = 0; i < sacrificedItems.Count; i++)
-                        // {
-                        //     ItemIndex ii = sacrificedItems[i];
-                        //     int numItems = 1;
-                        //     if (ItemCatalog.tier1ItemList.Contains(ii))
-                        //     {
-                        //         numItems = 5;
-                        //     }
-                        //
-                        //     if (ItemCatalog.tier2ItemList.Contains(ii))
-                        //     {
-                        //         numItems = 3;
-                        //     }
-                        //     bossInventory.GiveItem(ii,numItems);
-                        // }
-                        //
-                        // if (bonusItemToGive != ItemIndex.None)
-                        // {
-                        //     bossInventory.GiveItem(bonusItemToGive);
-                        // }
-                        //bossInventory.GiveItemString("ShinyPearl",Darkness.DarknessLevel);
+                        bossInventory.SetEquipmentIndex(Darkness.DarknessEquipment.equipmentIndex);
+                        for (int i = 0; i < sacrificedItems.Count; i++)
+                        {
+                            ItemIndex ii = sacrificedItems[i];
+                            int numItems = 1;
+                            if (ItemCatalog.tier1ItemList.Contains(ii))
+                            {
+                                numItems = 5;
+                                while (ItemCatalog.GetItemDef(ii).ContainsTag(ItemTag.AIBlacklist))
+                                {
+                                    Log.Debug("Rerolling item");
+                                    ii = ItemCatalog.tier1ItemList[
+                                        (int)(ItemCatalog.tier1ItemList.Count * Random.value)];
+                                }
+                            }
+
+                            else if (ItemCatalog.tier2ItemList.Contains(ii))
+                            {
+                                numItems = 3;
+                                while (ItemCatalog.GetItemDef(ii).ContainsTag(ItemTag.AIBlacklist))
+                                {
+                                    Log.Debug("Rerolling item");
+                                    ii = ItemCatalog.tier2ItemList[
+                                        (int)(ItemCatalog.tier2ItemList.Count * Random.value)];
+                                }
+                            }
+
+                            else if (ItemCatalog.tier3ItemList.Contains(ii))
+                            {
+                                while (ItemCatalog.GetItemDef(ii).ContainsTag(ItemTag.AIBlacklist))
+                                {
+                                    Log.Debug("Rerolling item");
+                                    ii = ItemCatalog.tier3ItemList[
+                                        (int)(ItemCatalog.tier3ItemList.Count * Random.value)];
+                                }
+                            }
+                            else
+                            {
+                                while (ItemCatalog.GetItemDef(ii).ContainsTag(ItemTag.AIBlacklist))
+                                {
+                                    Log.Debug("Rerolling item");
+                                    ii = ItemCatalog.itemNameToIndex[
+                                        yellowItemNames[(int)(yellowItemNames.Length * Random.value)]];
+                                }
+                            }
+
+                            bossInventory.GiveItem(ii,numItems);
+                        }
+                        
+                        if (bonusItemToGive != ItemIndex.None)
+                        {
+                            bossInventory.GiveItem(bonusItemToGive);
+                        }
+                        float toMultiply = (0.1f * Darkness.DarknessLevel);
+                        CharacterBody bossBody = boss[j].GetBody();
+                        bossInventory.beadAppliedDamage += bossBody.baseDamage * toMultiply;
+                        bossInventory.beadAppliedHealth += bossBody.baseMaxHealth * toMultiply;
+                        bossBody.RecalculateStats();
                     }
                 }
                 if (bossSquad.defeatedServer)
