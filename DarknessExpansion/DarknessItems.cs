@@ -133,6 +133,11 @@ public class DarknessItems
             behaviorType = typeof(DarkClayItem.DarkClayItemBehavior),
             itemIndex = DarkClayItem.darkClayItem.itemIndex
         });
+        itemTypePairs.Add(new BaseItemBodyBehavior.ItemTypePair()
+        {
+            behaviorType = typeof(DarkConstructItem.DarkConstructItemBehavior),
+            itemIndex = DarkConstructItem.darkConstructItem.itemIndex
+        });
         BaseItemBodyBehavior.server.SetItemTypePairs(itemTypePairs);
         itemTypePairs = BaseItemBodyBehavior.shared.itemTypePairs.ToList();
         itemTypePairs.Add(new BaseItemBodyBehavior.ItemTypePair()
@@ -159,6 +164,11 @@ public class DarknessItems
         {
             behaviorType = typeof(DarkClayItem.DarkClayItemBehavior),
             itemIndex = DarkClayItem.darkClayItem.itemIndex
+        });
+        itemTypePairs.Add(new BaseItemBodyBehavior.ItemTypePair()
+        {
+            behaviorType = typeof(DarkConstructItem.DarkConstructItemBehavior),
+            itemIndex = DarkConstructItem.darkConstructItem.itemIndex
         });
         BaseItemBodyBehavior.shared.SetItemTypePairs(itemTypePairs);
         itemTypePairs = BaseItemBodyBehavior.client.itemTypePairs.ToList();
