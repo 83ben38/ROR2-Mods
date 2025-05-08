@@ -385,11 +385,12 @@ public class DarknessShrine
                         {
                             bossInventory.GiveItem(bonusItemToGive);
                         }
-                        float toMultiply = (0.1f * Darkness.DarknessLevel);
-                        CharacterBody bossBody = boss[j].GetBody();
-                        bossInventory.beadAppliedDamage += bossBody.baseDamage * toMultiply;
-                        bossInventory.beadAppliedHealth += bossBody.baseMaxHealth * toMultiply;
-                        bossBody.RecalculateStats();
+                        // float toMultiply = (0.1f * Darkness.DarknessLevel);
+                        // CharacterBody bossBody = boss[j].GetBody();
+                        // bossInventory.beadAppliedDamage += bossBody.baseDamage * toMultiply;
+                        // bossInventory.beadAppliedHealth += bossBody.baseMaxHealth * toMultiply;
+                        // bossBody.RecalculateStats();
+                        bossInventory.GiveItemString("ShinyPearl",Darkness.DarknessLevel);
                     }
                 }
                 if (bossSquad.defeatedServer)
