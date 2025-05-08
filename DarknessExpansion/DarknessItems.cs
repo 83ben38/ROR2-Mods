@@ -57,11 +57,11 @@ public class DarknessItems
         new DarkBleedItem();
         new DarkClayItem();
         new DarkConstructItem();
-        new DarkCoreItem();
         new DarkParentItem();       
         new DarkLightningItem();
         new DarkFireItem();
         new DarkStacksItem();
+        new DarkCoreItem();
         Inventory.onServerItemGiven += InventoryOnonServerItemGiven;
         onKillDarknessEnemy += body => body.inventory.GiveItem(stackingDarkItem);
         On.RoR2.CharacterMaster.OnInventoryChanged += CharacterMasterOnOnInventoryChanged;
