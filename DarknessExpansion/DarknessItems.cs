@@ -1724,7 +1724,7 @@ public class DarknessItems
                         {
                             Log.Debug("Shooting");
                             float newDamage = di.damage * 3 * stack;
-                            CharacterBody cb = children[i].GetComponent<CharacterBody>();
+                            CharacterBody cb = children[i].GetComponent<CharacterMaster>().GetBody();
                             cb.baseDamage = newDamage;
                             InputBankTest ibt = cb.inputBank;
                             ibt.aimDirection = children[i].transform.position - victim.transform.position;
