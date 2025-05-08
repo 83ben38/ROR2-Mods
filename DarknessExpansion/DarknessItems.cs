@@ -5,7 +5,9 @@ using EntityStates.TitanMonster;
 using EntityStates.VagrantNovaItem;
 using R2API;
 using RoR2;
+using RoR2.CharacterAI;
 using RoR2.Items;
+using RoR2.Navigation;
 using RoR2.Orbs;
 using RoR2.Projectile;
 using RoR2.UI;
@@ -1597,7 +1599,32 @@ public class DarknessItems
             darkItems.Add(darkConstructItem);
             GlobalEventManager.onCharacterDeathGlobal += GlobalEventManagerOnonCharacterDeathGlobal;
             On.RoR2.CharacterMaster.GetDeployableSameSlotLimit += CharacterMasterOnGetDeployableSameSlotLimit;
+            On.RoR2.GlobalEventManager.ProcessHitEnemy += GlobalEventManagerOnProcessHitEnemy;
             testItem = darkConstructItem;
+            spawnCard.prefab.GetComponent<BaseAI>().desiredSpawnNodeGraphType = MapNodeGroup.GraphType.Air;
+            AISkillDriver[] skills = spawnCard.prefab.GetComponents<AISkillDriver>();
+            for (int i = 0; i < skills.Length; i++)
+            {
+                skills[i].enabled = false;
+            }
+        }
+
+        private void GlobalEventManagerOnProcessHitEnemy(On.RoR2.GlobalEventManager.orig_ProcessHitEnemy orig, GlobalEventManager self, DamageInfo damageinfo, GameObject victim)
+        {
+            if (damageinfo.attacker)
+            {
+                CharacterBody cb = damageinfo.attacker.GetComponent<CharacterBody>();
+                if (cb && cb.inventory)
+                {
+                    int numItems = cb.inventory.GetItemCount(darkConstructItem);
+                    if (numItems > 0)
+                    {
+                        cb.GetComponent<DarkConstructItemBehavior>().shoot(damageinfo,victim);
+                    }
+                }
+            }
+
+            orig(self, damageinfo, victim);
         }
 
         private int CharacterMasterOnGetDeployableSameSlotLimit(On.RoR2.CharacterMaster.orig_GetDeployableSameSlotLimit orig, CharacterMaster self, DeployableSlot slot)
@@ -1618,35 +1645,90 @@ public class DarknessItems
         
                 if (!obj.attackerMaster.IsDeployableLimited(DeployableSlot.MinorConstructOnKill) && obj.attackerBody.inventory.GetItemCount(darkConstructItem) > 0)
                 {
-                    CharacterMaster characterMaster = obj.attackerMaster;
-                    Transform transform = obj.attacker.transform;
-			        DirectorCore.MonsterSpawnDistance input = DirectorCore.MonsterSpawnDistance.Close;
-			        DirectorPlacementRule directorPlacementRule = new DirectorPlacementRule
-			        {
-				        spawnOnTarget = transform,
-				        placementMode = DirectorPlacementRule.PlacementMode.Direct
-			        };
-			        DirectorCore.GetMonsterSpawnDistance(input, out directorPlacementRule.minDistance, out directorPlacementRule.maxDistance);
-			        DirectorSpawnRequest directorSpawnRequest = new DirectorSpawnRequest(spawnCard, directorPlacementRule, new Xoroshiro128Plus(Run.instance.seed + (ulong)Run.instance.fixedTime));
-			        directorSpawnRequest.teamIndexOverride = characterMaster.teamIndex;
-			        directorSpawnRequest.ignoreTeamMemberLimit = false;
-			        directorSpawnRequest.summonerBodyObject = obj.attacker;
-                    DirectorSpawnRequest directorSpawnRequest2 = directorSpawnRequest;
-                    directorSpawnRequest2.onSpawnedServer = (Action<SpawnCard.SpawnResult>)Delegate.Combine(directorSpawnRequest2.onSpawnedServer, new Action<SpawnCard.SpawnResult>(delegate(SpawnCard.SpawnResult result)
-                    {
-                        if (result.success && result.spawnedInstance)
-                        {
-                            result.spawnedInstance.GetComponent<CharacterMaster>();
-                            Deployable deployable = result.spawnedInstance.AddComponent<Deployable>();
-                            characterMaster.AddDeployable(deployable,DeployableSlot.MinorConstructOnKill);
-                        }
-                    }));
-                    DirectorCore.instance.TrySpawnObject(directorSpawnRequest);
+                    obj.attackerBody.GetComponent<DarkConstructItemBehavior>().spawnChild();
                 }
             }
         }
+        public class DarkConstructItemBehavior : BaseItemBodyBehavior
+        {
+            [ItemDefAssociation(useOnServer = true, useOnClient = false)]
+            private static ItemDef GetItemDef()
+            {
+                return darkConstructItem;
+            }
 
-        private SpawnCard spawnCard = Addressables.LoadAssetAsync<SpawnCard>("RoR2/DLC1/MajorAndMinorConstruct/cscMinorConstructOnKill.asset").WaitForCompletion();
+            private void Start()
+            {
+                master = body.master;
+            }
+
+            public CharacterMaster master;
+
+            public void spawnChild()
+            {
+                CharacterMaster characterMaster = master;
+                DirectorCore.MonsterSpawnDistance input = DirectorCore.MonsterSpawnDistance.Close;
+                DirectorPlacementRule directorPlacementRule = new DirectorPlacementRule
+                {
+                    spawnOnTarget = transform,
+                    placementMode = DirectorPlacementRule.PlacementMode.Direct
+                };
+                DirectorCore.GetMonsterSpawnDistance(input, out directorPlacementRule.minDistance, out directorPlacementRule.maxDistance);
+                DirectorSpawnRequest directorSpawnRequest = new DirectorSpawnRequest(spawnCard, directorPlacementRule, new Xoroshiro128Plus(Run.instance.seed + (ulong)Run.instance.fixedTime));
+                directorSpawnRequest.teamIndexOverride = characterMaster.teamIndex;
+                directorSpawnRequest.ignoreTeamMemberLimit = false;
+                directorSpawnRequest.summonerBodyObject = gameObject;
+                DirectorSpawnRequest directorSpawnRequest2 = directorSpawnRequest;
+                directorSpawnRequest2.onSpawnedServer = (Action<SpawnCard.SpawnResult>)Delegate.Combine(directorSpawnRequest2.onSpawnedServer, new Action<SpawnCard.SpawnResult>(delegate(SpawnCard.SpawnResult result)
+                {
+                    if (result.success && result.spawnedInstance)
+                    {
+                        result.spawnedInstance.GetComponent<CharacterMaster>();
+                        Deployable deployable = result.spawnedInstance.AddComponent<Deployable>();
+                        characterMaster.AddDeployable(deployable,DeployableSlot.MinorConstructOnKill);
+                        children.Add(result.spawnedInstance);
+                        result.spawnedInstance.transform.SetParent(transform);
+                    }
+                }));
+            }
+
+            public void shoot(DamageInfo di, GameObject victim)
+            {
+                if (!di.procChainMask.HasProc((ProcType)25))
+                {
+                    ProcChainMask newMask = di.procChainMask;
+                    newMask.AddProc((ProcType)25);
+                    for (int i = 0; i < children.Count; i++)
+                    {
+                        while (!children[i])
+                        {
+                            children.RemoveAt(i);
+                            if (children.Count == i)
+                            {
+                                return;
+                            }
+                        }
+                        if (Util.CheckRoll(5f * di.procCoefficient, master))
+                        {
+                            float newDamage = di.damage * 3;
+                            AISkillDriver[] drivers = children[i].GetComponents<AISkillDriver>();
+                            for (int j = 0; j < drivers.Length; j++)
+                            {
+                                if (drivers[i].customName == "Shooty")
+                                {
+                                    //shoot from drivers[i] to victim
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            private List<GameObject> children = new ();
+
+
+
+        }
+        private static SpawnCard spawnCard = Addressables.LoadAssetAsync<SpawnCard>("RoR2/DLC1/MajorAndMinorConstruct/cscMinorConstructOnKill.asset").WaitForCompletion();
     }
     
     
