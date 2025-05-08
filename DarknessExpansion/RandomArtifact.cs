@@ -33,8 +33,8 @@ public class RandomArtifact
     {
         if (arg1)  if (!ItemCatalog.GetItemDef(arg2).hidden)
         {
-            CharacterBody cb0 = arg1.GetComponent<CharacterBody>();
-            if (cb0) if (cb0.teamComponent.teamIndex == TeamIndex.Player)
+            CharacterMaster cb0 = arg1.GetComponent<CharacterMaster>();
+            if (cb0) if (cb0.GetBody()) if (cb0.GetBody().teamComponent.teamIndex == TeamIndex.Player)
             {
                 int optionNum = Random.RandomRangeInt(0, 25);
                 int indexInInventory = arg1.itemAcquisitionOrder.IndexOf(arg2);
