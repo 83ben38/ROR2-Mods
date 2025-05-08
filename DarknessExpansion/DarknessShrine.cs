@@ -327,6 +327,7 @@ public class DarknessShrine
             {
                 if (!changedEnemies && bossSquad.membersList.Count > 0)
                 {
+                    changedEnemies = true;
                     List<CharacterMaster> boss = bossSquad.membersList;
                     for (int j = 0; j < boss.Count; j++)
                     {
