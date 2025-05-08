@@ -1490,7 +1490,6 @@ public class DarknessItems
                 "Chance on hit to summon fireballs. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkFireItem);
             On.RoR2.GlobalEventManager.ProcessHitEnemy += GlobalEventManagerOnProcessHitEnemy;
-            testItem = darkFireItem;
         }
         private void GlobalEventManagerOnProcessHitEnemy(On.RoR2.GlobalEventManager.orig_ProcessHitEnemy orig, GlobalEventManager self, DamageInfo damageInfo, GameObject victim)
         {
@@ -1592,11 +1591,62 @@ public class DarknessItems
             darkConstructItem.itemIndex = ItemIndex.Count;
             ItemAPI.Add(new CustomItem(darkConstructItem, displayRules));
             LanguageAPI.Add("DARK_CONSTRUCT_NAME", "Defense Cell");
-            LanguageAPI.Add("DARK_CONSTRUCT_DESCRIPTION", "Killing an elite enemy spawns an Alpha Construct that attaches to you with 1000% (+1000% per stack) health. On hit, all Constructs attached to you have a 5% chance to fire at the enemy hit for 300% (+300% per stack) damage. Limit of 4 (+4 per stack) constructs. Upon killing a dark enemy, gain .03 luck.");
+            LanguageAPI.Add("DARK_CONSTRUCT_DESCRIPTION", "Killing an elite enemy spawns an Alpha Construct that attaches to you with 1000% (+1000% per stack) health. On hit, all Constructs attached to you have a 5% chance to fire at the enemy hit for 300% (+300% per stack) total damage. Limit of 4 (+4 per stack) constructs. Upon killing a dark enemy, gain .03 luck.");
             LanguageAPI.Add("DARK_CONSTRUCT_PICKUP",
                 "Upon killing an elite, gain an alpha construct that attaches to you and fires at enemies you fire at. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkConstructItem);
+            GlobalEventManager.onCharacterDeathGlobal += GlobalEventManagerOnonCharacterDeathGlobal;
+            On.RoR2.CharacterMaster.GetDeployableSameSlotLimit += CharacterMasterOnGetDeployableSameSlotLimit;
+            testItem = darkConstructItem;
         }
+
+        private int CharacterMasterOnGetDeployableSameSlotLimit(On.RoR2.CharacterMaster.orig_GetDeployableSameSlotLimit orig, CharacterMaster self, DeployableSlot slot)
+        {
+            if (slot == DeployableSlot.MinorConstructOnKill)
+            {
+                return 4 * (self.inventory.GetItemCount(DLC1Content.Items.MinorConstructOnKill) +
+                            self.inventory.GetItemCount(darkConstructItem));
+            }
+
+            return orig(self, slot);
+        }
+
+        private void GlobalEventManagerOnonCharacterDeathGlobal(DamageReport obj)
+        {
+            if (obj.attackerBody && obj.attackerBody.inventory && obj.victimBody && obj.victimBody.isElite && obj.attackerMaster && obj.attacker)
+            {
+        
+                if (!obj.attackerMaster.IsDeployableLimited(DeployableSlot.MinorConstructOnKill) && obj.attackerBody.inventory.GetItemCount(darkConstructItem) > 0)
+                {
+                    CharacterMaster characterMaster = obj.attackerMaster;
+                    Transform transform = obj.attacker.transform;
+			        DirectorCore.MonsterSpawnDistance input = DirectorCore.MonsterSpawnDistance.Close;
+			        DirectorPlacementRule directorPlacementRule = new DirectorPlacementRule
+			        {
+				        spawnOnTarget = transform,
+				        placementMode = DirectorPlacementRule.PlacementMode.Direct
+			        };
+			        DirectorCore.GetMonsterSpawnDistance(input, out directorPlacementRule.minDistance, out directorPlacementRule.maxDistance);
+			        DirectorSpawnRequest directorSpawnRequest = new DirectorSpawnRequest(spawnCard, directorPlacementRule, new Xoroshiro128Plus(Run.instance.seed + (ulong)Run.instance.fixedTime));
+			        directorSpawnRequest.teamIndexOverride = characterMaster.teamIndex;
+			        directorSpawnRequest.ignoreTeamMemberLimit = false;
+			        directorSpawnRequest.summonerBodyObject = obj.attacker;
+                    DirectorSpawnRequest directorSpawnRequest2 = directorSpawnRequest;
+                    directorSpawnRequest2.onSpawnedServer = (Action<SpawnCard.SpawnResult>)Delegate.Combine(directorSpawnRequest2.onSpawnedServer, new Action<SpawnCard.SpawnResult>(delegate(SpawnCard.SpawnResult result)
+                    {
+                        if (result.success && result.spawnedInstance)
+                        {
+                            result.spawnedInstance.GetComponent<CharacterMaster>();
+                            Deployable deployable = result.spawnedInstance.AddComponent<Deployable>();
+                            characterMaster.AddDeployable(deployable,DeployableSlot.MinorConstructOnKill);
+                        }
+                    }));
+                    DirectorCore.instance.TrySpawnObject(directorSpawnRequest);
+                }
+            }
+        }
+
+        private SpawnCard spawnCard = Addressables.LoadAssetAsync<SpawnCard>("RoR2/DLC1/MajorAndMinorConstruct/cscMinorConstructOnKill.asset").WaitForCompletion();
     }
     
     
