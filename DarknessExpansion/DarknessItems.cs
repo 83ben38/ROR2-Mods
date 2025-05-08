@@ -1676,6 +1676,7 @@ public class DarknessItems
 
             public void spawnChild()
             {
+                Log.Debug("Spawning");
                 CharacterMaster characterMaster = master;
                 DirectorCore.MonsterSpawnDistance input = DirectorCore.MonsterSpawnDistance.Close;
                 DirectorPlacementRule directorPlacementRule = new DirectorPlacementRule
@@ -1688,18 +1689,19 @@ public class DarknessItems
                 directorSpawnRequest.teamIndexOverride = characterMaster.teamIndex;
                 directorSpawnRequest.ignoreTeamMemberLimit = false;
                 directorSpawnRequest.summonerBodyObject = gameObject;
-                DirectorSpawnRequest directorSpawnRequest2 = directorSpawnRequest;
-                directorSpawnRequest2.onSpawnedServer = (Action<SpawnCard.SpawnResult>)Delegate.Combine(directorSpawnRequest2.onSpawnedServer, new Action<SpawnCard.SpawnResult>(delegate(SpawnCard.SpawnResult result)
+                directorSpawnRequest.onSpawnedServer = (Action<SpawnCard.SpawnResult>)Delegate.Combine(directorSpawnRequest.onSpawnedServer, new Action<SpawnCard.SpawnResult>(delegate(SpawnCard.SpawnResult result)
                 {
                     if (result.success && result.spawnedInstance)
                     {
-                        result.spawnedInstance.GetComponent<CharacterMaster>();
+                        result.spawnedInstance.GetComponent<CharacterMaster>().GetBody().skillLocator.primary.cooldownScale = 0.01f;
+                        result.spawnedInstance.GetComponent<CharacterMaster>().GetBody().baseMaxHealth *= 10 * stack;
                         Deployable deployable = result.spawnedInstance.AddComponent<Deployable>();
                         characterMaster.AddDeployable(deployable,DeployableSlot.MinorConstructOnKill);
                         children.Add(result.spawnedInstance);
                         result.spawnedInstance.transform.SetParent(transform);
                     }
                 }));
+                DirectorCore.instance.TrySpawnObject(directorSpawnRequest);
             }
 
             public void shoot(DamageInfo di, GameObject victim)
@@ -1720,19 +1722,30 @@ public class DarknessItems
                         }
                         if (Util.CheckRoll(5f * di.procCoefficient, master))
                         {
-                            float newDamage = di.damage * 3;
-                            AISkillDriver[] drivers = children[i].GetComponents<AISkillDriver>();
-                            for (int j = 0; j < drivers.Length; j++)
-                            {
-                                if (drivers[i].customName == "Shooty")
-                                {
-                                    //shoot from drivers[i] to victim
-                                }
-                            }
+                            Log.Debug("Shooting");
+                            float newDamage = di.damage * 3 * stack;
+                            CharacterBody cb = children[i].GetComponent<CharacterBody>();
+                            cb.baseDamage = newDamage;
+                            InputBankTest ibt = cb.inputBank;
+                            ibt.aimDirection = children[i].transform.position - victim.transform.position;
+                            ibt.skill1.PushState(true);
+                            toUndo.Add(ibt);
                         }
                     }
                 }
             }
+
+            private void FixedUpdate()
+            {
+                for (int i = 0; i < toUndo.Count; i++)
+                {
+                    toUndo[i].skill1.PushState(false);
+                }
+
+                toUndo = new List<InputBankTest>();
+            }
+
+            private List<InputBankTest> toUndo = new List<InputBankTest>();
             private List<GameObject> children = new ();
 
 
