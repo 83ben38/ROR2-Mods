@@ -1693,9 +1693,10 @@ public class DarknessItems
                 {
                     if (result.success && result.spawnedInstance)
                     {
-                        result.spawnedInstance.GetComponent<CharacterMaster>().GetBody().skillLocator.primary.cooldownScale = 0.01f;
                         result.spawnedInstance.GetComponent<CharacterMaster>().GetBody().baseMaxHealth *= 10 * stack;
                         Deployable deployable = result.spawnedInstance.AddComponent<Deployable>();
+                        NetworkedBodyAttachment nba = result.spawnedInstance.AddComponent<NetworkedBodyAttachment>();
+                        nba.AttachToGameObjectAndSpawn(gameObject);
                         characterMaster.AddDeployable(deployable,DeployableSlot.MinorConstructOnKill);
                         children.Add(result.spawnedInstance);
                         result.spawnedInstance.transform.SetParent(transform);
