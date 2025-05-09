@@ -70,13 +70,15 @@ public class Darkness
             {
                 if (i.GetEquipmentIndex() == DarknessEquipment.equipmentIndex)
                 {
+                    List<ItemDef> li = DarknessItems.darkItems;
+                    i.GiveItem(li[(int)((li.Count-1) * Random.value)]);
                     float itemChance = DarknessLevel / 10f;
-                    if (Random.value < itemChance)
+                    for (int j = 0; j < 3; j++)
                     {
-                        List<ItemDef> li = DarknessItems.darkItems;
-                        i.GiveItem(li[(int)((li.Count-1) * Random.value)]);
-                        Log.Debug("Giving Item");
-
+                        if (Random.value < itemChance)
+                        {
+                            i.GiveItem(li[(int)((li.Count-1) * Random.value)]);
+                        }
                     }
                 }
             }
