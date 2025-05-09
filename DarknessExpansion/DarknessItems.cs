@@ -1728,14 +1728,8 @@ public class DarknessItems
                         }
                         if (Util.CheckRoll(5f * di.procCoefficient, master))
                         {
-                            Log.Debug("Shooting");
                             float newDamage = di.damage * 3 * stack;
-                            CharacterBody cb = children[i].GetComponent<CharacterMaster>().GetBody();
-                            cb.baseDamage = newDamage;
-                            InputBankTest ibt = cb.inputBank;
-                            ibt.aimDirection = children[i].transform.position - victim.transform.position;
-                            ibt.skill1.PushState(true);
-                            toUndo.Add(ibt);
+                            ProjectileManager.instance.FireProjectileWithoutDamageType(projectile, children[i].transform.position, Quaternion.LookRotation(victim.transform.position-children[i].transform.position,Vector3.up), children[i], newDamage, 3f, Util.CheckRoll(body.crit, body.master), DamageColorIndex.Item,victim);
                         }
                     }
                 }
@@ -1759,20 +1753,17 @@ public class DarknessItems
 
                     masters[i].GetBodyObject().transform.position = currentPos + positions[i];
                 }
-                for (int i = 0; i < toUndo.Count; i++)
-                {
-                    toUndo[i].skill1.PushState(false);
-                }
-
-                toUndo = new List<InputBankTest>();
             }
 
-            private List<InputBankTest> toUndo = new List<InputBankTest>();
             private List<GameObject> children = new ();
             private List<CharacterMaster> masters = new();
             private List<Vector3> positions = new();
 
         }
+
+        private static GameObject projectile = Addressables
+            .LoadAssetAsync<GameObject>("RoR2/DLC1/MajorAndMinorConstruct/MinorConstructProjectile.prefab")
+            .WaitForCompletion();
         private static SpawnCard spawnCard = Addressables.LoadAssetAsync<SpawnCard>("RoR2/DLC1/MajorAndMinorConstruct/cscMinorConstructOnKill.asset").WaitForCompletion();
     }
     
