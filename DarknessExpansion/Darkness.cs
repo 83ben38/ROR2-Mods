@@ -73,11 +73,20 @@ public class Darkness
                     List<ItemDef> li = DarknessItems.darkItems;
                     i.GiveItem(li[(int)((li.Count-1) * Random.value)]);
                     float itemChance = DarknessLevel / 10f;
+                    if (Random.value < itemChance)
+                    {
+                        i.GiveItem(li[(int)((li.Count-1) * Random.value)]);
+                    }
                     for (int j = 0; j < 3; j++)
                     {
                         if (Random.value < itemChance)
                         {
-                            i.GiveItem(li[(int)((li.Count-1) * Random.value)]);
+                            i.GiveItem(ItemCatalog.itemNameToIndex[
+                                DarknessShrine.yellowItemNames[(int)(DarknessShrine.yellowItemNames.Length * Random.value)]]);
+                        }
+                        else
+                        {
+                            break;
                         }
                     }
                 }

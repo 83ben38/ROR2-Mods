@@ -1699,7 +1699,10 @@ public class DarknessItems
                         nba.AttachToGameObjectAndSpawn(gameObject);
                         characterMaster.AddDeployable(deployable,DeployableSlot.MinorConstructOnKill);
                         children.Add(result.spawnedInstance);
-                        result.spawnedInstance.transform.SetParent(transform);
+                        masters.Add(result.spawnedInstance.GetComponent<CharacterMaster>());
+                        positions.Add(Random.insideUnitSphere * 2f);
+                        result.spawnedInstance.GetComponent<CharacterMaster>().GetBodyObject().transform.rotation =
+                            Random.rotation;
                     }
                 }));
                 DirectorCore.instance.TrySpawnObject(directorSpawnRequest);
@@ -1716,6 +1719,8 @@ public class DarknessItems
                         while (!children[i])
                         {
                             children.RemoveAt(i);
+                            masters.RemoveAt(i);
+                            positions.RemoveAt(i);
                             if (children.Count == i)
                             {
                                 return;
@@ -1738,6 +1743,22 @@ public class DarknessItems
 
             private void FixedUpdate()
             {
+                Vector3 currentPos = transform.position;
+                for (int i = 0; i < children.Count; i++)
+                {
+                    while (!children[i])
+                    {
+                        children.RemoveAt(i);
+                        masters.RemoveAt(i);
+                        positions.RemoveAt(i);
+                        if (children.Count == i)
+                        {
+                            return;
+                        }
+                    }
+
+                    masters[i].GetBodyObject().transform.position = currentPos + positions[i];
+                }
                 for (int i = 0; i < toUndo.Count; i++)
                 {
                     toUndo[i].skill1.PushState(false);
@@ -1748,8 +1769,8 @@ public class DarknessItems
 
             private List<InputBankTest> toUndo = new List<InputBankTest>();
             private List<GameObject> children = new ();
-
-
+            private List<CharacterMaster> masters = new();
+            private List<Vector3> positions = new();
 
         }
         private static SpawnCard spawnCard = Addressables.LoadAssetAsync<SpawnCard>("RoR2/DLC1/MajorAndMinorConstruct/cscMinorConstructOnKill.asset").WaitForCompletion();
