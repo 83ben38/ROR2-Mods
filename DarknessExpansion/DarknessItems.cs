@@ -1563,18 +1563,7 @@ public class DarknessItems
             orig(self, damageInfo, victim);
         }
     }
-    #endregion
-    
-    
-    #region uncompleteItems
-   
-    
-    
-    
-    
-    
-    
-    public class DarkConstructItem
+     public class DarkConstructItem
     {
         public static ItemDef darkConstructItem;
 
@@ -1703,6 +1692,8 @@ public class DarknessItems
                         positions.Add(Random.insideUnitSphere * 2f);
                         result.spawnedInstance.GetComponent<CharacterMaster>().GetBodyObject().transform.rotation =
                             Random.rotation;
+                        result.spawnedInstance.GetComponent<CharacterMaster>().GetBodyObject().layer =
+                            LayerIndex.playerBody.intVal;
                     }
                 }));
                 DirectorCore.instance.TrySpawnObject(directorSpawnRequest);
@@ -1766,11 +1757,8 @@ public class DarknessItems
             .WaitForCompletion();
         private static SpawnCard spawnCard = Addressables.LoadAssetAsync<SpawnCard>("RoR2/DLC1/MajorAndMinorConstruct/cscMinorConstructOnKill.asset").WaitForCompletion();
     }
-    
-    
-    
-
-    
-
     #endregion
+    
+    
+    
 }

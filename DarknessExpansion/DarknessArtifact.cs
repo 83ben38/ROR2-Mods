@@ -28,7 +28,7 @@ public class DarknessArtifact
     {
         if (RunArtifactManager.instance.IsArtifactEnabled(darknessArtifact))
         {
-            Darkness.DarknessLevel += 3;
+            Darkness.DarknessLevel++;
             Darkness.UpdateDarkness();
             foreach (var cm in CharacterMaster.instancesList)
             {

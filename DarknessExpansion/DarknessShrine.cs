@@ -52,12 +52,12 @@ public class DarknessShrine
         "BleedOnHitAndExplode",
         "SiphonOnLowHealth",
         "MinorConstructOnKill",
-        "RoboBallBuddy",
         "ParentEgg",
         "LightningStrikeOnHit",
         "FireballsOnHit",
         "Pearl",
-        "ShinyPearl"
+        "ShinyPearl",
+        "RoboBallBuddy"
     };
 
 
@@ -374,22 +374,18 @@ public class DarknessShrine
                                 {
                                     Log.Debug("Rerolling item");
                                     ii = ItemCatalog.itemNameToIndex[
-                                        yellowItemNames[(int)(yellowItemNames.Length * Random.value)]];
+                                        yellowItemNames[(int)((yellowItemNames.Length -1) * Random.value)]];
                                 }
                             }
-
+                            
                             bossInventory.GiveItem(ii,numItems);
                         }
-                        
                         if (bonusItemToGive != ItemIndex.None)
                         {
                             bossInventory.GiveItem(bonusItemToGive);
                         }
-                        // float toMultiply = (0.1f * Darkness.DarknessLevel);
-                        // CharacterBody bossBody = boss[j].GetBody();
-                        // bossInventory.beadAppliedDamage += bossBody.baseDamage * toMultiply;
-                        // bossInventory.beadAppliedHealth += bossBody.baseMaxHealth * toMultiply;
-                        // bossBody.RecalculateStats();
+                        List<ItemDef> li = DarknessItems.darkItems;
+                        bossInventory.GiveItem(li[(int)((li.Count-1) * Random.value)]);
                         bossInventory.GiveItemString("ShinyPearl",Darkness.DarknessLevel);
                     }
                 }

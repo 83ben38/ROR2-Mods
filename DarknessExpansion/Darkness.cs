@@ -82,7 +82,7 @@ public class Darkness
                         if (Random.value < itemChance)
                         {
                             i.GiveItem(ItemCatalog.itemNameToIndex[
-                                DarknessShrine.yellowItemNames[(int)(DarknessShrine.yellowItemNames.Length * Random.value)]]);
+                                DarknessShrine.yellowItemNames[(int)((DarknessShrine.yellowItemNames.Length-1) * Random.value)]]);
                         }
                         else
                         {
