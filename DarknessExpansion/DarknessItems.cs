@@ -238,7 +238,7 @@ public class DarknessItems
 
         if (obj.attackerBody.inventory)
         {
-            if (obj.victimBody.inventory.GetEquipmentIndex() ==
+            if (obj.victimBody && obj.victimBody.inventory) if (obj.victimBody.inventory.GetEquipmentIndex() ==
                 Darkness.DarknessEquipment.equipmentIndex)
             {
                 onKillDarknessEnemy.Invoke(obj.attackerBody);
@@ -525,7 +525,7 @@ public class DarknessItems
                 return;
             }
 
-            if (obj.attackerBody.inventory)
+            if (obj.attackerBody.inventory && obj.victimBody)
             {
                 int numDarkBleedItems = obj.attackerBody.inventory.GetItemCount(darkBleedItem);
                 if (numDarkBleedItems > 0 && obj.victimBody.HasBuff(RoR2Content.Buffs.Bleeding) || obj.victimBody.HasBuff(RoR2Content.Buffs.SuperBleed))
