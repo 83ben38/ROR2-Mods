@@ -377,7 +377,7 @@ public class DarknessItems
         
         private void HealthComponentOnTakeDamageProcess(HealthComponent.orig_TakeDamageProcess orig, RoR2.HealthComponent self, DamageInfo damageinfo)
         {
-            if (self) if (self.body) if (self.body.inventory)
+            if (self) if (self.body) if (self.body.inventory) if (damageinfo.attacker)
             {
                 int numDarkGolems = self.body.inventory.GetItemCount(darkGolemItem);
                 if (numDarkGolems > 0)
@@ -852,7 +852,7 @@ public class DarknessItems
                     if (num != 0)
                     {
                         destInventory.GiveItem(DarkStacksItem.stackingDarkItem,num);
-                        granted = itemCount;
+                        granted2 = itemCount;
                     }
                 }
             }

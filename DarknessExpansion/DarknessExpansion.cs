@@ -27,6 +27,8 @@ public class DarknessExpansion : BaseUnityPlugin
         new DarknessArtifact();
         new DarknessItems();
     }
+
+    private int itemNum = 0;
     
     private void Update()
     {
@@ -34,7 +36,12 @@ public class DarknessExpansion : BaseUnityPlugin
         if (Input.GetKeyDown(KeyCode.F2))
         {
             var transform = PlayerCharacterMasterController.instances[0].master.GetBodyObject().transform;
-            PickupDropletController.CreatePickupDroplet(PickupCatalog.FindPickupIndex(ItemCatalog.FindItemIndex("Knurl")),transform.position,transform.forward*20f);
+            PickupDropletController.CreatePickupDroplet(PickupCatalog.FindPickupIndex(DarknessItems.darkItems[itemNum].itemIndex),transform.position,transform.forward*20f);
+            itemNum++;
+            if (itemNum == DarknessItems.darkItems.Count)
+            {
+                itemNum = 0;
+            }
         }
     }
 
