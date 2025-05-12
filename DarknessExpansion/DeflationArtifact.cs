@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using BepInEx;
+﻿using BepInEx;
 using R2API;
-using RoR2;
-using RoR2.Items;
-using UnityEngine;
 
 namespace DarknessExpansion;
-[BepInPlugin("com.cybug.DarknessExpansion", "DarknessExpansion","0.0.1")]
+[BepInPlugin("com.cybug.DeflationArtifact", "DeflationArtifact","0.0.1")]
 [BepInDependency(ItemAPI.PluginGUID)]
 [BepInDependency(EliteAPI.PluginGUID)]
 [BepInDependency(LanguageAPI.PluginGUID)]
@@ -17,15 +11,12 @@ namespace DarknessExpansion;
 [BepInDependency(RecalculateStatsAPI.PluginGUID)]
 
 
-public class DarknessExpansion : BaseUnityPlugin
+public class DeflationArtifact : BaseUnityPlugin
 {
     private void Awake()
     {
         Log.Init(Logger);
-        new Darkness();
-        new DarknessShrine();
-        new DarknessArtifact();
-        new DarknessItems();
+        new Deflation(Info);
     }
 
     // private int itemNum = 0;
