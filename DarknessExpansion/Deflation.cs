@@ -217,7 +217,7 @@ public class Deflation
     {
         if (RunArtifactManager.instance.IsArtifactEnabled(deflationArtifact))
         {
-            baazarVisitsLeft = 1;
+            baazarVisitsLeft = NetworkUser.instancesList.Count;
             RunArtifactManager.instance.SetArtifactEnabled(RoR2Content.Artifacts.Sacrifice,false);
             RoR2Content.Equipment.Recycle.cooldown = 0f;
         }
