@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using R2API;
 using RoR2;
 using UnityEngine;
@@ -231,7 +232,12 @@ public class Deflation
 
     private void createItem(List<ItemIndex> options, Vector3 position)
     {
-        PickupDropletController.CreatePickupDroplet(PickupCatalog.FindPickupIndex(options[Random.RandomRangeInt(0,options.Count)]),position,Vector3.zero);
+        ItemIndex option = options[Random.RandomRangeInt(0,options.Count)];
+        while (ItemCatalog.GetItemDef(option).tags.Contains(ItemTag.Scrap))
+        {
+            option = options[Random.RandomRangeInt(0,options.Count)];
+        }
+        PickupDropletController.CreatePickupDroplet(PickupCatalog.FindPickupIndex(option),position,Vector3.zero);
     }
     private void createItem(List<EquipmentIndex> options, Vector3 position)
     {
