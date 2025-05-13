@@ -10,13 +10,19 @@ namespace DarknessExpansion;
 public class Deflation
 {
     public static ArtifactDef deflationArtifact;
-    public Deflation(PluginInfo Info)
+
+    public static AssetBundle ab =
+        AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(DeflationArtifact.PInfo.Location), "assets"));
+
+    public static Sprite deselected = ab.LoadAsset<Sprite>("DeflationDisabled.png");
+    public static Sprite selected = ab.LoadAsset<Sprite>("Deflation.png");
+    public Deflation()
     {
         deflationArtifact = ScriptableObject.CreateInstance<ArtifactDef>();
         deflationArtifact.nameToken = "Artifact of Deflation";
         deflationArtifact.descriptionToken = "Start with items, but you can't get any more.";
-        deflationArtifact.smallIconDeselectedSprite = Addressables.LoadAssetAsync<Sprite>(Path.Combine(Path.GetDirectoryName(Info.Location), "Assets","DeflationDisabled.png")).WaitForCompletion();
-        deflationArtifact.smallIconSelectedSprite =  Addressables.LoadAssetAsync<Sprite>(Path.Combine(Path.GetDirectoryName(Info.Location), "Assets","Deflation.png")).WaitForCompletion();
+        deflationArtifact.smallIconDeselectedSprite = deselected;
+        deflationArtifact.smallIconSelectedSprite = selected;
         ContentAddition.AddArtifactDef(deflationArtifact);
         Run.onRunStartGlobal += RunOnonRunStartGlobal;
     }

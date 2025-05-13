@@ -13,12 +13,14 @@ namespace DarknessExpansion;
 
 public class DeflationArtifact : BaseUnityPlugin
 {
+    public static PluginInfo PInfo;
     private void Awake()
     {
+        PInfo = Info;
         Log.Init(Logger);
-        new Deflation(Info);
+        new Deflation();
     }
-
+    
     // private int itemNum = 0;
     //
     // private void Update()
