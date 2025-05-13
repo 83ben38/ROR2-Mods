@@ -4,12 +4,11 @@ using RoR2;
 using UnityEngine;
 
 namespace DarknessExpansion;
-[BepInPlugin("com.cybug.DeflationArtifact", "DeflationArtifact","0.0.1")]
+[BepInPlugin("com.cybug.DeflationArtifact", "DeflationArtifact","1.0.0")]
 [BepInDependency(ItemAPI.PluginGUID)]
 [BepInDependency(EliteAPI.PluginGUID)]
 [BepInDependency(LanguageAPI.PluginGUID)]
-[BepInDependency(DirectorAPI.PluginGUID)]
-[BepInDependency(ColorsAPI.PluginGUID)]
+[BepInDependency(DirectorAPI.PluginGUID)] 
 [BepInDependency(RecalculateStatsAPI.PluginGUID)]
 
 

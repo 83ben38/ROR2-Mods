@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
-using BepInEx;
 using R2API;
 using RoR2;
-using RoR2.Artifacts;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
 using BossGroup = On.RoR2.BossGroup;
 using Path = System.IO.Path;
@@ -67,13 +64,20 @@ public class Deflation
             baazarVisitsLeft--;
             if (baazarVisitsLeft == 0)
             {
-                //set level to 8, time to 10:00, stage to 3
-                WeightedSelection<SceneDef> weightedSelection = new WeightedSelection<SceneDef>();
-                if (Run.instance.startingSceneGroup)
+                Run.instance.NetworkstageClearCount = 2;
+                Run.instance.runStopwatch.offsetFromFixedTime += 10f * 60f;
+                for (int i = 0; i < PlayerCharacterMasterController.instances.Count; i++)
                 {
-                    Run.instance.startingSceneGroup.AddToWeightedSelection(weightedSelection, Run.instance.CanPickStage);
+                    PlayerCharacterMasterController.instances[i].master.GiveExperience(746);
                 }
+                WeightedSelection<SceneDef> weightedSelection = new WeightedSelection<SceneDef>();
+                Run.instance.startingSceneGroup.AddToWeightedSelection(weightedSelection, Run.instance.CanPickStage);
                 Run.instance.PickNextStageScene(weightedSelection);
+                for (int i = 0; i < 2; i++)
+                {
+                    SceneCatalog.mostRecentSceneDef = Run.instance.nextStageScene;
+                    Run.instance.PickNextStageSceneFromCurrentSceneDestinations();
+                }
             }
         }
         orig(self);
