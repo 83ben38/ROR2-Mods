@@ -241,7 +241,12 @@ public class Deflation
     }
     private void createItem(List<EquipmentIndex> options, Vector3 position)
     {
-        PickupDropletController.CreatePickupDroplet(PickupCatalog.FindPickupIndex(options[Random.RandomRangeInt(0,options.Count)]),position,Vector3.zero);
+        EquipmentIndex option = options[Random.RandomRangeInt(0,options.Count)];
+        while (EquipmentCatalog.GetEquipmentDef(option).isLunar)
+        {
+            option = options[Random.RandomRangeInt(0,options.Count)];
+        }
+        PickupDropletController.CreatePickupDroplet(PickupCatalog.FindPickupIndex(option),position,Vector3.zero);
     }
     private int baazarVisitsLeft = 0;
     private bool fillWithItems = false;
