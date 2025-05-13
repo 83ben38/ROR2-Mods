@@ -1,5 +1,7 @@
 ﻿using BepInEx;
 using R2API;
+using RoR2;
+using UnityEngine;
 
 namespace DarknessExpansion;
 [BepInPlugin("com.cybug.DeflationArtifact", "DeflationArtifact","0.0.1")]
@@ -21,21 +23,21 @@ public class DeflationArtifact : BaseUnityPlugin
         new Deflation();
     }
     
-    // private int itemNum = 0;
-    //
-    // private void Update()
-    // {
-    //     // This if statement checks if the player has currently pressed F2.
-    //     if (Input.GetKeyDown(KeyCode.F2))
-    //     {
-    //         var transform = PlayerCharacterMasterController.instances[0].master.GetBodyObject().transform;
-    //         PickupDropletController.CreatePickupDroplet(PickupCatalog.FindPickupIndex(DarknessItems.darkItems[itemNum].itemIndex),transform.position,transform.forward*20f);
-    //         itemNum++;
-    //         if (itemNum == DarknessItems.darkItems.Count)
-    //         {
-    //             itemNum = 0;
-    //         }
-    //     }
-    // }
+    
+    private void Update()
+    {
+        // This if statement checks if the player has currently pressed F2.
+        if (Input.GetKeyDown(KeyCode.F2))
+        {
+            var transform = PlayerCharacterMasterController.instances[0].master.GetBodyObject().transform;
+            Log.Debug(transform.position);
+            // 
+            // itemNum++;
+            // if (itemNum == DarknessItems.darkItems.Count)
+            // {
+            //     itemNum = 0;
+            // }
+        }
+    }
 
 }
