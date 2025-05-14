@@ -34,15 +34,17 @@ public class Deflation
     public static AssetBundle ab =
         AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(DeflationArtifact.PInfo.Location), "assets"));
 
-    public static Sprite deselected = ab.LoadAsset<Sprite>("DeflationDisabled.png");
-    public static Sprite selected = ab.LoadAsset<Sprite>("Deflation.png");
+    public static Sprite deselected1 = ab.LoadAsset<Sprite>("DeflationDisabled11.png");
+    public static Sprite selected1 = ab.LoadAsset<Sprite>("Deflation1.png");
+    public static Sprite deselected2 = ab.LoadAsset<Sprite>("DeflationDisabled2.png");
+    public static Sprite selected2 = ab.LoadAsset<Sprite>("Deflation2.png");
     public Deflation()
     {
         deflationArtifact = ScriptableObject.CreateInstance<ArtifactDef>();
         deflationArtifact.nameToken = "Artifact of Deflation";
         deflationArtifact.descriptionToken = "Start with items, but you can't get any more.";
-        deflationArtifact.smallIconDeselectedSprite = deselected;
-        deflationArtifact.smallIconSelectedSprite = selected;
+        deflationArtifact.smallIconDeselectedSprite = DeflationArtifact.useOldIcon.Value ? deselected1 : deselected2;
+        deflationArtifact.smallIconSelectedSprite = DeflationArtifact.useOldIcon.Value ? selected1 : selected2;
         ContentAddition.AddArtifactDef(deflationArtifact);
         On.RoR2.Run.Start += RunOnStart;
         On.RoR2.Run.PickNextStageScene += RunOnPickNextStageScene;
