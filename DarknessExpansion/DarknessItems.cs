@@ -338,7 +338,7 @@ public class DarknessItems
             float darkBetterPearlMultiplier = 1 + (numDarkBetterPearls * DarkPearlItem2.allStatsPercent/100f);
             darkBetterPearlMultiplier *= 1 + (numDarkBetterPearls * numDarknessStacks * DarkPearlItem2.onKillPercent/100f);
             darkBetterPearlMultiplier -= 1;
-            darkBetterPearlMultiplier += .02f * numDarkCoreStacks;
+            darkBetterPearlMultiplier += DarkCoreItem.onKillAllyPct * numDarkCoreStacks/100f;
             args.healthMultAdd += darkBetterPearlMultiplier;
             args.regenMultAdd += darkBetterPearlMultiplier;
             args.moveSpeedMultAdd += darkBetterPearlMultiplier;
@@ -871,7 +871,7 @@ public class DarknessItems
         }
     }
      
-     public class DarkCoreItem
+    public class DarkCoreItem
     {
         public static ItemDef darkCoreItem;
 
@@ -881,7 +881,9 @@ public class DarknessItems
         private GameObject darkCorePickup = Addressables
             .LoadAssetAsync<GameObject>("RoR2/Base/RoboBallBuddy/PickupEmpathyChip.prefab")
             .WaitForCompletion();
-        
+        public static float spawnInterval;
+        public static float dmgPerAllyPct;
+        public static float onKillAllyPct;
         public class DarkStacksItem
         {
             public static ItemDef stackingDarkItem;
@@ -912,6 +914,9 @@ public class DarknessItems
         }
         public DarkCoreItem()
         {
+            spawnInterval  = DarknessExpansion.coreSpawnInterval.Value;
+            dmgPerAllyPct  = DarknessExpansion.coreAllyDamagePerAlly.Value;
+            onKillAllyPct  = DarknessExpansion.coreOnKillAllyStatPct.Value;
             darkCoreItem = ScriptableObject.CreateInstance<ItemDef>();
             darkCoreItem.name = "DARK_CORE_NAME";
             darkCoreItem.descriptionToken = "DARK_CORE_DESCRIPTION";
@@ -927,13 +932,15 @@ public class DarknessItems
             darkCoreItem.itemIndex = ItemIndex.Count;
             ItemAPI.Add(new CustomItem(darkCoreItem, displayRules));
             LanguageAPI.Add("DARK_CORE_NAME", "Sympathy Cores");
-            LanguageAPI.Add("DARK_CORE_DESCRIPTION", "Every 10 seconds, summon two Solus Probes. All summons gain +200% (+200% per stack) damage per ally on your team. Upon killing a dark enemy, increase all of your allies stats by 2% (+2% per stack).");
-            LanguageAPI.Add("DARK_CORE_PICKUP",
+            LanguageAPI.Add("DARK_CORE_DESCRIPTION",
+                $"Every {spawnInterval}s, summon two Solus Probes. " +
+                $"All summons gain +{dmgPerAllyPct}% (+{dmgPerAllyPct}% per stack) damage per ally on your team. " +
+                $"Upon killing a dark enemy, increase all your allies’ stats by {onKillAllyPct}% (+{onKillAllyPct}% per stack)."
+            );LanguageAPI.Add("DARK_CORE_PICKUP",
                 "Summon probes. All allies gain stats per ally on your team. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkCoreItem);
             new DarkStacksItem();
             MasterSummon.onServerMasterSummonGlobal+= MasterSummonOnonServerMasterSummonGlobal;
-
         }
 
         private void MasterSummonOnonServerMasterSummonGlobal(MasterSummon.MasterSummonReport obj)
@@ -964,15 +971,27 @@ public class DarknessItems
             {
                 if (srcInventory && destInventory)
                 {
-                    int itemCount = srcInventory.GetItemCount(darkCoreItem)*2;
+                    int itemCount = (int)(srcInventory.GetItemCount(darkCoreItem)*dmgPerAllyPct/100f);
                     int num = itemCount - granted;
                     if (num != 0)
                     {
                         destInventory.GiveItem(RoR2Content.Items.TeamSizeDamageBonus,num);
                         granted = itemCount;
                     }
-
-                    itemCount = srcInventory.GetItemCount(darkCoreItem) * srcInventory.GetItemCount(stackingDarkItem);
+                    int numDarknessStacks = srcInventory.GetItemCount(stackingDarkItem);
+                    if (logStacking && sqrtStacking)
+                    {
+                        numDarknessStacks = 0;
+                    }
+                    else if (logStacking)
+                    {
+                        numDarknessStacks = (int)Mathf.Log(numDarknessStacks + 1,2);
+                    }
+                    else if (sqrtStacking)
+                    {
+                        numDarknessStacks = (int)Mathf.Sqrt(numDarknessStacks);
+                    }
+                    itemCount = srcInventory.GetItemCount(darkCoreItem) * numDarknessStacks;
                     num = itemCount - granted2;
                     if (num != 0)
                     {
@@ -1018,7 +1037,7 @@ public class DarknessItems
             {
                 dms = new DeployableMinionSpawner(cm, ds, new Xoroshiro128Plus((ulong)Random.value * ulong.MaxValue))
                 {
-                    respawnInterval = 30f,
+                    respawnInterval = spawnInterval,
                     spawnCard = sc
                 };
             }

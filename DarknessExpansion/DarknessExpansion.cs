@@ -71,6 +71,9 @@ public class DarknessExpansion : BaseUnityPlugin
     public static ConfigEntry<int>   beetleDebuffStacks;
     public static ConfigEntry<int>   beetleMaxGuards;
     public static ConfigEntry<float> beetleOnKillASPercent;
+    public static ConfigEntry<float> coreSpawnInterval;
+    public static ConfigEntry<float> coreAllyDamagePerAlly;
+    public static ConfigEntry<float> coreOnKillAllyStatPct;
     private void Awake()
     {
         startingDarkness = Config.Bind("Darkness Level", "Starting Darkness Level", 0, "What the starting darkness level is.");
@@ -142,6 +145,9 @@ public class DarknessExpansion : BaseUnityPlugin
         beetleDebuffStacks      = Config.Bind("King's Gland", "Debuff Stacks per Hit",1,    "Number of debuff stacks Beetle applies on hit");
         beetleMaxGuards         = Config.Bind("King's Gland", "Max Guards",            1,    "Maximum simultaneous Beetle Guards");
         beetleOnKillASPercent   = Config.Bind("King's Gland", "Attack Speed Gain per Kill",         3f,   "Attack speed % gained on killing a dark enemy");
+        coreSpawnInterval     = Config.Bind("Dark Core", "Spawn Interval",       10f, "Seconds between each pair of Solus Probe summons");
+        coreAllyDamagePerAlly = Config.Bind("Dark Core", "Damage % per Ally",       200f, "Base % damage bonus per ally on your team");
+        coreOnKillAllyStatPct = Config.Bind("Dark Core", "On-Kill Ally Stat %",      2f, "Percent buff to all allies’ stats on killing a dark enemy");
 
         
         Log.Init(Logger);
