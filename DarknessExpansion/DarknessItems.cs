@@ -322,7 +322,8 @@ public class DarknessItems
             float numDarkBleedItems = self.inventory.GetItemCount(DarkBleedItem.darkBleedItem);
             numDarkBleedItems = 1 + (numDarkBleedItems - 1) * DarkBleedItem.stackingMultiplier;
             int numDarkCoreStacks = self.inventory.GetItemCount(DarkCoreItem.DarkStacksItem.stackingDarkItem);
-            int numDarkParentItems = self.inventory.GetItemCount(DarkParentItem.darkParentItem);
+            float numDarkParentItems = self.inventory.GetItemCount(DarkParentItem.darkParentItem);
+            numDarkParentItems = 1 + (numDarkParentItems - 1) * DarkParentItem.stackingMultiplier;
             int numDarkLightningItems = self.inventory.GetItemCount(DarkLightningItem.darkLightningItem);
             int numDarkFires = self.inventory.GetItemCount(DarkFireItem.darkFireItem);
             if (numDarkBleedItems > 0)
@@ -333,7 +334,7 @@ public class DarknessItems
             args.baseHealthAdd += (numDarkGolems * DarkGolemItem.baseHealth) + (numDarkGolems * numDarknessStacks * DarkGolemItem.stackingHealth);
             args.baseRegenAdd += (numDarkGolems * DarkGolemItem.baseRegen) + (numDarkGolems * numDarknessStacks * DarkGolemItem.stackingRegen);
             args.critDamageMultAdd += (numDarkBleedItems * numDarknessStacks * DarkBleedItem.onKillCritDmgPercent / 100f);
-            args.armorAdd += (numDarkParentItems * numDarknessStacks * 1.5f);
+            args.armorAdd += (numDarkParentItems * numDarknessStacks * DarkParentItem.darkKillArmorBonus);
             args.attackSpeedMultAdd += (numDarkBeetles * numDarknessStacks * DarkBeetleItem.onKillASPct);
             args.moveSpeedMultAdd += (numDarkWisps * numDarknessStacks * DarkWispItem.onKillMoveSpeedPct / 100f);
             args.healthMultAdd += (1 + numDarkPearls * DarkPearlItem.baseHealthPercent/100f) * (1 + numDarkPearls * numDarknessStacks * DarkPearlItem.onKillHealthPercent/100f)-1;
@@ -1488,6 +1489,12 @@ public class DarknessItems
     public class DarkParentItem
     {
         public static ItemDef darkParentItem;
+        
+        public static float healPerArmorPct = DarknessExpansion.parentHealPerArmorPct.Value;
+        public static float igniteRadiusBase = DarknessExpansion.parentIgniteRadiusBase.Value;
+        public static float darkKillArmorBonus = DarknessExpansion.parentDarkKillArmorBonus.Value;
+        public static float stackingMultiplier = DarknessExpansion.parentStackingMultiplier.Value;
+
 
         private Sprite darkParentSprite =
             Addressables.LoadAssetAsync<Sprite>("RoR2/Base/ParentEgg/texParentEggIcon.png").WaitForCompletion();
@@ -1514,9 +1521,10 @@ public class DarknessItems
             darkParentItem.itemIndex = ItemIndex.Count;
             ItemAPI.Add(new CustomItem(darkParentItem, displayRules));
             LanguageAPI.Add("DARK_PARENT_NAME", "Dark Planula");
-            LanguageAPI.Add("DARK_PARENT_DESCRIPTION", "Heal from incoming damage equal to 100% (+100% per stack) armor. On taking damage, ignite enemies within a 13m (+8m per stack) radius. Upon killing a dark enemy, gain 1.5 (+1.5 per stack) armor.");
             LanguageAPI.Add("DARK_PARENT_PICKUP",
                 "Heal from incoming damage and ignite nearby enemies. Grows stronger as it absorbs darkness.");
+            LanguageAPI.Add("DARK_PARENT_DESCRIPTION",
+                $"Heal from incoming damage equal to {healPerArmorPct}% (+{healPerArmorPct * stackingMultiplier}% per stack) armor. On taking damage, ignite enemies within a {igniteRadiusBase}m (+{igniteRadiusBase*stackingMultiplier}m per stack) radius. Upon killing a dark enemy, gain {darkKillArmorBonus} (+{darkKillArmorBonus * stackingMultiplier}) armor.");
             darkItems.Add(darkParentItem);
             HealthComponent.TakeDamageProcess += HealthComponentOnTakeDamageProcess;
         }
@@ -1526,11 +1534,12 @@ public class DarknessItems
             if (self) if (self.body)
                 if (self.body.inventory)
                 {
-                    int numItems = self.body.inventory.GetItemCount(darkParentItem);
+                    float numItems = self.body.inventory.GetItemCount(darkParentItem);
+                    numItems = 1 + (numItems - 1) * stackingMultiplier;
                     if (numItems > 0)
                     {
-                        self.Heal(self.body.armor * numItems, default, false);
-                        float radius = 5f + 8f * numItems;
+                        self.Heal(self.body.armor * numItems * healPerArmorPct / 100f, default, false);
+                        float radius = igniteRadiusBase * numItems;
                         Vector3 corePosition = self.body.corePosition;
                         GlobalEventManager.igniteOnKillSphereSearch.origin = corePosition;
                         GlobalEventManager.igniteOnKillSphereSearch.mask = LayerIndex.entityPrecise.mask;
@@ -1570,7 +1579,7 @@ public class DarknessItems
             orig(self, damageinfo);
         }
     }
-     public class DarkLightningItem
+    public class DarkLightningItem
     {
         public static ItemDef darkLightningItem;
 

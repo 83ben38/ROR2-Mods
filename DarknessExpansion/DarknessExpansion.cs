@@ -90,6 +90,10 @@ public class DarknessExpansion : BaseUnityPlugin
     public static ConfigEntry<float> clayHealPct;
     public static ConfigEntry<float> clayDarkKillHealingBonusPct;
     public static ConfigEntry<float> clayStackingMultiplier;
+    public static ConfigEntry<float> parentHealPerArmorPct;
+    public static ConfigEntry<float> parentIgniteRadiusBase;
+    public static ConfigEntry<float> parentDarkKillArmorBonus;
+    public static ConfigEntry<float> parentStackingMultiplier;
     private void Awake()
     {
         startingDarkness = Config.Bind("Darkness Level", "Starting Darkness Level", 0, "What the starting darkness level is.");
@@ -180,6 +184,10 @@ public class DarknessExpansion : BaseUnityPlugin
         clayHealPct                   = Config.Bind("Polished Urn", "Heal Percent",           5f, "Heal % of damage dealt to tarred enemies");
         clayDarkKillHealingBonusPct  = Config.Bind("Polished Urn", "On-Kill Heal %",        3f, "Healing bonus % gained on dark kill");
         clayStackingMultiplier        = Config.Bind("Polished Urn", "Stacking Multiplier",     1f, "Multiplier applied to all per-stack values");
+        parentHealPerArmorPct       = Config.Bind("Dark Planula", "Heal Per Armor %", 100f, "Heal percent of armor when damaged");
+        parentIgniteRadiusBase      = Config.Bind("Dark Planula", "Ignite Radius Base", 13f, "Base radius for ignite explosion");
+        parentDarkKillArmorBonus    = Config.Bind("Dark Planula", "Dark Kill Armor Bonus", 1.5f, "Armor bonus gained on dark enemy kill");
+        parentStackingMultiplier    = Config.Bind("Dark Planula", "Stacking Multiplier", 1f, "Multiplier for all per-stack effects");
 
         
         Log.Init(Logger);
