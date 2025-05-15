@@ -316,7 +316,8 @@ public class DarknessItems
             numDarkBetterPearls = 1 + (numDarkBetterPearls - 1) * DarkPearlItem2.stackingMultiplier;
             float numDarkJellyfish = self.inventory.GetItemCount(DarkJellyfishItem.darkJellyfishItem);
             numDarkJellyfish = 1 + (numDarkJellyfish - 1) * DarkJellyfishItem.stackingMult;
-            int numDarkWisps = self.inventory.GetItemCount(DarkWispItem.darkWispItem);
+            float numDarkWisps = self.inventory.GetItemCount(DarkWispItem.darkWispItem);
+            numDarkWisps = 1 + (numDarkWisps - 1) * DarkWispItem.stackingMult;
             float numDarkBleedItems = self.inventory.GetItemCount(DarkBleedItem.darkBleedItem);
             numDarkBleedItems = 1 + (numDarkBleedItems - 1) * DarkBleedItem.stackingMultiplier;
             int numDarkCoreStacks = self.inventory.GetItemCount(DarkCoreItem.DarkStacksItem.stackingDarkItem);
@@ -333,7 +334,7 @@ public class DarknessItems
             args.critDamageMultAdd += (numDarkBleedItems * numDarknessStacks * DarkBleedItem.onKillCritDmgPercent / 100f);
             args.armorAdd += (numDarkParentItems * numDarknessStacks * 1.5f);
             args.attackSpeedMultAdd += (numDarkBeetles * numDarknessStacks * DarkBeetleItem.onKillASPct);
-            args.moveSpeedMultAdd += (numDarkWisps * numDarknessStacks * .03f);
+            args.moveSpeedMultAdd += (numDarkWisps * numDarknessStacks * DarkWispItem.onKillMoveSpeedPct / 100f);
             args.healthMultAdd += (1 + numDarkPearls * DarkPearlItem.baseHealthPercent/100f) * (1 + numDarkPearls * numDarknessStacks * DarkPearlItem.onKillHealthPercent/100f)-1;
             args.damageMultAdd += (numDarknessStacks * .04f * numDarkLightningItems);
             float darkBetterPearlMultiplier = 1 + (numDarkBetterPearls * DarkPearlItem2.allStatsPercent/100f);
@@ -1267,7 +1268,7 @@ public class DarknessItems
             private float reloadTimer = 0f;
         }
     }
-     public class DarkWispItem
+    public class DarkWispItem
     {
         public static ItemDef darkWispItem;
 
@@ -1278,9 +1279,19 @@ public class DarknessItems
             .LoadAssetAsync<GameObject>("RoR2/Base/SprintWisp/PickupBrokenMask.prefab")
             .WaitForCompletion();
         
-
+        public static int   baseWisps;
+        public static float damageMult;
+        public static float procCoeff;
+        public static float onKillMoveSpeedPct;
+        public static float stackingMult;
         public DarkWispItem()
         {
+            baseWisps           = DarknessExpansion.wispCount.Value;
+            damageMult          = DarknessExpansion.wispBaseDamageMult.Value;
+            procCoeff           = DarknessExpansion.wispProcCoeff.Value;
+            onKillMoveSpeedPct  = DarknessExpansion.wispOnKillMoveSpeedPct.Value;
+            stackingMult        = DarknessExpansion.wispStackingMultiplier.Value;
+
             darkWispItem = ScriptableObject.CreateInstance<ItemDef>();
             darkWispItem.name = "DARK_WISP_NAME";
             darkWispItem.descriptionToken = "DARK_WISP_DESCRIPTION";
@@ -1297,8 +1308,12 @@ public class DarknessItems
             ItemAPI.Add(new CustomItem(darkWispItem, displayRules));
             LanguageAPI.Add("DARK_WISP_NAME", "Large Disciple");
             LanguageAPI.Add("DARK_WISP_DESCRIPTION",
-                "Fire 3 (+3 per stack) tracking wisps for 300% (+300% per stack) base damage. Wisps have 3.0 (+3 per stack) proc coefficient. Fires every 1.6 seconds while sprinting. Fire rate increases with movement speed. Upon killing a dark enemy, gain 3% (+3% per stack) movement speed.");
-            LanguageAPI.Add("DARK_WISP_PICKUP",
+                $"Fire {baseWisps} (+{baseWisps * stackingMult} per stack) tracking wisps for " +
+                $"{damageMult}% (+{damageMult * stackingMult}% per stack) base damage. " +
+                $"Wisps have {procCoeff} (+{procCoeff * stackingMult} per stack) proc coefficient. " +
+                $"Fires every 1.6 seconds while sprinting; fire rate increases with move speed. " +
+                $"Upon killing a dark enemy, gain {onKillMoveSpeedPct}% (+{onKillMoveSpeedPct * stackingMult}% per stack) movement speed."
+            );LanguageAPI.Add("DARK_WISP_PICKUP",
                 "Fire 3 tracking wisps while sprinting. Fire rate scales with move speed. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkWispItem);
         }
@@ -1326,18 +1341,20 @@ public class DarknessItems
         
             private void Fire()
             {
-                for (int i = 0; i < 3 * stack; i++)
+                float stack = base.stack;
+                stack = 1 + (stack - 1) * stackingMult;
+                for (int i = 0; i < baseWisps * stack; i++)
                 {
                     DevilOrb devilOrb = new DevilOrb
                     {
                         origin = body.corePosition,
-                        damageValue = body.damage * 3f * stack,
+                        damageValue = body.damage * damageMult * stack / 100f,
                         teamIndex = body.teamComponent.teamIndex,
                         attacker = gameObject,
                         damageColorIndex = DamageColorIndex.Item,
                         scale = 3f,
                         effectType = DevilOrb.EffectType.Wisp,
-                        procCoefficient = 3f * stack
+                        procCoefficient = procCoeff * stack
                     };
                     
                     if (devilOrb.target = devilOrb.PickNextTarget(devilOrb.origin, 40f))
