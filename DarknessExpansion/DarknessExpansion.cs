@@ -105,6 +105,12 @@ public class DarknessExpansion : BaseUnityPlugin
     public static ConfigEntry<float> fireDamagePct;               
     public static ConfigEntry<float> fireOnKillDamageBonus;    
     public static ConfigEntry<float> fireStackingMultiplier;     
+    public static ConfigEntry<float> constructHealthPctBase;
+    public static ConfigEntry<float> constructOnHitChancePct;
+    public static ConfigEntry<float> constructDamagePctBase;
+    public static ConfigEntry<int>   constructMaxBase;
+    public static ConfigEntry<float> constructOnKillLuckGain;
+    public static ConfigEntry<float> constructStackingMultiplier;
 
     private void Awake()
     {
@@ -206,11 +212,17 @@ public class DarknessExpansion : BaseUnityPlugin
         lightningDamagePct          = Config.Bind("Charged Claw", "Damage %",             1000f, "Base damage % of lightning strike");
         lightningOnKillDamageBonus  = Config.Bind("Charged Claw", "On-Kill Damage %",      4f,   "Damage % bonus on killing a dark enemy");
         lightningStackingMultiplier = Config.Bind("Charged Claw", "Stacking Multiplier",   1f,   "Multiplier applied to all per-stack values");
-        fireProcChance           = Config.Bind("Dark Fire", "Proc Chance %",           10f,   "Chance to summon magma balls on hit");
-        fireBaseBalls            = Config.Bind("Dark Fire", "Base Balls",               6,    "Number of magma balls summoned per proc");
-        fireDamagePct            = Config.Bind("Dark Fire", "Base Damage Damage %%",              3000f, "Base damage damage percent percent of each magma ball");
-        fireOnKillDamageBonus = Config.Bind("Dark Fire", "On-Kill Damage",        0.5f, "Base damage bonus on dark enemy kill");
-        fireStackingMultiplier   = Config.Bind("Dark Fire", "Stacking Multiplier",     1f,   "Multiplier applied to all per-stack effects");
+        fireProcChance           = Config.Bind("Molten Claw", "Proc Chance %",           10f,   "Chance to summon magma balls on hit");
+        fireBaseBalls            = Config.Bind("Molten Claw", "Base Balls",               6,    "Number of magma balls summoned per proc");
+        fireDamagePct            = Config.Bind("Molten Claw", "Base Damage Damage %%",              3000f, "Base damage damage percent percent of each magma ball");
+        fireOnKillDamageBonus = Config.Bind("Molten Claw", "On-Kill Damage",        0.5f, "Base damage bonus on dark enemy kill");
+        fireStackingMultiplier   = Config.Bind("Molten Claw", "Stacking Multiplier",     1f,   "Multiplier applied to all per-stack effects");
+        constructHealthPctBase       = Config.Bind("Defense Cell","Construct Health % Base", 1000f, "Alpha Construct health % of base");
+        constructOnHitChancePct      = Config.Bind("Defense Cell","On-Hit Fire Chance %",     5f,   "Chance per hit for a Construct to fire");
+        constructDamagePctBase       = Config.Bind("Defense Cell","Construct Damage % Base", 300f, "Damage % when a Construct fires");
+        constructMaxBase             = Config.Bind("Defense Cell","Max Constructs Base",      4,    "Number of Constructs you can have");
+        constructOnKillLuckGain      = Config.Bind("Defense Cell","On-Kill Luck Gain %",    0.03f,"Luck % gained on killing a dark enemy");
+        constructStackingMultiplier  = Config.Bind("Defense Cell","Stacking Multiplier",    1f,   "Multiplier applied to per-stack values");
 
         
         Log.Init(Logger);

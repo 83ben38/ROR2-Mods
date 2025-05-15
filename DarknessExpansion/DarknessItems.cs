@@ -229,9 +229,10 @@ public class DarknessItems
             {
                 numDarknessStacks = (int)Mathf.Sqrt(numDarknessStacks);
             }
-            int numDarkConstructItems = self.inventory.GetItemCount(DarkConstructItem.darkConstructItem);
+            float numDarkConstructItems = self.inventory.GetItemCount(DarkConstructItem.darkConstructItem);
+            numDarkConstructItems = 1 + (numDarkConstructItems - 1) * DarkConstructItem.constructStackingMultiplier;
             orig(self);
-            self.luck += numDarknessStacks * numDarkConstructItems * .03f;
+            self.luck += numDarknessStacks * numDarkConstructItems * DarkConstructItem.constructOnKillLuckGain;
         }
     }
 
@@ -1796,8 +1797,15 @@ public class DarknessItems
             orig(self, damageInfo, victim);
         }
     }
-     public class DarkConstructItem
+    public class DarkConstructItem
     {
+        public static float constructHealthPctBase      = DarknessExpansion.constructHealthPctBase.Value;
+        public static float constructOnHitChancePct     = DarknessExpansion.constructOnHitChancePct.Value;
+        public static float constructDamagePctBase      = DarknessExpansion.constructDamagePctBase.Value;
+        public static int   constructMaxBase            = DarknessExpansion.constructMaxBase.Value;
+        public static float constructOnKillLuckGain     = DarknessExpansion.constructOnKillLuckGain.Value;
+        public static float constructStackingMultiplier = DarknessExpansion.constructStackingMultiplier.Value;
+
         public static ItemDef darkConstructItem;
 
         private Sprite darkConstructSprite =
@@ -1825,7 +1833,10 @@ public class DarknessItems
             darkConstructItem.itemIndex = ItemIndex.Count;
             ItemAPI.Add(new CustomItem(darkConstructItem, displayRules));
             LanguageAPI.Add("DARK_CONSTRUCT_NAME", "Defense Cell");
-            LanguageAPI.Add("DARK_CONSTRUCT_DESCRIPTION", "Killing an elite enemy spawns an Alpha Construct that attaches to you with 1000% (+1000% per stack) health. On hit, all Constructs attached to you have a 5% chance to fire at the enemy hit for 300% (+300% per stack) total damage. Limit of 4 (+4 per stack) constructs. Upon killing a dark enemy, gain .03 luck.");
+            LanguageAPI.Add("DARK_CONSTRUCT_DESCRIPTION",
+                $"Killing an elite spawns an Alpha Construct with {constructHealthPctBase}% (+{constructHealthPctBase*constructStackingMultiplier}% per stack) health. " +
+                $"On hit, each Construct has a {constructOnHitChancePct}% chance to fire for {constructDamagePctBase}% (+{constructDamagePctBase*constructStackingMultiplier}% per stack) damage. " +
+                $"Limit of {constructMaxBase} (+{constructMaxBase * constructStackingMultiplier} per stack) constructs. Upon killing a dark enemy, gain {constructOnKillLuckGain}% (+{constructOnKillLuckGain*constructStackingMultiplier} per stack) luck.");
             LanguageAPI.Add("DARK_CONSTRUCT_PICKUP",
                 "Upon killing an elite, gain an alpha construct that attaches to you and fires at enemies you fire at. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkConstructItem);
@@ -1863,8 +1874,11 @@ public class DarknessItems
         {
             if (slot == DeployableSlot.MinorConstructOnKill)
             {
-                return 4 * (self.inventory.GetItemCount(DLC1Content.Items.MinorConstructOnKill) +
-                            self.inventory.GetItemCount(darkConstructItem));
+                float total = self.inventory.GetItemCount(darkConstructItem);
+                total = 1 + (total - 1) * constructStackingMultiplier;
+                total *= constructMaxBase;
+                return 4 * self.inventory.GetItemCount(DLC1Content.Items.MinorConstructOnKill) + (int)total;
+                            
             }
 
             return orig(self, slot);
@@ -1915,7 +1929,9 @@ public class DarknessItems
                 {
                     if (result.success && result.spawnedInstance)
                     {
-                        result.spawnedInstance.GetComponent<CharacterMaster>().GetBody().baseMaxHealth *= 10 * stack;
+                        float stack = this.stack;
+                        stack = 1 + (stack - 1) * constructStackingMultiplier;
+                        result.spawnedInstance.GetComponent<CharacterMaster>().GetBody().baseMaxHealth *= constructHealthPctBase * stack / 100f;
                         Deployable deployable = result.spawnedInstance.AddComponent<Deployable>();
                         NetworkedBodyAttachment nba = result.spawnedInstance.AddComponent<NetworkedBodyAttachment>();
                         nba.AttachToGameObjectAndSpawn(gameObject);
@@ -1950,9 +1966,11 @@ public class DarknessItems
                                 return;
                             }
                         }
-                        if (Util.CheckRoll(5f * di.procCoefficient, master))
+                        if (Util.CheckRoll(constructOnHitChancePct * di.procCoefficient, master))
                         {
-                            float newDamage = di.damage * 3 * stack;
+                            float stack = this.stack;
+                            stack = 1 + (stack - 1) * constructStackingMultiplier;
+                            float newDamage = di.damage * constructDamagePctBase * stack / 100f;
                             ProjectileManager.instance.FireProjectileWithoutDamageType(projectile, children[i].transform.position, Quaternion.LookRotation(victim.transform.position-children[i].transform.position,Vector3.up), children[i], newDamage, 3f, Util.CheckRoll(body.crit, body.master), DamageColorIndex.Item,victim);
                         }
                     }
