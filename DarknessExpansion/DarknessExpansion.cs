@@ -165,11 +165,11 @@ public class DarknessExpansion : BaseUnityPlugin
         jellySecondaryBasePct     = Config.Bind("Omega Loop", "Secondary Base %",  500f, "Base secondary projectile damage percent");
         jellyOnKillCdrPct         = Config.Bind("Omega Loop", "On-Kill CDR %",     1f,  "Cooldown reduction percent gained on kill");
         jellyStackingMultiplier   = Config.Bind("Omega Loop", "Stacking Multiplier",1f,  "Multiplier applied to all per-stack values");
-        wispCount               = Config.Bind("Dark Wisp", "Base Wisps",            3,     "Number of wisps fired per shot");
-        wispBaseDamageMult      = Config.Bind("Dark Wisp", "Wisp Damage %",   300,    "Damage percent per wisp");
-        wispProcCoeff           = Config.Bind("Dark Wisp", "Proc Coefficient",     3f,    "Proc coefficient per wisp");
-        wispOnKillMoveSpeedPct  = Config.Bind("Dark Wisp", "On-Kill MoveSpeed %", 3f,    "Move-speed % gained on killing a dark enemy");
-        wispStackingMultiplier  = Config.Bind("Dark Wisp", "Stacking Multiplier", 1f,    "Multiplier applied to each per-stack value");
+        wispCount               = Config.Bind("Large Disciple", "Base Wisps",            3,     "Number of wisps fired per shot");
+        wispBaseDamageMult      = Config.Bind("Large Disciple", "Wisp Damage %",   300,    "Damage percent per wisp");
+        wispProcCoeff           = Config.Bind("Large Disciple", "Proc Coefficient",     3f,    "Proc coefficient per wisp");
+        wispOnKillMoveSpeedPct  = Config.Bind("Large Disciple", "On-Kill MoveSpeed %", 3f,    "Move-speed % gained on killing a dark enemy");
+        wispStackingMultiplier  = Config.Bind("Large Disciple", "Stacking Multiplier", 1f,    "Multiplier applied to each per-stack value");
 
         
         Log.Init(Logger);
