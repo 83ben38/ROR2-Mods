@@ -324,13 +324,15 @@ public class DarknessItems
             int numDarkCoreStacks = self.inventory.GetItemCount(DarkCoreItem.DarkStacksItem.stackingDarkItem);
             float numDarkParentItems = self.inventory.GetItemCount(DarkParentItem.darkParentItem);
             numDarkParentItems = 1 + (numDarkParentItems - 1) * DarkParentItem.stackingMultiplier;
-            int numDarkLightningItems = self.inventory.GetItemCount(DarkLightningItem.darkLightningItem);
-            int numDarkFires = self.inventory.GetItemCount(DarkFireItem.darkFireItem);
+            float numDarkLightningItems = self.inventory.GetItemCount(DarkLightningItem.darkLightningItem);
+            numDarkLightningItems = 1 + (numDarkLightningItems - 1) * DarkLightningItem.stackingMultiplier;
+            float numDarkFires = self.inventory.GetItemCount(DarkFireItem.darkFireItem);
+            numDarkFires = 1 + (numDarkFires - 1) * DarkFireItem.stackingMultiplier;
             if (numDarkBleedItems > 0)
             {
                 args.critAdd += DarkBleedItem.critChancePercent;
             }
-            args.baseDamageAdd += numDarkFires * numDarknessStacks * 0.5f;
+            args.baseDamageAdd += numDarkFires * numDarknessStacks * DarkFireItem.onKillDamageBonus;
             args.baseHealthAdd += (numDarkGolems * DarkGolemItem.baseHealth) + (numDarkGolems * numDarknessStacks * DarkGolemItem.stackingHealth);
             args.baseRegenAdd += (numDarkGolems * DarkGolemItem.baseRegen) + (numDarkGolems * numDarknessStacks * DarkGolemItem.stackingRegen);
             args.critDamageMultAdd += (numDarkBleedItems * numDarknessStacks * DarkBleedItem.onKillCritDmgPercent / 100f);
@@ -338,7 +340,7 @@ public class DarknessItems
             args.attackSpeedMultAdd += (numDarkBeetles * numDarknessStacks * DarkBeetleItem.onKillASPct);
             args.moveSpeedMultAdd += (numDarkWisps * numDarknessStacks * DarkWispItem.onKillMoveSpeedPct / 100f);
             args.healthMultAdd += (1 + numDarkPearls * DarkPearlItem.baseHealthPercent/100f) * (1 + numDarkPearls * numDarknessStacks * DarkPearlItem.onKillHealthPercent/100f)-1;
-            args.damageMultAdd += (numDarknessStacks * .04f * numDarkLightningItems);
+            args.damageMultAdd += (numDarknessStacks * DarkLightningItem.onKillDamageBonus * numDarkLightningItems / 100f);
             float darkBetterPearlMultiplier = 1 + (numDarkBetterPearls * DarkPearlItem2.allStatsPercent/100f);
             darkBetterPearlMultiplier *= 1 + (numDarkBetterPearls * numDarknessStacks * DarkPearlItem2.onKillPercent/100f);
             darkBetterPearlMultiplier -= 1;
@@ -1581,6 +1583,14 @@ public class DarknessItems
     }
     public class DarkLightningItem
     {
+        public static float procChance          = DarknessExpansion.lightningProcChance.Value;
+        public static int   extraTargets        = DarknessExpansion.lightningExtraTargets.Value;
+        public static float rangeBase           = DarknessExpansion.lightningRangeBase.Value;
+        public static float damagePct           = DarknessExpansion.lightningDamagePct.Value;
+        public static float onKillDamageBonus   = DarknessExpansion.lightningOnKillDamageBonus.Value;
+        public static float stackingMultiplier  = DarknessExpansion.lightningStackingMultiplier.Value;
+
+        
         public static ItemDef darkLightningItem;
 
         private Sprite darkLightningSprite =
@@ -1608,7 +1618,8 @@ public class DarknessItems
             darkLightningItem.itemIndex = ItemIndex.Count;
             ItemAPI.Add(new CustomItem(darkLightningItem, displayRules));
             LanguageAPI.Add("DARK_LIGHTNING_NAME", "Charged Claw");
-            LanguageAPI.Add("DARK_LIGHTNING_DESCRIPTION", "10% chance on hit to down a lightning strike on the enemy and 2 (+2 per stack) enemies within 15m (+8m per stack), dealing 1000% (+1000% per stack) damage. Killing a dark enemy grants 4% (+4% per stack) damage.");
+            LanguageAPI.Add("DARK_LIGHTNING_DESCRIPTION",
+                $"{procChance}% chance on hit to call down lightning on the target and {extraTargets} (+{extraTargets * stackingMultiplier} per stack) enemies within {rangeBase}m (+{rangeBase*stackingMultiplier}m per stack), dealing {damagePct}% (+{damagePct*stackingMultiplier}% per stack) damage. Killing a dark enemy grants {onKillDamageBonus}% (+{onKillDamageBonus * stackingMultiplier}% per stack) damage.");
             LanguageAPI.Add("DARK_LIGHTNING_PICKUP",
                 "Chance on hit to summon a lightning storm. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkLightningItem);
@@ -1623,12 +1634,13 @@ public class DarknessItems
                 CharacterBody cb2 = victim.GetComponent<CharacterBody>();
                 if (cb && cb2)
                 {
-                    int numLightningItems = cb.inventory.GetItemCount(darkLightningItem);
+                    float numLightningItems = cb.inventory.GetItemCount(darkLightningItem);
+                    numLightningItems = 1 + (numLightningItems - 1) * stackingMultiplier;
                     if (numLightningItems > 0 && !damageInfo.procChainMask.HasProc(ProcType.LightningStrikeOnHit) &&
-                        Util.CheckRoll(10f * damageInfo.procCoefficient, cb.master))
+                        Util.CheckRoll(procChance * damageInfo.procCoefficient, cb.master))
                     {
                         float damageValue =
-                            Util.OnHitProcDamage(damageInfo.damage, cb.damage, 10f * numLightningItems);
+                            Util.OnHitProcDamage(damageInfo.damage, cb.damage, damagePct * numLightningItems / 100f);
                         ProcChainMask procChainMask = damageInfo.procChainMask;
                         procChainMask.AddProc(ProcType.LightningStrikeOnHit);
                         HurtBox target = cb2.mainHurtBox;
@@ -1655,10 +1667,10 @@ public class DarknessItems
                         bullseyeSearch.teamMaskFilter.RemoveTeam(cb.teamComponent.teamIndex);
                         bullseyeSearch.filterByLoS = false;
                         bullseyeSearch.sortMode = BullseyeSearch.SortMode.Distance;
-                        bullseyeSearch.maxDistanceFilter = 7f + 8f * numLightningItems;
+                        bullseyeSearch.maxDistanceFilter = rangeBase * numLightningItems;
                         bullseyeSearch.RefreshCandidates();
                         List<HurtBox> list = bullseyeSearch.GetResults().ToList();
-                        for (int i = 0; i < numLightningItems*2 && list.Count > 0; i++)
+                        for (int i = 0; i < numLightningItems*extraTargets && list.Count > 0; i++)
                         {
                             int x = Random.Range(0, list.Count);
                             HurtBox hb = list[x];
@@ -1681,8 +1693,14 @@ public class DarknessItems
             orig(self, damageInfo, victim);
         }
     }
-     public class DarkFireItem
+    public class DarkFireItem
     {
+        public static float procChance            = DarknessExpansion.fireProcChance.Value;
+        public static int   baseBalls             = DarknessExpansion.fireBaseBalls.Value;
+        public static float damagePct             = DarknessExpansion.fireDamagePct.Value;
+        public static float onKillDamageBonus  = DarknessExpansion.fireOnKillDamageBonus.Value;
+        public static float stackingMultiplier    = DarknessExpansion.fireStackingMultiplier.Value;
+
         public static ItemDef darkFireItem;
 
         private Sprite darkFireSprite =
@@ -1710,7 +1728,8 @@ public class DarknessItems
             darkFireItem.itemIndex = ItemIndex.Count;
             ItemAPI.Add(new CustomItem(darkFireItem, displayRules));
             LanguageAPI.Add("DARK_FIRE_NAME", "Molten Claw");
-            LanguageAPI.Add("DARK_FIRE_DESCRIPTION", "10% chance on hit to call forth 6 (+3 per stack) magma balls from an enemy, dealing (3000% (+3000% per stack) damage)% base damage. Killing a dark enemy grants 0.5 (+0.5 per stack) base damage.");
+            LanguageAPI.Add("DARK_FIRE_DESCRIPTION",
+                $"{procChance}% chance on hit to call forth {baseBalls} (+{baseBalls * stackingMultiplier} per stack) magma balls from an enemy, dealing ({damagePct}% (+{damagePct * stackingMultiplier}% per stack) base damage)% damage. Killing a dark enemy grants {onKillDamageBonus} (+{onKillDamageBonus * stackingMultiplier} per stack) base damage.");
             LanguageAPI.Add("DARK_FIRE_PICKUP",
                 "Chance on hit to summon fireballs. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkFireItem);
@@ -1724,13 +1743,14 @@ public class DarknessItems
                 CharacterBody cb2 = victim.GetComponent<CharacterBody>();
                 if (cb && cb2)
                 {
-                    int numFireItems = cb.inventory.GetItemCount(darkFireItem);
+                    float numFireItems = cb.inventory.GetItemCount(darkFireItem);
+                    numFireItems = 1 + (numFireItems - 1) * stackingMultiplier;
                     if (numFireItems > 0 && !damageInfo.procChainMask.HasProc(ProcType.Meatball))
                     {
                         Vector3 vector = cb2.characterMotor ? victim.transform.position + Vector3.up * (cb2.characterMotor.capsuleHeight * 0.5f + 2f) : victim.transform.position + Vector3.up * 2f;
                         Vector3 forward =  Vector3.up;
                         float variation = 1f;
-                        if (Util.CheckRoll(10f * damageInfo.procCoefficient, cb.master))
+                        if (Util.CheckRoll(procChance * damageInfo.procCoefficient, cb.master))
                         {
                             EffectData effectData = new EffectData
                             {
@@ -1738,8 +1758,8 @@ public class DarknessItems
                                 origin = vector
                             };
                             EffectManager.SpawnEffect(LegacyResourcesAPI.Load<GameObject>("Prefabs/Effects/MuzzleFlashes/MuzzleflashFireMeatBall"), effectData, true);
-                            int numFireballs = 3 + 3 * numFireItems;
-                            float damageCoefficient = 0.3f * cb.damage * numFireItems;
+                            int numFireballs = (int )(baseBalls * numFireItems);
+                            float damageCoefficient = damagePct * cb.damage * numFireItems / 10000f;
                             float damage = Util.OnHitProcDamage(damageInfo.damage, cb.damage, damageCoefficient);
                             float minInclusive = 15f;
                             float maxInclusive = 30f;

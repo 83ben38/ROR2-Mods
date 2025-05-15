@@ -94,6 +94,18 @@ public class DarknessExpansion : BaseUnityPlugin
     public static ConfigEntry<float> parentIgniteRadiusBase;
     public static ConfigEntry<float> parentDarkKillArmorBonus;
     public static ConfigEntry<float> parentStackingMultiplier;
+    public static ConfigEntry<float> lightningProcChance; 
+    public static ConfigEntry<int>   lightningExtraTargets;
+    public static ConfigEntry<float> lightningRangeBase;
+    public static ConfigEntry<float> lightningDamagePct;
+    public static ConfigEntry<float> lightningOnKillDamageBonus;
+    public static ConfigEntry<float> lightningStackingMultiplier;
+    public static ConfigEntry<float> fireProcChance;              
+    public static ConfigEntry<int>   fireBaseBalls;               
+    public static ConfigEntry<float> fireDamagePct;               
+    public static ConfigEntry<float> fireOnKillDamageBonus;    
+    public static ConfigEntry<float> fireStackingMultiplier;     
+
     private void Awake()
     {
         startingDarkness = Config.Bind("Darkness Level", "Starting Darkness Level", 0, "What the starting darkness level is.");
@@ -188,6 +200,17 @@ public class DarknessExpansion : BaseUnityPlugin
         parentIgniteRadiusBase      = Config.Bind("Dark Planula", "Ignite Radius Base", 13f, "Base radius for ignite explosion");
         parentDarkKillArmorBonus    = Config.Bind("Dark Planula", "Dark Kill Armor Bonus", 1.5f, "Armor bonus gained on dark enemy kill");
         parentStackingMultiplier    = Config.Bind("Dark Planula", "Stacking Multiplier", 1f, "Multiplier for all per-stack effects");
+        lightningProcChance         = Config.Bind("Charged Claw", "Proc Chance %",           10f,   "Base % chance to trigger lightning on hit");
+        lightningExtraTargets       = Config.Bind("Charged Claw", "Extra Targets per Item",    2,   "Number of extra enemies struck per item");
+        lightningRangeBase          = Config.Bind("Charged Claw", "Base Range",            15f,   "Base search radius for additional targets");
+        lightningDamagePct          = Config.Bind("Charged Claw", "Damage %",             1000f, "Base damage % of lightning strike");
+        lightningOnKillDamageBonus  = Config.Bind("Charged Claw", "On-Kill Damage %",      4f,   "Damage % bonus on killing a dark enemy");
+        lightningStackingMultiplier = Config.Bind("Charged Claw", "Stacking Multiplier",   1f,   "Multiplier applied to all per-stack values");
+        fireProcChance           = Config.Bind("Dark Fire", "Proc Chance %",           10f,   "Chance to summon magma balls on hit");
+        fireBaseBalls            = Config.Bind("Dark Fire", "Base Balls",               6,    "Number of magma balls summoned per proc");
+        fireDamagePct            = Config.Bind("Dark Fire", "Base Damage Damage %%",              3000f, "Base damage damage percent percent of each magma ball");
+        fireOnKillDamageBonus = Config.Bind("Dark Fire", "On-Kill Damage",        0.5f, "Base damage bonus on dark enemy kill");
+        fireStackingMultiplier   = Config.Bind("Dark Fire", "Stacking Multiplier",     1f,   "Multiplier applied to all per-stack effects");
 
         
         Log.Init(Logger);
