@@ -11,6 +11,8 @@ public class DarknessArtifact
     public static ArtifactDef darknessArtifact;
     public static Sprite iconDisabled = Addressables.LoadAssetAsync<Sprite>("RoR2/Base/EliteOnly/texArtifactEliteOnlyDisabled.png").WaitForCompletion();
     public static Sprite iconEnabled = Addressables.LoadAssetAsync<Sprite>("RoR2/Base/EliteOnly/texArtifactEliteOnlyEnabled.png").WaitForCompletion();
+
+    public static int darknessGained;
     public DarknessArtifact()
     {
         darknessArtifact = ScriptableObject.CreateInstance<ArtifactDef>();
@@ -20,6 +22,7 @@ public class DarknessArtifact
         darknessArtifact.smallIconSelectedSprite = iconEnabled;
         ContentAddition.AddArtifactDef(darknessArtifact);
         Run.onRunStartGlobal += RunOnonRunStartGlobal;
+        darknessGained = DarknessExpansion.darknessGainedFromArtifact.Value;
     }
     
 
@@ -28,7 +31,7 @@ public class DarknessArtifact
     {
         if (RunArtifactManager.instance.IsArtifactEnabled(darknessArtifact))
         {
-            Darkness.DarknessLevel++;
+            Darkness.DarknessLevel+=darknessGained;
             Darkness.UpdateDarkness();
             foreach (var cm in CharacterMaster.instancesList)
             {

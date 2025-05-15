@@ -62,6 +62,8 @@ public class DarknessShrine
 
 
     public static SpawnCard[] bosses;
+
+    public static int darknessGained;
     public DarknessShrine()
     {
         shrine1.name = "Shrine of Darkness";
@@ -145,6 +147,8 @@ public class DarknessShrine
         {
             bosses[i] = Addressables.LoadAssetAsync<SpawnCard>(bossLocations[i]).WaitForCompletion();
         }
+
+        darknessGained = DarknessExpansion.darknessGainedFromShrine.Value;
     }
 
     private void SpawnCardOnonSpawnedServerGlobal(SpawnCard.SpawnResult obj)
@@ -203,7 +207,7 @@ public class DarknessShrine
             },true);
             Chat.SendBroadcastChat(new Chat.SimpleChatMessage(){baseToken = "<style=cEvent><color=#000000>The Darkness Increases!</color></style>"});
             purchaseInteraction.SetAvailable(false);
-            Darkness.DarknessLevel++;
+            Darkness.DarknessLevel+=darknessGained;
             Darkness.UpdateDarkness();
             for (int i = 0; i < 3; i++)
             {

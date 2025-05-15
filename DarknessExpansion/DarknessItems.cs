@@ -31,6 +31,8 @@ public class DarknessItems
     public static List<ItemDef> darkItems = new();
     public static Action<CharacterBody> onKillDarknessEnemy;
     public static ItemDef stackingDarkItem;
+
+    public static int darknessGained;
     
     public DarknessItems()
     {
@@ -69,6 +71,7 @@ public class DarknessItems
         RecalculateStatsAPI.GetStatCoefficients += RecalculateStatsAPIOnGetStatCoefficients;
         On.RoR2.Util.CheckRoll_float_float_CharacterMaster += CalculateDecimalLuck;
         On.RoR2.Items.BaseItemBodyBehavior.Init += BaseItemBodyBehaviorOnInit;
+        darknessGained = DarknessExpansion.darknessGainedFromItem.Value;
     }
     private bool CalculateDecimalLuck(On.RoR2.Util.orig_CheckRoll_float_float_CharacterMaster orig, float percentChance, float luck, CharacterMaster effectOriginMaster)
     {
@@ -252,7 +255,7 @@ public class DarknessItems
         {
             if (darkItems.Contains(ItemCatalog.GetItemDef(arg2)))
             {
-                Darkness.DarknessLevel += arg3;
+                Darkness.DarknessLevel += arg3 * darknessGained;
                 Darkness.UpdateDarkness();
             }
         }

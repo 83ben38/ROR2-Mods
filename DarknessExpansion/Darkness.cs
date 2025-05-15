@@ -17,7 +17,15 @@ public class Darkness
     public static BuffDef DarknessBuff;
     public static int DarknessLevel = 0;
     private static Sprite eliteIcon = Addressables.LoadAssetAsync<Sprite>("RoR2/Base/EliteFire/texBuffAffixRed.tif").WaitForCompletion();
-
+    
+    public static int maxDarknessLevel;
+    public static float maxItemChance;
+    public static bool linearItemScaling;
+    public static int maximumBonusItems;
+    public static bool linearEliteScaling;
+    public static bool linearStatsScaling;
+    public static float healthBoost;
+    public static float damageBoost;
     public Darkness()
     {
         
@@ -58,7 +66,16 @@ public class Darkness
         UpdateDarkness();
         CombatDirector.Spawn += CombatDirectorOnSpawn;
         SpawnCard.onSpawnedServerGlobal += SpawnCardOnonSpawnedServerGlobal;
-        Run.onRunStartGlobal += run => DarknessLevel = 0;
+        Run.onRunStartGlobal += run => DarknessLevel = DarknessExpansion.startingDarkness.Value;
+
+        maxDarknessLevel = DarknessExpansion.maximumDarknessLevel.Value;
+        maxItemChance = DarknessExpansion.maximumItemChance.Value;
+        linearItemScaling = DarknessExpansion.linearDarknessEliteItemScaling.Value;
+        maximumBonusItems = DarknessExpansion.maximumBonusItems.Value;
+        linearEliteScaling = DarknessExpansion.linearDarknessEliteChanceScaling.Value;
+        linearStatsScaling = DarknessExpansion.linearDarknessEliteStatsScaling.Value;
+        healthBoost = DarknessExpansion.healthBoostAmount.Value;
+        damageBoost = DarknessExpansion.damageBoostAmount.Value;
     }
 
     private void SpawnCardOnonSpawnedServerGlobal(SpawnCard.SpawnResult obj)
@@ -72,12 +89,17 @@ public class Darkness
                 {
                     List<ItemDef> li = DarknessItems.darkItems;
                     i.GiveItem(li[(int)((li.Count-1) * Random.value)]);
-                    float itemChance = DarknessLevel / 10f;
+                    float itemChance = DarknessLevel / (float)maxDarknessLevel;
+                    if (!linearItemScaling)
+                    {
+                        itemChance *= itemChance;
+                    }
+                    itemChance *= maxItemChance;
                     if (Random.value < itemChance)
                     {
                         i.GiveItem(li[(int)((li.Count-1) * Random.value)]);
                     }
-                    for (int j = 0; j < 3; j++)
+                    for (int j = 0; j < maximumBonusItems; j++)
                     {
                         if (Random.value < itemChance)
                         {
@@ -133,7 +155,11 @@ public class Darkness
 
     private bool CombatDirectorOnSpawn(CombatDirector.orig_Spawn orig, RoR2.CombatDirector self, SpawnCard spawncard, EliteDef elitedef, Transform spawntarget, DirectorCore.MonsterSpawnDistance spawndistance, bool preventoverhead, float valuemultiplier, DirectorPlacementRule.PlacementMode placementmode)
     {
-        float chanceToSwap = DarknessLevel * DarknessLevel / 100f; 
+        float chanceToSwap = DarknessLevel / (float)maxDarknessLevel;
+        if (!linearEliteScaling)
+        {
+            chanceToSwap *= chanceToSwap;
+        }
         if (Random.value < chanceToSwap)
         {
             elitedef = DarknessElite;
@@ -147,8 +173,13 @@ public class Darkness
     public static event Action<int> onDarknessLevelChange;
     public static void UpdateDarkness()
     {
-        DarknessElite.healthBoostCoefficient = 1f + Mathf.Sqrt(DarknessLevel);
-        DarknessElite.damageBoostCoefficient = 1f + (DarknessElite.healthBoostCoefficient-1) / 2f;
+        float value = DarknessLevel;
+        if (!linearStatsScaling)
+        {
+            value = Mathf.Sqrt(value);
+        }
+        DarknessElite.healthBoostCoefficient = 1f + (value * healthBoost);
+        DarknessElite.damageBoostCoefficient = 1f + (value * damageBoost);
         if (onDarknessLevelChange != null)
         {
             onDarknessLevelChange.Invoke(DarknessLevel);
