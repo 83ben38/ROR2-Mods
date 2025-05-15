@@ -34,7 +34,7 @@ public class Deflation
     public static AssetBundle ab =
         AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(DeflationArtifact.PInfo.Location), "assets"));
 
-    public static Sprite deselected1 = ab.LoadAsset<Sprite>("DeflationDisabled11.png");
+    public static Sprite deselected1 = ab.LoadAsset<Sprite>("DeflationDisabled1.png");
     public static Sprite selected1 = ab.LoadAsset<Sprite>("Deflation1.png");
     public static Sprite deselected2 = ab.LoadAsset<Sprite>("DeflationDisabled2.png");
     public static Sprite selected2 = ab.LoadAsset<Sprite>("Deflation2.png");
