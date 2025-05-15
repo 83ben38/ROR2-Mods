@@ -49,7 +49,7 @@ public class DarknessExpansion : BaseUnityPlugin
         maximumDarknessLevel = Config.Bind("Darkness Level", "Maximum Darkness Level", 10, "The point at which the world becomes consumed with darkness.");
         darknessGainedFromShrine = Config.Bind("Darkness Level", "Darkness From Shrine Activation", 1, "How much is added to the darkness level on activating a darkness shrine.");
         darknessGainedFromItem = Config.Bind("Darkness Level", "Darkness From Dark Item", 1, "How much is added to the darkness level per dark item picked up.");
-        darknessGainedFromItem = Config.Bind("Darkness Level", "Darkness From Artifact", 1, "How much is added to the darkness level when starting a run with the darkness artifact.");
+        darknessGainedFromArtifact = Config.Bind("Darkness Level", "Darkness From Artifact", 1, "How much is added to the darkness level when starting a run with the darkness artifact.");
         
         linearDarknessEliteItemScaling =
             Config.Bind("Darkness Elite", "Darkness Elite Item Chance Scaling Type", true,"Whether the item chance should scale linearly (true) or quadratically (false).");
@@ -67,7 +67,7 @@ public class DarknessExpansion : BaseUnityPlugin
         maxDarknessShrines = Config.Bind("Darkness Shrine", "Maximum Darkness Shrines", 1,
             "How many Darkness Shrines can spawn at once.");
         numPotentialsPerShrine = Config.Bind("Darkness Shrine", "Number Of Potentials Per Shrine", 3,
-            "How many Potentials spawn per Darkness Shrine.");
+            "How many Potentials spawn per Darkness Shrine. Also is the number of yellows required to make a dark item.");
         baseShrineCredits = Config.Bind("Darkness Shrine", "Base Shrine Credits", 600f,
             "The base shrine credits of the darkness shrine (scales like the teleporter).");
         numWhiteItemsGiven = Config.Bind("Darkness Shrine", "Number of White Items", 5,
@@ -80,7 +80,7 @@ public class DarknessExpansion : BaseUnityPlugin
             "The number of each yellow item sacrificed given to the boss.");
         bonusStatsGiven = Config.Bind("Darkness Shrine", "Amount of Bonus Stats", 1f,
             "The amount of darkness level required for the dark boss to gain 10% bonus stats.");
-        numRedItemsGiven = Config.Bind("Darkness Shrine", "Number of Whites Per Red", 5,
+        numWhitesPerRed = Config.Bind("Darkness Shrine", "Number of Whites Per Red", 5,
             "How many white items a red item upgrades into.");
         
         Log.Init(Logger);
