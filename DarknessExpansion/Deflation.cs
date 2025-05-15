@@ -67,16 +67,16 @@ public class Deflation
             baazarVisitsLeft--;
             if (baazarVisitsLeft == 0)
             {
-                Run.instance.NetworkstageClearCount = 2;
-                Run.instance.runStopwatch.offsetFromFixedTime += 10f * 60f;
+                Run.instance.NetworkstageClearCount = DeflationArtifact.stagesToSkip.Value;
+                Run.instance.runStopwatch.offsetFromFixedTime += DeflationArtifact.timeToSkip.Value;
                 for (int i = 0; i < PlayerCharacterMasterController.instances.Count; i++)
                 {
-                    PlayerCharacterMasterController.instances[i].master.GiveExperience(746);
+                    PlayerCharacterMasterController.instances[i].master.GiveExperience(DeflationArtifact.xpToGet.Value);
                 }
                 WeightedSelection<SceneDef> weightedSelection = new WeightedSelection<SceneDef>();
                 Run.instance.startingSceneGroup.AddToWeightedSelection(weightedSelection, Run.instance.CanPickStage);
                 Run.instance.PickNextStageScene(weightedSelection);
-                for (int i = 0; i < 2; i++)
+                for (int i = 0; i < Run.instance.NetworkstageClearCount; i++)
                 {
                     SceneCatalog.mostRecentSceneDef = Run.instance.nextStageScene;
                     Run.instance.PickNextStageSceneFromCurrentSceneDestinations();
@@ -114,7 +114,7 @@ public class Deflation
     {
         if (RunArtifactManager.instance.IsArtifactEnabled(deflationArtifact))
         {
-            obj.onPopulateCreditMultiplier *= 0.2f;
+            obj.onPopulateCreditMultiplier *= DeflationArtifact.creditMultiplier.Value;
         }
     }
 
@@ -124,40 +124,33 @@ public class Deflation
         {
             createItem(new List<EquipmentIndex>(){EquipmentCatalog.FindEquipmentIndex("Recycle")},new Vector3(-70,-20,-2));
             List<ItemIndex> whiteItems = ItemCatalog.tier1ItemList;
-            for (int i = 0; i < 3; i++)
+            int j = 0;
+            for (int i = 0; i < DeflationArtifact.whitesToGive.Value; i++)
             {
-                for (int j = 0; j < 5; j++)
-                {
-                    createItem(whiteItems,new Vector3(-85 - i * 5,-20, -10 - j * 5));
-                }
+                createItem(whiteItems,new Vector3(-85 - (j/5) * 5,-20, -10 - (j%5) * 5));
+                j++;
             }
             List<ItemIndex> greenItems = ItemCatalog.tier2ItemList;
-            for (int i = 3; i < 4; i++)
+            for (int i = 0; i < DeflationArtifact.greensToGive.Value; i++)
             {
-                for (int j = 0; j < 5; j++)
-                {
-                    createItem(greenItems,new Vector3(-85 - i * 5,-20, -10 - j * 5));
-                }
+                createItem(greenItems,new Vector3(-85 - (j/5) * 5,-20, -10 - (j%5) * 5));
+                j++;
             }
             List<ItemIndex> redItems = ItemCatalog.tier3ItemList;
-            for (int i = 4; i < 5; i++)
+            for (int i = 0; i < DeflationArtifact.redsToGive.Value; i++)
             {
-                for (int j = 0; j < 1; j++)
-                {
-                    createItem(redItems,new Vector3(-85 - i * 5,-20, -10 - j * 5));
-                }
+                createItem(redItems,new Vector3(-85 - (j/5) * 5,-20, -10 - (j%5) * 5));
+                j++;
             }
             List<ItemIndex> yellowItems = new List<ItemIndex>();
             for (int i = 0; i < yellowItemNames.Length; i++)
             {
                 yellowItems.Add(ItemCatalog.FindItemIndex(yellowItemNames[i]));
             }
-            for (int i = 4; i < 5; i++)
+            for (int i = 0; i < DeflationArtifact.yellowsToGive.Value; i++)
             {
-                for (int j = 1; j < 3; j++)
-                {
-                    createItem(yellowItems,new Vector3(-85 - i * 5,-20, -10 - j * 5));
-                }
+                createItem(yellowItems,new Vector3(-85 - (j/5) * 5,-20, -10 - (j%5) * 5));
+                j++;
             }
 
             ItemDef.Pair[] pairs = ItemCatalog.itemRelationships[DLC1Content.ItemRelationshipTypes.ContagiousItem];
@@ -169,12 +162,10 @@ public class Deflation
                     tier1VoidItems.Add(pairs[i].itemDef2.itemIndex);
                 }
             }
-            for (int i = 4; i < 5; i++)
+            for (int i = 0; i < DeflationArtifact.voidTier1ToGive.Value; i++)
             {
-                for (int j = 3; j < 4; j++)
-                {
-                    createItem(tier1VoidItems,new Vector3(-85 - i * 5,-20, -10 - j * 5));
-                }
+                createItem(tier1VoidItems,new Vector3(-85 - (j/5) * 5,-20, -10 - (j%5) * 5));
+                j++;
             }
             List<ItemIndex> tier2VoidItems = new List<ItemIndex>();
             for (int i = 0; i < pairs.Length; i++)
@@ -184,20 +175,16 @@ public class Deflation
                     tier2VoidItems.Add(pairs[i].itemDef2.itemIndex);
                 }
             }
-            for (int i = 4; i < 5; i++)
+            for (int i = 0; i < DeflationArtifact.voidTier2ToGive.Value; i++)
             {
-                for (int j = 4; j < 5; j++)
-                {
-                    createItem(tier2VoidItems,new Vector3(-85 - i * 5,-20, -10 - j * 5));
-                }
+                createItem(tier2VoidItems,new Vector3(-85 - (j/5) * 5,-20, -10 - (j%5) * 5));
+                j++;
             }
             List<EquipmentIndex> equipments = EquipmentCatalog.equipmentList;
-            for (int i = 5; i < 6; i++)
+            for (int i = 0; i < DeflationArtifact.equipmentToGive.Value; i++)
             {
-                for (int j = 2; j < 4; j++)
-                {
-                    createItem(equipments,new Vector3(-85 - i * 5,-20, -10 - j * 5));
-                }
+                createItem(equipments,new Vector3(-85 - (j/5) * 5,-20, -10 - (j%5) * 5));
+                j++;
             }
         }
         orig(self);
