@@ -314,7 +314,8 @@ public class DarknessItems
             numDarkPearls = 1 + (numDarkPearls - 1) * DarkPearlItem.stackingMultiplier;
             float numDarkBetterPearls = self.inventory.GetItemCount(DarkPearlItem2.darkPearlItem);
             numDarkBetterPearls = 1 + (numDarkBetterPearls - 1) * DarkPearlItem2.stackingMultiplier;
-            int numDarkJellyfish = self.inventory.GetItemCount(DarkJellyfishItem.darkJellyfishItem);
+            float numDarkJellyfish = self.inventory.GetItemCount(DarkJellyfishItem.darkJellyfishItem);
+            numDarkJellyfish = 1 + (numDarkJellyfish - 1) * DarkJellyfishItem.stackingMult;
             int numDarkWisps = self.inventory.GetItemCount(DarkWispItem.darkWispItem);
             float numDarkBleedItems = self.inventory.GetItemCount(DarkBleedItem.darkBleedItem);
             numDarkBleedItems = 1 + (numDarkBleedItems - 1) * DarkBleedItem.stackingMultiplier;
@@ -347,7 +348,7 @@ public class DarknessItems
             args.attackSpeedMultAdd += darkBetterPearlMultiplier;
             args.armorAdd += darkBetterPearlMultiplier * (self.armor+args.armorAdd);
             //check if this actually works
-            float cooldownMult = Mathf.Pow(1-(.01f*numDarkJellyfish),numDarknessStacks);
+            float cooldownMult = Mathf.Pow(1-(DarkJellyfishItem.onKillCdrPct*numDarkJellyfish/100f),numDarknessStacks);
             args.cooldownMultAdd =cooldownMult - 1;
         }
     }
@@ -1049,7 +1050,7 @@ public class DarknessItems
 
          
     }
-     public class DarkJellyfishItem
+    public class DarkJellyfishItem
     {
         public static ItemDef darkJellyfishItem;
 
@@ -1062,8 +1063,21 @@ public class DarknessItems
 
         private static BuffDef chargeBuff;
 
+        public static float lowHealthThreshold;
+        public static float rechargeInterval;
+        public static int   baseCharges;
+        public static float secondaryBasePct;
+        public static float onKillCdrPct;
+        public static float stackingMult;
         public DarkJellyfishItem()
         {
+            lowHealthThreshold    = DarknessExpansion.jellyLowHealthThreshold.Value;
+            rechargeInterval      = DarknessExpansion.jellyRechargeInterval.Value;
+            baseCharges           = DarknessExpansion.jellyBaseCharges.Value;
+            secondaryBasePct      = DarknessExpansion.jellySecondaryBasePct.Value;
+            onKillCdrPct          = DarknessExpansion.jellyOnKillCdrPct.Value;
+            stackingMult          = DarknessExpansion.jellyStackingMultiplier.Value;
+
             darkJellyfishItem = ScriptableObject.CreateInstance<ItemDef>();
             darkJellyfishItem.name = "DARK_JELLYFISH_NAME";
             darkJellyfishItem.descriptionToken = "DARK_JELLYFISH_DESCRIPTION";
@@ -1080,8 +1094,13 @@ public class DarknessItems
             ItemAPI.Add(new CustomItem(darkJellyfishItem, displayRules));
             LanguageAPI.Add("DARK_JELLYFISH_NAME", "Omega Loop");
             LanguageAPI.Add("DARK_JELLYFISH_DESCRIPTION",
-                "When below 50% health, every 30 / 2 (+1 per stack) seconds, charge an explosion, dealing 6000% damage (+6000% per stack). Additionally, gain 3 (+3 per stack) charges. Upon using your secondary, release a ball of lightning that deaals 500% base damage (+500% per stack). Upon killing a dark enemy, gain 1% (+1% per stack) cooldown reduction, which affects this item.");
-            LanguageAPI.Add("DARK_JELLYFISH_PICKUP",
+                $"When below {lowHealthThreshold * 100}% health, every " +
+                $"{rechargeInterval}/2 (+{stackingMult} per stack) seconds, " +
+                $"charge an explosion, dealing 6000% (+{6000*stackingMult}% per stack) damage." +
+                $"Additionally, gain {baseCharges} (+{baseCharges * stackingMult} per stack) charges. " +
+                $"Upon using your secondary, release a ball dealing {secondaryBasePct}% (+{secondaryBasePct*stackingMult}% per stack) damage. " +
+                $"On killing a dark enemy, gain {onKillCdrPct}% (+{onKillCdrPct * stackingMult}% per stack) cooldown reduction."
+            );LanguageAPI.Add("DARK_JELLYFISH_PICKUP",
                 "Upon reaching low health, explode in an area. Upon using your secondary, release a ball of lightning. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkJellyfishItem);
             chargeBuff = ScriptableObject.CreateInstance<BuffDef>();
@@ -1100,8 +1119,9 @@ public class DarknessItems
                 self.fixedAge += self.GetDeltaTime();
                 if (self.isAuthority)
                 {
-                    int itemStack = self.GetItemStack();
-                    float num = EntityStates.VagrantNovaItem.RechargeState.baseDuration / (itemStack + 1);
+                    float itemStack = self.GetItemStack();
+                    itemStack = 1 + (itemStack - 1) * stackingMult;
+                    float num = rechargeInterval / (itemStack + 1);
                     num *= self.attachedBody.skillLocator.primary.cooldownScale;
                     float num2 = self.fixedAge / num;
                     if (num2 >= 1f)
@@ -1123,7 +1143,7 @@ public class DarknessItems
             if (self.attachedBody.inventory.GetItemCount(darkJellyfishItem) > 0)
             {
                 if (self.isAuthority && (self.attachedHealthComponent.health + self.attachedHealthComponent.shield) /
-                    self.attachedHealthComponent.fullCombinedHealth <= 0.5f)
+                    self.attachedHealthComponent.fullCombinedHealth <= lowHealthThreshold)
                 {
                     self.outer.SetNextState(new ChargeState());
                 }
@@ -1170,7 +1190,10 @@ public class DarknessItems
                 {
                     Destroy(this);
                 }
-                int num = stack * 3;
+
+                float itemStack = stack;
+                itemStack = 1 + (itemStack - 1) * stackingMult;
+                int num = (int)itemStack  * baseCharges;
                 if (body.GetBuffCount(chargeBuff) < num)
                 {
                     float num2 = 10f * skillLocator.primary.cooldownScale / num;
@@ -1199,7 +1222,9 @@ public class DarknessItems
             {
                 Log.Debug("Firing");
                 Ray aimRay = GetAimRay();
-                ProjectileManager.instance.FireProjectileWithoutDamageType(projectilePrefab, aimRay.origin, Util.QuaternionSafeLookRotation(aimRay.direction) * GetRandomRollPitch(), gameObject, body.damage * (5f * stack), 0f, Util.CheckRoll(body.crit, body.master), DamageColorIndex.Item);
+                float itemStack = stack;
+                itemStack = 1 + (itemStack - 1) * stackingMult;
+                ProjectileManager.instance.FireProjectileWithoutDamageType(projectilePrefab, aimRay.origin, Util.QuaternionSafeLookRotation(aimRay.direction) * GetRandomRollPitch(), gameObject, body.damage * (secondaryBasePct * itemStack / 100f), 0f, Util.CheckRoll(body.crit, body.master), DamageColorIndex.Item);
             }
             Quaternion GetRandomRollPitch()
             {

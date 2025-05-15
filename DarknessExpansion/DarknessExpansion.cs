@@ -74,6 +74,12 @@ public class DarknessExpansion : BaseUnityPlugin
     public static ConfigEntry<float> coreSpawnInterval;
     public static ConfigEntry<float> coreAllyDamagePerAlly;
     public static ConfigEntry<float> coreOnKillAllyStatPct;
+    public static ConfigEntry<float> jellyLowHealthThreshold;
+    public static ConfigEntry<float> jellyRechargeInterval;
+    public static ConfigEntry<int>   jellyBaseCharges;
+    public static ConfigEntry<float> jellySecondaryBasePct;
+    public static ConfigEntry<float> jellyOnKillCdrPct;
+    public static ConfigEntry<float> jellyStackingMultiplier;
     private void Awake()
     {
         startingDarkness = Config.Bind("Darkness Level", "Starting Darkness Level", 0, "What the starting darkness level is.");
@@ -145,9 +151,15 @@ public class DarknessExpansion : BaseUnityPlugin
         beetleDebuffStacks      = Config.Bind("King's Gland", "Debuff Stacks per Hit",1,    "Number of debuff stacks Beetle applies on hit");
         beetleMaxGuards         = Config.Bind("King's Gland", "Max Guards",            1,    "Maximum simultaneous Beetle Guards");
         beetleOnKillASPercent   = Config.Bind("King's Gland", "Attack Speed Gain per Kill",         3f,   "Attack speed % gained on killing a dark enemy");
-        coreSpawnInterval     = Config.Bind("Dark Core", "Spawn Interval",       10f, "Seconds between each pair of Solus Probe summons");
-        coreAllyDamagePerAlly = Config.Bind("Dark Core", "Damage % per Ally",       200f, "Base % damage bonus per ally on your team");
-        coreOnKillAllyStatPct = Config.Bind("Dark Core", "On-Kill Ally Stat %",      2f, "Percent buff to all allies’ stats on killing a dark enemy");
+        coreSpawnInterval     = Config.Bind("Sympathy Cores", "Spawn Interval",       10f, "Seconds between each pair of Solus Probe summons");
+        coreAllyDamagePerAlly = Config.Bind("Sympathy Cores", "Damage % per Ally",       200f, "Base % damage bonus per ally on your team");
+        coreOnKillAllyStatPct = Config.Bind("Sympathy Cores", "On-Kill Ally Stat %",      2f, "Percent buff to all allies’ stats on killing a dark enemy");
+        jellyLowHealthThreshold   = Config.Bind("Omega Loop", "Low Health Threshold", 0.5f, "Fraction of health to trigger charging");
+        jellyRechargeInterval     = Config.Bind("Omega Loop", "Charge Interval (s)", 30f,  "Base seconds per explosion");
+        jellyBaseCharges          = Config.Bind("Omega Loop", "Base Charges",        3,    "Starting number of charges");
+        jellySecondaryBasePct     = Config.Bind("Omega Loop", "Secondary Base %",  500f, "Base secondary projectile damage percent");
+        jellyOnKillCdrPct         = Config.Bind("Omega Loop", "On-Kill CDR %",     1f,  "Cooldown reduction percent gained on kill");
+        jellyStackingMultiplier   = Config.Bind("Omega Loop", "Stacking Multiplier",1f,  "Multiplier applied to all per-stack values");
 
         
         Log.Init(Logger);
