@@ -310,8 +310,10 @@ public class DarknessItems
             float numDarkGolems = self.inventory.GetItemCount(DarkGolemItem.darkGolemItem);
             numDarkGolems = 1 + (numDarkGolems - 1) * DarkGolemItem.stacking;
             int numDarkBeetles = self.inventory.GetItemCount(DarkBeetleItem.darkBeetleItem);
-            int numDarkPearls = self.inventory.GetItemCount(DarkPearlItem.darkPearlItem);
-            int numDarkBetterPearls = self.inventory.GetItemCount(DarkPearlItem2.darkPearlItem);
+            float numDarkPearls = self.inventory.GetItemCount(DarkPearlItem.darkPearlItem);
+            numDarkPearls = 1 + (numDarkPearls - 1) * DarkPearlItem.stackingMultiplier;
+            float numDarkBetterPearls = self.inventory.GetItemCount(DarkPearlItem2.darkPearlItem);
+            numDarkBetterPearls = 1 + (numDarkBetterPearls - 1) * DarkPearlItem2.stackingMultiplier;
             int numDarkJellyfish = self.inventory.GetItemCount(DarkJellyfishItem.darkJellyfishItem);
             int numDarkWisps = self.inventory.GetItemCount(DarkWispItem.darkWispItem);
             int numDarkBleedItems = self.inventory.GetItemCount(DarkBleedItem.darkBleedItem);
@@ -330,10 +332,10 @@ public class DarknessItems
             args.armorAdd += (numDarkParentItems * numDarknessStacks * 1.5f);
             args.attackSpeedMultAdd += (numDarkBeetles * numDarknessStacks * .03f);
             args.moveSpeedMultAdd += (numDarkWisps * numDarknessStacks * .03f);
-            args.healthMultAdd += ((1 + (numDarkPearls * .5f)) * (1 + (numDarkPearls * numDarknessStacks * .02f)))-1;
+            args.healthMultAdd += (1 + numDarkPearls * DarkPearlItem.baseHealthPercent/100f) * (1 + numDarkPearls * numDarknessStacks * DarkPearlItem.onKillHealthPercent/100f)-1;
             args.damageMultAdd += (numDarknessStacks * .04f * numDarkLightningItems);
-            float darkBetterPearlMultiplier = 1 + (numDarkBetterPearls * .5f);
-            darkBetterPearlMultiplier *= 1 + (numDarkBetterPearls * numDarknessStacks * .01f);
+            float darkBetterPearlMultiplier = 1 + (numDarkBetterPearls * DarkPearlItem2.allStatsPercent/100f);
+            darkBetterPearlMultiplier *= 1 + (numDarkBetterPearls * numDarknessStacks * DarkPearlItem2.onKillPercent/100f);
             darkBetterPearlMultiplier -= 1;
             darkBetterPearlMultiplier += .02f * numDarkCoreStacks;
             args.healthMultAdd += darkBetterPearlMultiplier;
@@ -483,9 +485,15 @@ public class DarknessItems
             .LoadAssetAsync<GameObject>("RoR2/Base/Pearl/PickupPearl.prefab")
             .WaitForCompletion();
         
-
+        public static float baseHealthPercent;
+        public static float onKillHealthPercent;
+        public static float stackingMultiplier;
         public DarkPearlItem()
         {
+            baseHealthPercent    = DarknessExpansion.pearlHealthPercent.Value;
+            onKillHealthPercent  = DarknessExpansion.pearlOnKillPercent.Value; 
+            stackingMultiplier   = DarknessExpansion.pearlStacking.Value;
+
             darkPearlItem = ScriptableObject.CreateInstance<ItemDef>();
             darkPearlItem.name = "DARK_PEARL_NAME";
             darkPearlItem.descriptionToken = "DARK_PEARL_DESCRIPTION";
@@ -502,7 +510,11 @@ public class DarknessItems
             ItemAPI.Add(new CustomItem(darkPearlItem, displayRules));
             LanguageAPI.Add("DARK_PEARL_NAME", "Dark Pearl");
             LanguageAPI.Add("DARK_PEARL_DESCRIPTION",
-                "Increases maximum health by 50% (+50% per stack). Upon killing a dark enemy, increases health by 2% (+2% per stack).");
+                $"Increases maximum health by {baseHealthPercent}% " +
+                $"(+{baseHealthPercent * stackingMultiplier}% per stack). " +
+                $"Upon killing a dark enemy, increases health by {onKillHealthPercent}% " +
+                $"(+{onKillHealthPercent * stackingMultiplier}% per stack)."
+            );
             LanguageAPI.Add("DARK_PEARL_PICKUP",
                 "Increases health. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkPearlItem);
@@ -518,10 +530,15 @@ public class DarknessItems
         private GameObject darkPearlPickup = Addressables
             .LoadAssetAsync<GameObject>("RoR2/Base/ShinyPearl/PickupShinyPearl.prefab")
             .WaitForCompletion();
-        
+        public static float allStatsPercent;
+        public static float onKillPercent;
+        public static float stackingMultiplier;
 
         public DarkPearlItem2()
         {
+            allStatsPercent      = DarknessExpansion.pearl2AllStatsPercent.Value;
+            onKillPercent        = DarknessExpansion.pearl2OnKillPercent.Value;
+            stackingMultiplier   = DarknessExpansion.pearl2Stacking.Value; 
             darkPearlItem = ScriptableObject.CreateInstance<ItemDef>();
             darkPearlItem.name = "DARK_PEARL_NAME2";
             darkPearlItem.descriptionToken = "DARK_PEARL_DESCRIPTION2";
@@ -538,7 +555,11 @@ public class DarknessItems
             ItemAPI.Add(new CustomItem(darkPearlItem, displayRules));
             LanguageAPI.Add("DARK_PEARL_NAME2", "Dark Irradient Pearl");
             LanguageAPI.Add("DARK_PEARL_DESCRIPTION2",
-                "Increases all stats by 50% (+50% per stack). Upon killing a dark enemy, increases all stats by 1% (+1% per stack).");
+                $"Increases all stats by {allStatsPercent}% " +
+                $"(+{allStatsPercent * stackingMultiplier}% per stack). " +
+                $"Upon killing a dark enemy, increases all stats by {onKillPercent}% " +
+                $"(+{onKillPercent * stackingMultiplier}% per stack)."
+            );
             LanguageAPI.Add("DARK_PEARL_PICKUP2",
                 "Increases all stats. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkPearlItem);

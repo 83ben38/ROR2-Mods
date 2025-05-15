@@ -53,6 +53,12 @@ public class DarknessExpansion : BaseUnityPlugin
     public static ConfigEntry<int> golemStackingHealth;
     public static ConfigEntry<int> golemStackingRegen;
     public static ConfigEntry<float> golemStacking;
+    public static ConfigEntry<float> pearlHealthPercent;
+    public static ConfigEntry<float> pearlOnKillPercent;
+    public static ConfigEntry<float> pearlStacking;
+    public static ConfigEntry<float> pearl2AllStatsPercent;
+    public static ConfigEntry<float> pearl2OnKillPercent;
+    public static ConfigEntry<float> pearl2Stacking;
     private void Awake()
     {
         startingDarkness = Config.Bind("Darkness Level", "Starting Darkness Level", 0, "What the starting darkness level is.");
@@ -97,14 +103,21 @@ public class DarknessExpansion : BaseUnityPlugin
             "Whether the stacking from dark items stacks logarithmically. If this and sqrt stacking are both enabled, stacking is disabled.");
         sqrtStacking = Config.Bind("Darkness Items", "Square Root Stacking", false,
             "Whether the stacking from dark items stacks by square root. If this and log stacking are both enabled, stacking is disabled.");
-        golemHealth            = Config.Bind("Golem Item", "Health",              100,  "Base health of each Golem Item.");
-        golemRegen             = Config.Bind("Golem Item", "Regen",               10,     "Health regen granted by Golem Item.");
-        golemChance            = Config.Bind("Golem Item", "Spawn Chance",        20f, "Percent chance to spawn a Golem on hit.");
-        golemBaseDamage        = Config.Bind("Golem Item", "Base Damage",         200,    "Base Damage dealt by Golem item.");
-        golemDamagePerHealth   = Config.Bind("Golem Item", "Damage per Health",   100,     "Additional damage per 500 health.");
-        golemStackingHealth    = Config.Bind("Golem Item", "Stacking Health",     5,   "Additional health per darkness stack per Golem Item.");
-        golemStackingRegen     = Config.Bind("Golem Item", "Stacking Regen",      1,     "Additional regen per darkness stack per Golem Item.");
-        golemStacking          = Config.Bind("Golem Item", "Stacking Bonus",     1f, "The effectiveness of stacking.");
+        golemHealth            = Config.Bind("Titanic Boulder", "Health",              100,  "Base health of each Golem Item.");
+        golemRegen             = Config.Bind("Titanic Boulder", "Regen",               10,     "Health regen granted by Golem Item.");
+        golemChance            = Config.Bind("Titanic Boulder", "Spawn Chance",        20f, "% chance to spawn a Golem on hit.");
+        golemBaseDamage        = Config.Bind("Titanic Boulder", "Base Damage %",         200,    "Base % Damage dealt by Golem item.");
+        golemDamagePerHealth   = Config.Bind("Titanic Boulder", "Damage per Health %",   100,     "Additional % damage per 500 health.");
+        golemStackingHealth    = Config.Bind("Titanic Boulder", "Stacking Health",     5,   "Additional health per darkness stack per Golem Item.");
+        golemStackingRegen     = Config.Bind("Titanic Boulder", "Stacking Regen",      1,     "Additional regen per darkness stack per Golem Item.");
+        golemStacking          = Config.Bind("Titanic Boulder", "Stacking Bonus",     1f, "Multiplier applied to per-stack values");
+        pearlHealthPercent   = Config.Bind("Dark Pearl", "Base Health %",  50f, "Base % max health");
+        pearlOnKillPercent   = Config.Bind("Dark Pearl", "On Kill %",      2f,  "Health % gained on kill");
+        pearlStacking        = Config.Bind("Dark Pearl", "Stacking Mult",  1f,  "Multiplier applied to per-stack values");
+        pearl2AllStatsPercent = Config.Bind(
+            "Dark Irradiant Pearl", "All Stats %", 50f, "Base % increase to all stats per Dark Irradiant Pearl");
+        pearl2OnKillPercent = Config.Bind("Dark Irradiant Pearl", "On Kill All Stats %", 1f, "Additional % to all stats on kill per Dark Irradiant Pearl");
+        pearl2Stacking = Config.Bind("Dark Irradiant Pearl", "Stacking Multiplier", 1f, "Multiplier applied to per-stack values");
 
         
         Log.Init(Logger);
