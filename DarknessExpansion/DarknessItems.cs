@@ -239,7 +239,8 @@ public class DarknessItems
     {
         if (self) if (self.body) if (self.body.inventory)
         {
-            int numDarkClay = self.body.inventory.GetItemCount(DarkClayItem.darkClayItem); 
+            float numDarkClay = self.body.inventory.GetItemCount(DarkClayItem.darkClayItem);
+            numDarkClay = 1 + (numDarkClay - 1) * DarkClayItem.stackMult;
             int numDarknessStacks = self.body.inventory.GetItemCount(stackingDarkItem);
             if (logStacking && sqrtStacking)
             {
@@ -253,7 +254,7 @@ public class DarknessItems
             {
                 numDarknessStacks = (int)Mathf.Sqrt(numDarknessStacks);
             }
-            float healMultiplier = 1 + (numDarknessStacks * numDarkClay * .03f);
+            float healMultiplier = 1 + (numDarknessStacks * numDarkClay * DarkClayItem.onKillHealPct / 100f);
             return orig(self, amount * healMultiplier, procchainmask, nonregen);
         }
         return orig(self, amount, procchainmask, nonregen);
@@ -1368,7 +1369,7 @@ public class DarknessItems
             private float fireTimer;
         }
     }
-     public class DarkClayItem
+    public class DarkClayItem
     {
         public static ItemDef darkClayItem;
 
@@ -1378,10 +1379,20 @@ public class DarknessItems
         private GameObject darkClayPickup = Addressables
             .LoadAssetAsync<GameObject>("RoR2/Base/SiphonOnLowHealth/PickupSiphonOnLowHealth.prefab")
             .WaitForCompletion();
-        
+        public static int   baseTethers;
+        public static float bonusDamagePct;
+        public static float healPct;
+        public static float onKillHealPct;
+        public static float stackMult;
 
         public DarkClayItem()
         {
+            baseTethers    = DarknessExpansion.clayTetherCount.Value;
+            bonusDamagePct = DarknessExpansion.clayTarBonusDamagePct.Value;
+            healPct        = DarknessExpansion.clayHealPct.Value;
+            onKillHealPct  = DarknessExpansion.clayDarkKillHealingBonusPct.Value;
+            stackMult      = DarknessExpansion.clayStackingMultiplier.Value;
+            
             darkClayItem = ScriptableObject.CreateInstance<ItemDef>();
             darkClayItem.name = "DARK_CLAY_NAME";
             darkClayItem.descriptionToken = "DARK_CLAY_DESCRIPTION";
@@ -1397,7 +1408,11 @@ public class DarknessItems
             darkClayItem.itemIndex = ItemIndex.Count;
             ItemAPI.Add(new CustomItem(darkClayItem, displayRules));
             LanguageAPI.Add("DARK_CLAY_NAME", "Polished Urn");
-            LanguageAPI.Add("DARK_CLAY_DESCRIPTION", "The nearest 1 (+1 per stack) enemies to you within 13m will be 'tethered' to you, applying tar. Deal 15% (+15% per stack) additional damage to enemies with tar applied, and heal for 5% (+5% per stack) of the damage dealt. Upon killing a dark enemy, gain 3% (+3% per stack) healing multiplier.");
+            LanguageAPI.Add("DARK_CLAY_DESCRIPTION",
+                $"The nearest {baseTethers} (+{baseTethers * stackMult} per stack) enemies within 13m are tethered and tarred." +
+                $"Deal {bonusDamagePct}% (+{bonusDamagePct * stackMult}% per stack) bonus damage to tarred enemies." +
+                $"Heal for {healPct}% (+{healPct * stackMult}% per stack) of the damage dealt to them." +
+                $"Killing a dark enemy increases your healing received by {onKillHealPct}% (+{onKillHealPct * stackMult}% per stack).");
             LanguageAPI.Add("DARK_CLAY_PICKUP",
                 "Tether yourself to nearby enemies, dealing bonus damage and healing for a portion of the damage dealt. Grows stronger as it absorbs darkness.");
             HealthComponent.TakeDamageProcess += HealthComponentOnTakeDamageProcess;
@@ -1411,13 +1426,14 @@ public class DarknessItems
                 CharacterBody cb = damageinfo.attacker.GetComponent<CharacterBody>();
                 if (cb)
                 {
-                    int num = cb.inventory.GetItemCount(darkClayItem);
+                    float num = cb.inventory.GetItemCount(darkClayItem);
+                    num = 1 + (num - 1) * stackMult;
                     if (num > 0)
                     {
                         if (self.body.HasBuff(RoR2Content.Buffs.ClayGoo))
                         {
-                            damageinfo.damage *= 1 + (num * 0.15f);
-                            cb.healthComponent.Heal(damageinfo.damage * 0.05f * num, default, false);
+                            damageinfo.damage *= 1 + (num * bonusDamagePct / 100f);
+                            cb.healthComponent.Heal(damageinfo.damage * healPct * num / 100f, default, false);
                         }
                     }
                 }
@@ -1448,7 +1464,9 @@ public class DarknessItems
             
             private void FixedUpdate()
             {
-                siphonNearbyController.NetworkmaxTargets = (body.healthComponent.alive ? stack : 0);
+                float stack = this.stack;
+                stack = 1 + (stack - 1) * stackMult;
+                siphonNearbyController.NetworkmaxTargets = (body.healthComponent.alive ? (int)(stack*baseTethers) : 0);
             }
 
             private void DestroyAttachment()
@@ -1467,7 +1485,7 @@ public class DarknessItems
         }
         
     }
-     public class DarkParentItem
+    public class DarkParentItem
     {
         public static ItemDef darkParentItem;
 

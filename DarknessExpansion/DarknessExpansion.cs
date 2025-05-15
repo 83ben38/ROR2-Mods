@@ -85,6 +85,11 @@ public class DarknessExpansion : BaseUnityPlugin
     public static ConfigEntry<float> wispProcCoeff;        
     public static ConfigEntry<float> wispOnKillMoveSpeedPct;
     public static ConfigEntry<float> wispStackingMultiplier;
+    public static ConfigEntry<int>   clayTetherCount;
+    public static ConfigEntry<float> clayTarBonusDamagePct;
+    public static ConfigEntry<float> clayHealPct;
+    public static ConfigEntry<float> clayDarkKillHealingBonusPct;
+    public static ConfigEntry<float> clayStackingMultiplier;
     private void Awake()
     {
         startingDarkness = Config.Bind("Darkness Level", "Starting Darkness Level", 0, "What the starting darkness level is.");
@@ -170,6 +175,11 @@ public class DarknessExpansion : BaseUnityPlugin
         wispProcCoeff           = Config.Bind("Large Disciple", "Proc Coefficient",     3f,    "Proc coefficient per wisp");
         wispOnKillMoveSpeedPct  = Config.Bind("Large Disciple", "On-Kill MoveSpeed %", 3f,    "Move-speed % gained on killing a dark enemy");
         wispStackingMultiplier  = Config.Bind("Large Disciple", "Stacking Multiplier", 1f,    "Multiplier applied to each per-stack value");
+        clayTetherCount               = Config.Bind("Polished Urn", "Tether Count",           1,   "Base number of enemies tethered to you");
+        clayTarBonusDamagePct         = Config.Bind("Polished Urn", "Tar Bonus Damage %",    15f, "Bonus damage % against tarred enemies");
+        clayHealPct                   = Config.Bind("Polished Urn", "Heal Percent",           5f, "Heal % of damage dealt to tarred enemies");
+        clayDarkKillHealingBonusPct  = Config.Bind("Polished Urn", "On-Kill Heal %",        3f, "Healing bonus % gained on dark kill");
+        clayStackingMultiplier        = Config.Bind("Polished Urn", "Stacking Multiplier",     1f, "Multiplier applied to all per-stack values");
 
         
         Log.Init(Logger);
