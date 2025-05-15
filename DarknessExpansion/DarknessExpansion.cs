@@ -32,6 +32,17 @@ public class DarknessExpansion : BaseUnityPlugin
     public static ConfigEntry<bool> linearDarknessEliteStatsScaling;
     public static ConfigEntry<float> healthBoostAmount;
     public static ConfigEntry<float> damageBoostAmount;
+    public static ConfigEntry<int> creditCost;
+    public static ConfigEntry<int> selectionWeight;
+    public static ConfigEntry<int> maxDarknessShrines;
+    public static ConfigEntry<int> numPotentialsPerShrine;
+    public static ConfigEntry<float> baseShrineCredits;
+    public static ConfigEntry<int> numWhiteItemsGiven;
+    public static ConfigEntry<int> numGreenItemsGiven;
+    public static ConfigEntry<int> numRedItemsGiven;
+    public static ConfigEntry<int> numYellowItemsGiven;
+    public static ConfigEntry<float> bonusStatsGiven;
+    public static ConfigEntry<int> numWhitesPerRed;
     private void Awake()
     {
         startingDarkness = Config.Bind("Darkness Level", "Starting Darkness Level", 0, "What the starting darkness level is.");
@@ -51,6 +62,27 @@ public class DarknessExpansion : BaseUnityPlugin
         healthBoostAmount = Config.Bind("Darkness Elite", "Health Boost Per Stack", 1f, "The amount of health boost an elite gets from 1 darkness level.");
         damageBoostAmount = Config.Bind("Darkness Elite", "Damage Boost Per Stack", 0.5f, "The amount of damage boost an elite gets from 1 darkness level.");
 
+        creditCost = Config.Bind("Darkness Shrine", "Credit Cost", 10, "How many credits the darkness shrine costs.");
+        selectionWeight = Config.Bind("Darkness Shrine", "Selection Weight", 100, "The weight of the Darkness Shrine.");
+        maxDarknessShrines = Config.Bind("Darkness Shrine", "Maximum Darkness Shrines", 1,
+            "How many Darkness Shrines can spawn at once.");
+        numPotentialsPerShrine = Config.Bind("Darkness Shrine", "Number Of Potentials Per Shrine", 3,
+            "How many Potentials spawn per Darkness Shrine.");
+        baseShrineCredits = Config.Bind("Darkness Shrine", "Base Shrine Credits", 600f,
+            "The base shrine credits of the darkness shrine (scales like the teleporter).");
+        numWhiteItemsGiven = Config.Bind("Darkness Shrine", "Number of White Items", 5,
+            "The number of each white item sacrificed given to the boss.");
+        numGreenItemsGiven = Config.Bind("Darkness Shrine", "Number of Green Items", 3,
+            "The number of each green item sacrificed given to the boss.");
+        numRedItemsGiven = Config.Bind("Darkness Shrine", "Number of Red Items", 1,
+            "The number of each red item sacrificed given to the boss.");
+        numYellowItemsGiven = Config.Bind("Darkness Shrine", "Number of Yellow Items", 1,
+            "The number of each yellow item sacrificed given to the boss.");
+        bonusStatsGiven = Config.Bind("Darkness Shrine", "Amount of Bonus Stats", 1f,
+            "The amount of darkness level required for the dark boss to gain 10% bonus stats.");
+        numRedItemsGiven = Config.Bind("Darkness Shrine", "Number of Whites Per Red", 5,
+            "How many white items a red item upgrades into.");
+        
         Log.Init(Logger);
         new Darkness();
         new DarknessShrine();

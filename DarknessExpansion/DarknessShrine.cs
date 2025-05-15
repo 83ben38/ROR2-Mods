@@ -64,6 +64,11 @@ public class DarknessShrine
     public static SpawnCard[] bosses;
 
     public static int darknessGained;
+    public static int numPotentialsPerShrine;
+    public static float baseShrineCredits;
+    public static int[] itemsGiven = new int[4];
+    public static float bonusStatsGiven;
+    public static int numWhitesToUpgrade;
     public DarknessShrine()
     {
         shrine1.name = "Shrine of Darkness";
@@ -91,15 +96,15 @@ public class DarknessShrine
         card.nodeGraphType = MapNodeGroup.GraphType.Ground;
         card.requiredFlags = NodeFlags.None;
         card.forbiddenFlags = NodeFlags.NoShrineSpawn;
-        card.directorCreditCost = 10;
+        card.directorCreditCost = DarknessExpansion.creditCost.Value;
         card.occupyPosition = true;
         card.orientToFloor = false;
         card.skipSpawnWhenSacrificeArtifactEnabled = false;
-        card.maxSpawnsPerStage = 1;
+        card.maxSpawnsPerStage = DarknessExpansion.maxDarknessShrines.Value;
 
         DirectorCard dc = new DirectorCard()
         {
-            selectionWeight = 100,
+            selectionWeight = DarknessExpansion.selectionWeight.Value,
             spawnCard = card
         };
 
@@ -116,6 +121,8 @@ public class DarknessShrine
         shrine2.AddComponent<NetworkIdentity>();
         shrine2.GetComponent<Renderer>().sharedMaterial = darkMaterial;
         shrine2.AddComponent<MeshCollider>();
+
+        numPotentialsPerShrine = DarknessExpansion.numPotentialsPerShrine.Value;
         
         spawnCard = ScriptableObject.CreateInstance<InteractableSpawnCard>();
         spawnCard.name = "iscDarknessPotential";
@@ -129,7 +136,7 @@ public class DarknessShrine
         spawnCard.occupyPosition = true;
         spawnCard.orientToFloor = false;
         spawnCard.skipSpawnWhenSacrificeArtifactEnabled = false;
-        spawnCard.maxSpawnsPerStage = 3;
+        spawnCard.maxSpawnsPerStage = numPotentialsPerShrine;
 
         DarknessPotentialManager dpm = shrine2.AddComponent<DarknessPotentialManager>();
         PurchaseInteraction interaction2 = shrine2.AddComponent<PurchaseInteraction>();
@@ -149,6 +156,13 @@ public class DarknessShrine
         }
 
         darknessGained = DarknessExpansion.darknessGainedFromShrine.Value;
+        baseShrineCredits = DarknessExpansion.baseShrineCredits.Value;
+        itemsGiven[0] = DarknessExpansion.numWhiteItemsGiven.Value;
+        itemsGiven[1] = DarknessExpansion.numGreenItemsGiven.Value;
+        itemsGiven[2] = DarknessExpansion.numRedItemsGiven.Value;
+        itemsGiven[3] = DarknessExpansion.numYellowItemsGiven.Value;
+        bonusStatsGiven = DarknessExpansion.bonusStatsGiven.Value;
+        numWhitesToUpgrade = DarknessExpansion.numWhitesPerRed.Value;
     }
 
     private void SpawnCardOnonSpawnedServerGlobal(SpawnCard.SpawnResult obj)
@@ -188,8 +202,8 @@ public class DarknessShrine
 
         public void createPotentials(GameObject shrine2, SpawnCard spawnCard)
         {
-            terminalGameObjects = new GameObject[3];
-            for (int i = 0; i < 3; i++)
+            terminalGameObjects = new GameObject[numPotentialsPerShrine];
+            for (int i = 0; i < numPotentialsPerShrine; i++)
             {
                 terminalGameObjects[i] = DirectorCore.instance.TrySpawnObject(new DirectorSpawnRequest(spawnCard,new DirectorPlacementRule(){placementMode = DirectorPlacementRule.PlacementMode.Random},new Xoroshiro128Plus((ulong)(Random.value * ulong.MaxValue))));
                 terminalGameObjects[i].GetComponent<DarknessPotentialManager>().parent = this;
@@ -209,7 +223,7 @@ public class DarknessShrine
             purchaseInteraction.SetAvailable(false);
             Darkness.DarknessLevel+=darknessGained;
             Darkness.UpdateDarkness();
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < numPotentialsPerShrine; i++)
             {
                 if (terminalGameObjects[i])
                 {
@@ -221,9 +235,18 @@ public class DarknessShrine
 
             bonusItemToGive = ItemIndex.None;
             int bossToSpawn = -1;
-            if (sacrificedItems.Count == 3)
+            if (sacrificedItems.Count == numPotentialsPerShrine)
             {
-                if (sacrificedItems[0] == sacrificedItems[1] && sacrificedItems[0] == sacrificedItems[2])
+                bool allTheSame = true;
+                for (int i = 1; i < numPotentialsPerShrine; i++)
+                {
+                    if (sacrificedItems[i] != sacrificedItems[0])
+                    {
+                        allTheSame = false;
+                        break;
+                    }
+                }
+                if (allTheSame)
                 {
                     if (sacrificedItems[0] == ItemCatalog.itemNameToIndex["BeetleGland"])
                     {
@@ -315,7 +338,7 @@ public class DarknessShrine
             bossSpawner.enabled = true;
             bossSpawner.maxSpawnDistance = 60f;
             bossSpawner.monsterCredit +=
-                (int)(600f * Mathf.Pow(Run.instance.compensatedDifficultyCoefficient, 0.5f));
+                (int)(baseShrineCredits * Mathf.Pow(Run.instance.compensatedDifficultyCoefficient, 0.5f));
             bossSpawner.SetNextSpawnAsBoss();
             
 
@@ -340,10 +363,10 @@ public class DarknessShrine
                         for (int i = 0; i < sacrificedItems.Count; i++)
                         {
                             ItemIndex ii = sacrificedItems[i];
-                            int numItems = 1;
+                            int numItems = itemsGiven[3];
                             if (ItemCatalog.tier1ItemList.Contains(ii))
                             {
-                                numItems = 5;
+                                numItems = itemsGiven[0];
                                 while (ItemCatalog.GetItemDef(ii).ContainsTag(ItemTag.AIBlacklist))
                                 {
                                     Log.Debug("Rerolling item");
@@ -354,7 +377,7 @@ public class DarknessShrine
 
                             else if (ItemCatalog.tier2ItemList.Contains(ii))
                             {
-                                numItems = 3;
+                                numItems = itemsGiven[1];
                                 while (ItemCatalog.GetItemDef(ii).ContainsTag(ItemTag.AIBlacklist))
                                 {
                                     Log.Debug("Rerolling item");
@@ -367,6 +390,7 @@ public class DarknessShrine
                             {
                                 while (ItemCatalog.GetItemDef(ii).ContainsTag(ItemTag.AIBlacklist))
                                 {
+                                    numItems = itemsGiven[2];
                                     Log.Debug("Rerolling item");
                                     ii = ItemCatalog.tier3ItemList[
                                         (int)(ItemCatalog.tier3ItemList.Count * Random.value)];
@@ -390,7 +414,7 @@ public class DarknessShrine
                         }
                         List<ItemDef> li = DarknessItems.darkItems;
                         bossInventory.GiveItem(li[(int)((li.Count-1) * Random.value)]);
-                        bossInventory.GiveItemString("ShinyPearl",Darkness.DarknessLevel);
+                        bossInventory.GiveItemString("ShinyPearl",(int)(Darkness.DarknessLevel/bonusStatsGiven));
                     }
                 }
                 if (bossSquad.defeatedServer)
@@ -420,7 +444,7 @@ public class DarknessShrine
                             else if (ItemCatalog.tier3ItemList.Contains(ii))
                             {
                                 nii = ItemCatalog.tier1ItemList[(int)(ItemCatalog.tier1ItemList.Count * Random.value)];
-                                itemCount = 5;
+                                itemCount = numWhitesToUpgrade;
                             }
                             else
                             {
