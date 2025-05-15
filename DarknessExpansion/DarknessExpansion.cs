@@ -59,6 +59,12 @@ public class DarknessExpansion : BaseUnityPlugin
     public static ConfigEntry<float> pearl2AllStatsPercent;
     public static ConfigEntry<float> pearl2OnKillPercent;
     public static ConfigEntry<float> pearl2Stacking;
+    public static ConfigEntry<float> bleedCritChancePercent;     
+    public static ConfigEntry<int>   bleedStacksPerHit;
+    public static ConfigEntry<float> explosionBaseDamagePercent; 
+    public static ConfigEntry<float> explosionHealthPercent;     
+    public static ConfigEntry<float> onKillCritDamagePercent;    
+    public static ConfigEntry<float> bleedStackingMultiplier;
     private void Awake()
     {
         startingDarkness = Config.Bind("Darkness Level", "Starting Darkness Level", 0, "What the starting darkness level is.");
@@ -118,6 +124,12 @@ public class DarknessExpansion : BaseUnityPlugin
             "Dark Irradiant Pearl", "All Stats %", 50f, "Base % increase to all stats per Dark Irradiant Pearl");
         pearl2OnKillPercent = Config.Bind("Dark Irradiant Pearl", "On Kill All Stats %", 1f, "Additional % to all stats on kill per Dark Irradiant Pearl");
         pearl2Stacking = Config.Bind("Dark Irradiant Pearl", "Stacking Multiplier", 1f, "Multiplier applied to per-stack values");
+        bleedCritChancePercent       = Config.Bind("Dark Shatterspleen", "Crit Chance %",            20f,  "Base critical chance granted by each item");
+        bleedStacksPerHit            = Config.Bind("Dark Shatterspleen", "Bleed Stacks per Hit",     1,    "Bleed stacks applied on each hit");
+        explosionBaseDamagePercent   = Config.Bind("Dark Shatterspleen", "Explosion Base %",         100f, "Base % damage per bleed item on death");
+        explosionHealthPercent       = Config.Bind("Dark Shatterspleen", "Explosion Health %",       15f,  "Max-health % dealt per bleed item on death");
+        onKillCritDamagePercent      = Config.Bind("Dark Shatterspleen", "On-Kill Crit Dmg %",        3f,  "Crit damage % bonus upon killing a dark enemy");
+        bleedStackingMultiplier      = Config.Bind("Dark Shatterspleen", "Stacking Multiplier",       1f,  "Multiplier applied to all per-stack values");
 
         
         Log.Init(Logger);

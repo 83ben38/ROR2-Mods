@@ -316,19 +316,20 @@ public class DarknessItems
             numDarkBetterPearls = 1 + (numDarkBetterPearls - 1) * DarkPearlItem2.stackingMultiplier;
             int numDarkJellyfish = self.inventory.GetItemCount(DarkJellyfishItem.darkJellyfishItem);
             int numDarkWisps = self.inventory.GetItemCount(DarkWispItem.darkWispItem);
-            int numDarkBleedItems = self.inventory.GetItemCount(DarkBleedItem.darkBleedItem);
+            float numDarkBleedItems = self.inventory.GetItemCount(DarkBleedItem.darkBleedItem);
+            numDarkBleedItems = 1 + (numDarkBleedItems - 1) * DarkBleedItem.stackingMultiplier;
             int numDarkCoreStacks = self.inventory.GetItemCount(DarkCoreItem.DarkStacksItem.stackingDarkItem);
             int numDarkParentItems = self.inventory.GetItemCount(DarkParentItem.darkParentItem);
             int numDarkLightningItems = self.inventory.GetItemCount(DarkLightningItem.darkLightningItem);
             int numDarkFires = self.inventory.GetItemCount(DarkFireItem.darkFireItem);
             if (numDarkBleedItems > 0)
             {
-                args.critAdd += 20f;
+                args.critAdd += DarkBleedItem.critChancePercent;
             }
             args.baseDamageAdd += numDarkFires * numDarknessStacks * 0.5f;
             args.baseHealthAdd += (numDarkGolems * DarkGolemItem.baseHealth) + (numDarkGolems * numDarknessStacks * DarkGolemItem.stackingHealth);
             args.baseRegenAdd += (numDarkGolems * DarkGolemItem.baseRegen) + (numDarkGolems * numDarknessStacks * DarkGolemItem.stackingRegen);
-            args.critDamageMultAdd += (numDarkBleedItems * numDarknessStacks * .03f);
+            args.critDamageMultAdd += (numDarkBleedItems * numDarknessStacks * DarkBleedItem.onKillCritDmgPercent / 100f);
             args.armorAdd += (numDarkParentItems * numDarknessStacks * 1.5f);
             args.attackSpeedMultAdd += (numDarkBeetles * numDarknessStacks * .03f);
             args.moveSpeedMultAdd += (numDarkWisps * numDarknessStacks * .03f);
@@ -576,9 +577,21 @@ public class DarknessItems
             .LoadAssetAsync<GameObject>("RoR2/Base/BleedOnHitAndExplode/DisplayBleedOnHitAndExplode.prefab")
             .WaitForCompletion();
         
-
+        public static float critChancePercent;
+        public static int   bleedStacksPerHit;
+        public static float explosionBasePercent;
+        public static float explosionHealthPercent;
+        public static float onKillCritDmgPercent;
+        public static float stackingMultiplier;
         public DarkBleedItem()
         {
+            critChancePercent       = DarknessExpansion.bleedCritChancePercent.Value;
+            bleedStacksPerHit        = DarknessExpansion.bleedStacksPerHit.Value;
+            explosionBasePercent    = DarknessExpansion.explosionBaseDamagePercent.Value;
+            explosionHealthPercent  = DarknessExpansion.explosionHealthPercent.Value;
+            onKillCritDmgPercent    = DarknessExpansion.onKillCritDamagePercent.Value;
+            stackingMultiplier      = DarknessExpansion.bleedStackingMultiplier.Value;
+
             darkBleedItem = ScriptableObject.CreateInstance<ItemDef>();
             darkBleedItem.name = "DARK_BLEED_NAME";
             darkBleedItem.descriptionToken = "DARK_BLEED_DESCRIPTION";
@@ -595,8 +608,13 @@ public class DarknessItems
             ItemAPI.Add(new CustomItem(darkBleedItem, displayRules));
             LanguageAPI.Add("DARK_BLEED_NAME", "Dark Shatterspleen");
             LanguageAPI.Add("DARK_BLEED_DESCRIPTION",
-                "Gain 20% critical chance. All strikes apply 1 stack of bleed. Crits apply bonus bleed based on crit damage. Bleeding enemies explode on death for 100% damage (+100% per stack) damage per bleed stack + 15% (+15% per stack) of their max health. Upon killing a dark enemy, gain 3% (+3% per stack) crit damage.");
-            LanguageAPI.Add("DARK_BLEED_PICKUP",
+                $"Gain {critChancePercent}% critical chance. " +
+                $"All hits apply {bleedStacksPerHit} bleed stack(s). " +
+                $"Crits apply bonus bleed. " +
+                $"Bleeding enemies explode for {explosionBasePercent}% (+{explosionBasePercent * stackingMultiplier}% per stack) " +
+                $"damage per bleed stack + {explosionHealthPercent}% (+{explosionHealthPercent * stackingMultiplier}% per stack) max health. " +
+                $"Upon killing a dark enemy, gain {onKillCritDmgPercent}% (+{onKillCritDmgPercent * stackingMultiplier}% per stack) crit damage."
+            );LanguageAPI.Add("DARK_BLEED_PICKUP",
                 "All hits apply bleed, and crits apply extra. Bleeding enemies explode, dealing damage to nearby enemies. Grows stronger as it absorbs darkness.");
             On.RoR2.GlobalEventManager.ProcessHitEnemy += GlobalEventManagerOnProcessHitEnemy;
             GlobalEventManager.onCharacterDeathGlobal += GlobalEventManagerOnonCharacterDeathGlobal;
@@ -612,13 +630,14 @@ public class DarknessItems
 
             if (obj.attackerBody.inventory && obj.victimBody)
             {
-                int numDarkBleedItems = obj.attackerBody.inventory.GetItemCount(darkBleedItem);
+                float numDarkBleedItems = obj.attackerBody.inventory.GetItemCount(darkBleedItem);
+                numDarkBleedItems = 1 + (numDarkBleedItems - 1) * stackingMultiplier;
                 if (numDarkBleedItems > 0 && obj.victimBody.HasBuff(RoR2Content.Buffs.Bleeding) || obj.victimBody.HasBuff(RoR2Content.Buffs.SuperBleed))
                 {
                     Util.PlaySound("Play_bleedOnCritAndExplode_explode", obj.victimBody.gameObject);
                     Vector3 position = obj.victimBody.transform.position;
-                    float damageCoefficient = 1f * numDarkBleedItems * (obj.victimBody.GetBuffCount(RoR2Content.Buffs.Bleeding) + 3);
-                    float num = 0.15f * numDarkBleedItems;
+                    float damageCoefficient = explosionBasePercent * numDarkBleedItems * (obj.victimBody.GetBuffCount(RoR2Content.Buffs.Bleeding) + 3) / 100f;
+                    float num = explosionHealthPercent * numDarkBleedItems / 100f;
                     float baseDamage = Util.OnKillProcDamage(obj.attackerBody.damage, damageCoefficient) + obj.victimBody.maxHealth * num;
                     GameObject gameObject = Object.Instantiate(GlobalEventManager.CommonAssets.bleedOnHitAndExplodeBlastEffect, position, Quaternion.identity);
                     DelayBlast component = gameObject.GetComponent<DelayBlast>();
@@ -652,15 +671,16 @@ public class DarknessItems
                         if (!damageinfo.procChainMask.HasProc(ProcType.BleedOnHit))
                         {
                             Inventory inventory = master.inventory;
-                            int numDarkBleedItems = inventory.GetItemCount(darkBleedItem);
+                            float numDarkBleedItems = inventory.GetItemCount(darkBleedItem);
+                            numDarkBleedItems = 1 + (numDarkBleedItems - 1) * stackingMultiplier;
                             if (numDarkBleedItems > 0)
                             {
                                 ProcChainMask procChainMask2 = damageinfo.procChainMask;
                                 procChainMask2.AddProc(ProcType.BleedOnHit);
-                                int numBleeds = 1;
+                                int numBleeds = bleedStacksPerHit;
                                 if (damageinfo.crit)
                                 {
-                                    numBleeds *= (int)(component2.critMultiplier);
+                                    numBleeds *= (int)component2.critMultiplier;
                                 }
                                 for (int i = 0; i < numBleeds; i++)
                                 {
