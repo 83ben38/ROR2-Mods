@@ -43,6 +43,16 @@ public class DarknessExpansion : BaseUnityPlugin
     public static ConfigEntry<int> numYellowItemsGiven;
     public static ConfigEntry<float> bonusStatsGiven;
     public static ConfigEntry<int> numWhitesPerRed;
+    public static ConfigEntry<bool> logStacking;
+    public static ConfigEntry<bool> sqrtStacking;
+    public static ConfigEntry<int> golemHealth;
+    public static ConfigEntry<int> golemRegen;
+    public static ConfigEntry<float> golemChance;
+    public static ConfigEntry<int> golemBaseDamage;
+    public static ConfigEntry<int> golemDamagePerHealth;
+    public static ConfigEntry<int> golemStackingHealth;
+    public static ConfigEntry<int> golemStackingRegen;
+    public static ConfigEntry<float> golemStacking;
     private void Awake()
     {
         startingDarkness = Config.Bind("Darkness Level", "Starting Darkness Level", 0, "What the starting darkness level is.");
@@ -82,6 +92,20 @@ public class DarknessExpansion : BaseUnityPlugin
             "The amount of darkness level required for the dark boss to gain 10% bonus stats.");
         numWhitesPerRed = Config.Bind("Darkness Shrine", "Number of Whites Per Red", 5,
             "How many white items a red item upgrades into.");
+
+        logStacking = Config.Bind("Darkness Items", "Logarithmic Stacking", false,
+            "Whether the stacking from dark items stacks logarithmically. If this and sqrt stacking are both enabled, stacking is disabled.");
+        sqrtStacking = Config.Bind("Darkness Items", "Square Root Stacking", false,
+            "Whether the stacking from dark items stacks by square root. If this and log stacking are both enabled, stacking is disabled.");
+        golemHealth            = Config.Bind("Golem Item", "Health",              100,  "Base health of each Golem Item.");
+        golemRegen             = Config.Bind("Golem Item", "Regen",               10,     "Health regen granted by Golem Item.");
+        golemChance            = Config.Bind("Golem Item", "Spawn Chance",        20f, "Percent chance to spawn a Golem on hit.");
+        golemBaseDamage        = Config.Bind("Golem Item", "Base Damage",         200,    "Base Damage dealt by Golem item.");
+        golemDamagePerHealth   = Config.Bind("Golem Item", "Damage per Health",   100,     "Additional damage per 500 health.");
+        golemStackingHealth    = Config.Bind("Golem Item", "Stacking Health",     5,   "Additional health per darkness stack per Golem Item.");
+        golemStackingRegen     = Config.Bind("Golem Item", "Stacking Regen",      1,     "Additional regen per darkness stack per Golem Item.");
+        golemStacking          = Config.Bind("Golem Item", "Stacking Bonus",     1f, "The effectiveness of stacking.");
+
         
         Log.Init(Logger);
         new Darkness();

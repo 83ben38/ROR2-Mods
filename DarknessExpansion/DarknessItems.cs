@@ -33,6 +33,8 @@ public class DarknessItems
     public static ItemDef stackingDarkItem;
 
     public static int darknessGained;
+    public static bool logStacking;
+    public static bool sqrtStacking;
     
     public DarknessItems()
     {
@@ -72,6 +74,8 @@ public class DarknessItems
         On.RoR2.Util.CheckRoll_float_float_CharacterMaster += CalculateDecimalLuck;
         On.RoR2.Items.BaseItemBodyBehavior.Init += BaseItemBodyBehaviorOnInit;
         darknessGained = DarknessExpansion.darknessGainedFromItem.Value;
+        logStacking = DarknessExpansion.logStacking.Value;
+        sqrtStacking = DarknessExpansion.sqrtStacking.Value;
     }
     private bool CalculateDecimalLuck(On.RoR2.Util.orig_CheckRoll_float_float_CharacterMaster orig, float percentChance, float luck, CharacterMaster effectOriginMaster)
     {
@@ -208,11 +212,23 @@ public class DarknessItems
         darkTier.dropletDisplayPrefab = Temp;
     }
 
-    private void CharacterMasterOnOnInventoryChanged(On.RoR2.CharacterMaster.orig_OnInventoryChanged orig, RoR2.CharacterMaster self)
+    private void CharacterMasterOnOnInventoryChanged(On.RoR2.CharacterMaster.orig_OnInventoryChanged orig, CharacterMaster self)
     {
         if (self) if (self.inventory)
         {
             int numDarknessStacks = self.inventory.GetItemCount(stackingDarkItem);
+            if (logStacking && sqrtStacking)
+            {
+                numDarknessStacks = 0;
+            }
+            else if (logStacking)
+            {
+                numDarknessStacks = (int)Mathf.Log(numDarknessStacks + 1,2);
+            }
+            else if (sqrtStacking)
+            {
+                numDarknessStacks = (int)Mathf.Sqrt(numDarknessStacks);
+            }
             int numDarkConstructItems = self.inventory.GetItemCount(DarkConstructItem.darkConstructItem);
             orig(self);
             self.luck += numDarknessStacks * numDarkConstructItems * .03f;
@@ -225,6 +241,18 @@ public class DarknessItems
         {
             int numDarkClay = self.body.inventory.GetItemCount(DarkClayItem.darkClayItem); 
             int numDarknessStacks = self.body.inventory.GetItemCount(stackingDarkItem);
+            if (logStacking && sqrtStacking)
+            {
+                numDarknessStacks = 0;
+            }
+            else if (logStacking)
+            {
+                numDarknessStacks = (int)Mathf.Log(numDarknessStacks + 1,2);
+            }
+            else if (sqrtStacking)
+            {
+                numDarknessStacks = (int)Mathf.Sqrt(numDarknessStacks);
+            }
             float healMultiplier = 1 + (numDarknessStacks * numDarkClay * .03f);
             return orig(self, amount * healMultiplier, procchainmask, nonregen);
         }
@@ -267,7 +295,20 @@ public class DarknessItems
         if (self.inventory)
         {
             int numDarknessStacks = self.inventory.GetItemCount(stackingDarkItem);
-            int numDarkGolems = self.inventory.GetItemCount(DarkGolemItem.darkGolemItem);
+            if (logStacking && sqrtStacking)
+            {
+                numDarknessStacks = 0;
+            }
+            else if (logStacking)
+            {
+                numDarknessStacks = (int)Mathf.Log(numDarknessStacks + 1,2);
+            }
+            else if (sqrtStacking)
+            {
+                numDarknessStacks = (int)Mathf.Sqrt(numDarknessStacks);
+            }
+            float numDarkGolems = self.inventory.GetItemCount(DarkGolemItem.darkGolemItem);
+            numDarkGolems = 1 + (numDarkGolems - 1) * DarkGolemItem.stacking;
             int numDarkBeetles = self.inventory.GetItemCount(DarkBeetleItem.darkBeetleItem);
             int numDarkPearls = self.inventory.GetItemCount(DarkPearlItem.darkPearlItem);
             int numDarkBetterPearls = self.inventory.GetItemCount(DarkPearlItem2.darkPearlItem);
@@ -283,8 +324,8 @@ public class DarknessItems
                 args.critAdd += 20f;
             }
             args.baseDamageAdd += numDarkFires * numDarknessStacks * 0.5f;
-            args.baseHealthAdd += (numDarkGolems * 100) + (numDarkGolems * 5 * numDarknessStacks);
-            args.baseRegenAdd += (numDarkGolems * 10) + (numDarkGolems * numDarknessStacks);
+            args.baseHealthAdd += (numDarkGolems * DarkGolemItem.baseHealth) + (numDarkGolems * numDarknessStacks * DarkGolemItem.stackingHealth);
+            args.baseRegenAdd += (numDarkGolems * DarkGolemItem.baseRegen) + (numDarkGolems * numDarknessStacks * DarkGolemItem.stackingRegen);
             args.critDamageMultAdd += (numDarkBleedItems * numDarknessStacks * .03f);
             args.armorAdd += (numDarkParentItems * numDarknessStacks * 1.5f);
             args.attackSpeedMultAdd += (numDarkBeetles * numDarknessStacks * .03f);
@@ -352,8 +393,25 @@ public class DarknessItems
             .LoadAssetAsync<GameObject>("RoR2/Base/Titan/TitanPreFistProjectile.prefab").WaitForCompletion()
             .InstantiateClone("Dark Fist");
 
+        public static  int   baseHealth;
+        public static  int   baseRegen;
+        public static  float procChance;
+        public static  int   fistBaseDamage;
+        public static  int   fistDamagePerHealth;
+        public static  int   stackingHealth;
+        public static  int   stackingRegen;
+        public static  float stacking;
         public DarkGolemItem()
         {
+            baseHealth           = DarknessExpansion.golemHealth.Value;
+            baseRegen            = DarknessExpansion.golemRegen.Value;
+            procChance           = DarknessExpansion.golemChance.Value;
+            fistBaseDamage       = DarknessExpansion.golemBaseDamage.Value;
+            fistDamagePerHealth  = DarknessExpansion.golemDamagePerHealth.Value;
+            stackingHealth       = DarknessExpansion.golemStackingHealth.Value;
+            stackingRegen        = DarknessExpansion.golemStackingRegen.Value;
+            stacking   = DarknessExpansion.golemStacking.Value;
+            
             darkGolemItem = ScriptableObject.CreateInstance<ItemDef>();
             darkGolemItem.name = "DARK_GOLEM_NAME";
             darkGolemItem.descriptionToken = "DARK_GOLEM_DESCRIPTION";
@@ -371,7 +429,7 @@ public class DarknessItems
             HealthComponent.TakeDamageProcess += HealthComponentOnTakeDamageProcess;
             LanguageAPI.Add("DARK_GOLEM_NAME", "Titanic Boulder");
             LanguageAPI.Add("DARK_GOLEM_DESCRIPTION",
-                "Gives 100 (+100 per stack) health and 10 (+10 per stack) regen. Upon taking damage, 20% chance to summon a fist for 200% (+200% per stack) damage + 100% damage (+100% per stack) per 500 health. Gives 5 (+5 per stack) health and 1 (+1 per stack) regen upon killing a dark enemy.");
+                $"Gives {baseHealth} (+{baseHealth*stacking} per stack) health and {baseRegen} (+{baseRegen*stacking} per stack) regen. Upon taking damage, {procChance}% chance to summon a fist for {fistBaseDamage}% (+{fistBaseDamage*stacking}% per stack) damage + {fistDamagePerHealth}% damage (+{fistDamagePerHealth*stacking}% per stack) per 500 health. Gives {stackingHealth} (+{stackingHealth*stacking} per stack) health and {stackingRegen} (+{stackingRegen*stacking} per stack) regen upon killing a dark enemy.");
             LanguageAPI.Add("DARK_GOLEM_PICKUP",
                 "Increases health and regen. Upon taking damage, chance to summon a fist. Fist damage scales with health. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkGolemItem);
@@ -382,17 +440,20 @@ public class DarknessItems
         {
             if (self) if (self.body) if (self.body.inventory) if (damageinfo.attacker)
             {
-                int numDarkGolems = self.body.inventory.GetItemCount(darkGolemItem);
+                float numDarkGolems = self.body.inventory.GetItemCount(darkGolemItem);
+                numDarkGolems = 1 + (numDarkGolems - 1) * stacking;
                 if (numDarkGolems > 0)
                 {
-                    if (Util.CheckRoll(20, self.body.master))
+                    if (Util.CheckRoll(procChance, self.body.master))
                     {
                         bool isCrit = self.body.RollCrit();
-                        float damageValue = self.body.damage * (self.body.healthComponent.fullCombinedHealth + 1000f) * numDarkGolems / 500f;
+                        float damageValue = self.body.damage * self.body.healthComponent.fullCombinedHealth * numDarkGolems * fistDamagePerHealth / 50000f;
                         if (self.body.teamComponent.teamIndex != TeamIndex.Player)
                         {
-                            damageValue = self.body.damage * (self.body.healthComponent.fullCombinedHealth + 10000f) * numDarkGolems / 5000f;
+                            damageValue = self.body.damage * self.body.healthComponent.fullCombinedHealth  * numDarkGolems * fistDamagePerHealth / 500000f;
                         }
+
+                        damageValue += fistBaseDamage / 100f;
                         FireProjectileInfo fireProjectileInfo = default(FireProjectileInfo);
                         fireProjectileInfo.projectilePrefab = fistProjectilePrefab;
                         fireProjectileInfo.position = damageinfo.attacker.transform.position;
