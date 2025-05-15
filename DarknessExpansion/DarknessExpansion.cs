@@ -65,6 +65,12 @@ public class DarknessExpansion : BaseUnityPlugin
     public static ConfigEntry<float> explosionHealthPercent;     
     public static ConfigEntry<float> onKillCritDamagePercent;    
     public static ConfigEntry<float> bleedStackingMultiplier;
+    public static ConfigEntry<float> beetleSpawnInterval;
+    public static ConfigEntry<float> beetleBaseDamagePercent;
+    public static ConfigEntry<float> beetleBaseHealthPercent;
+    public static ConfigEntry<int>   beetleDebuffStacks;
+    public static ConfigEntry<int>   beetleMaxGuards;
+    public static ConfigEntry<float> beetleOnKillASPercent;
     private void Awake()
     {
         startingDarkness = Config.Bind("Darkness Level", "Starting Darkness Level", 0, "What the starting darkness level is.");
@@ -130,6 +136,12 @@ public class DarknessExpansion : BaseUnityPlugin
         explosionHealthPercent       = Config.Bind("Dark Shatterspleen", "Explosion Health %",       15f,  "Max-health % dealt per bleed item on death");
         onKillCritDamagePercent      = Config.Bind("Dark Shatterspleen", "On-Kill Crit Dmg %",        3f,  "Crit damage % bonus upon killing a dark enemy");
         bleedStackingMultiplier      = Config.Bind("Dark Shatterspleen", "Stacking Multiplier",       1f,  "Multiplier applied to all per-stack values");
+        beetleSpawnInterval     = Config.Bind("King's Gland", "Spawn Interval",    30f,  "Seconds between Beetle Guard spawns");
+        beetleBaseDamagePercent = Config.Bind("King's Gland", "Guard Damage %",        300f, "Base % damage of each Beetle Guard");
+        beetleBaseHealthPercent = Config.Bind("King's Gland", "Guard Health %",        300f, "Base % health of each Beetle Guard");
+        beetleDebuffStacks      = Config.Bind("King's Gland", "Debuff Stacks per Hit",1,    "Number of debuff stacks Beetle applies on hit");
+        beetleMaxGuards         = Config.Bind("King's Gland", "Max Guards",            1,    "Maximum simultaneous Beetle Guards");
+        beetleOnKillASPercent   = Config.Bind("King's Gland", "Attack Speed Gain per Kill",         3f,   "Attack speed % gained on killing a dark enemy");
 
         
         Log.Init(Logger);

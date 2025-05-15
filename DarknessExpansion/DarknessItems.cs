@@ -331,7 +331,7 @@ public class DarknessItems
             args.baseRegenAdd += (numDarkGolems * DarkGolemItem.baseRegen) + (numDarkGolems * numDarknessStacks * DarkGolemItem.stackingRegen);
             args.critDamageMultAdd += (numDarkBleedItems * numDarknessStacks * DarkBleedItem.onKillCritDmgPercent / 100f);
             args.armorAdd += (numDarkParentItems * numDarknessStacks * 1.5f);
-            args.attackSpeedMultAdd += (numDarkBeetles * numDarknessStacks * .03f);
+            args.attackSpeedMultAdd += (numDarkBeetles * numDarknessStacks * DarkBeetleItem.onKillASPct);
             args.moveSpeedMultAdd += (numDarkWisps * numDarknessStacks * .03f);
             args.healthMultAdd += (1 + numDarkPearls * DarkPearlItem.baseHealthPercent/100f) * (1 + numDarkPearls * numDarknessStacks * DarkPearlItem.onKillHealthPercent/100f)-1;
             args.damageMultAdd += (numDarknessStacks * .04f * numDarkLightningItems);
@@ -694,7 +694,7 @@ public class DarknessItems
         }
     }
     
-     public class DarkBeetleItem
+    public class DarkBeetleItem
     {
         public static ItemDef darkBeetleItem;
 
@@ -706,8 +706,22 @@ public class DarknessItems
             .WaitForCompletion();
 
         private static BuffDef debuffApplier;
+        
+        public static float spawnInterval;
+        public static float baseDamagePct;
+        public static float baseHealthPct;
+        public static int   debuffStacks;
+        public static int   maxGuards;
+        public static float onKillASPct;
         public DarkBeetleItem()
         {
+            spawnInterval   = DarknessExpansion.beetleSpawnInterval.Value;
+            baseDamagePct   = DarknessExpansion.beetleBaseDamagePercent.Value;
+            baseHealthPct   = DarknessExpansion.beetleBaseHealthPercent.Value;
+            debuffStacks    = DarknessExpansion.beetleDebuffStacks.Value;
+            maxGuards       = DarknessExpansion.beetleMaxGuards.Value;
+            onKillASPct     = DarknessExpansion.beetleOnKillASPercent.Value;
+            
             darkBeetleItem = ScriptableObject.CreateInstance<ItemDef>();
             darkBeetleItem.name = "DARK_BEETLE_NAME";
             darkBeetleItem.descriptionToken = "DARK_BEETLE_DESCRIPTION";
@@ -724,8 +738,14 @@ public class DarknessItems
             ItemAPI.Add(new CustomItem(darkBeetleItem, displayRules));
             LanguageAPI.Add("DARK_BEETLE_NAME", "King's Gland");
             LanguageAPI.Add("DARK_BEETLE_DESCRIPTION",
-                "Every 30 seconds, summon a Beetle Guard with 300% (+300% per stack) damage and 300% (+300% per stack) health. Beetle Guards apply 1 (+1 per stack) debuff on hit. Can have up to 1 (+1 per stack) beetle guard at a time. Give your beetles your attack speed. Upon killing a dark enemy, gain 3% (+3% per stack) attack speed.");
-            LanguageAPI.Add("DARK_BEETLE_PICKUP",
+                $"Every {spawnInterval}s, summon a Beetle Guard with " +
+                $"{baseDamagePct}% (+{baseDamagePct}% per stack) damage and " +
+                $"{baseHealthPct}% (+{baseHealthPct}% per stack) health. " +
+                $"Beetle Guards apply {debuffStacks} (+{debuffStacks} per stack) debuff on hit. " +
+                $"Can have up to {maxGuards} (+{maxGuards} per stack) guard(s) at a time. " +
+                $"Give your beetles your attack speed. " +
+                $"Upon killing a dark enemy, gain {onKillASPct}% (+{onKillASPct}% per stack) attack speed."
+            );LanguageAPI.Add("DARK_BEETLE_PICKUP",
                 "Summon a beetle guard which applies random debuffs on hit. Grows stronger as it absorbs darkness.");
             darkItems.Add(darkBeetleItem);
 
@@ -759,7 +779,7 @@ public class DarknessItems
                     num = 2;
                 }
 
-                return num * (self.inventory.GetItemCount(RoR2Content.Items.BeetleGland) + self.inventory.GetItemCount(darkBeetleItem));
+                return num * (self.inventory.GetItemCount(RoR2Content.Items.BeetleGland) + (self.inventory.GetItemCount(darkBeetleItem) * maxGuards));
             }
 
             return orig(self, slot);
@@ -771,7 +791,7 @@ public class DarknessItems
                 CharacterBody cb = damageinfo.attacker.GetComponent<CharacterBody>();
                 if (cb) if (cb.HasBuff(debuffApplier))
                 {
-                    int numBuffStacks = cb.GetBuffCount(debuffApplier);
+                    int numBuffStacks = cb.GetBuffCount(debuffApplier) * debuffStacks;
                     for (int i = 0; i < numBuffStacks; i++)
                     {
                         CharacterBody cb2 = victim.GetComponent<CharacterBody>();
@@ -826,7 +846,7 @@ public class DarknessItems
                             guardResummonCooldown = 1f;
                             return;
                         }
-                        guardResummonCooldown = 30f;
+                        guardResummonCooldown = spawnInterval;
                     }
                 }
             }
@@ -837,8 +857,8 @@ public class DarknessItems
                 {
                     Deployable d = obj.spawnedInstance.GetComponent<Deployable>();
                     cm.AddDeployable(d, DeployableSlot.BeetleGuardAlly);
-                    obj.spawnedInstance.GetComponent<CharacterMaster>().GetBody().baseDamage *= stack * 3;
-                    obj.spawnedInstance.GetComponent<CharacterMaster>().GetBody().baseMaxHealth *= stack * 3;
+                    obj.spawnedInstance.GetComponent<CharacterMaster>().GetBody().baseDamage *= stack * baseDamagePct / 100f;
+                    obj.spawnedInstance.GetComponent<CharacterMaster>().GetBody().baseMaxHealth *= stack * baseHealthPct / 100f;
                     for (int i = 0; i < stack; i++)
                     {
                         obj.spawnedInstance.GetComponent<CharacterMaster>().GetBody().AddBuff(debuffApplier);
