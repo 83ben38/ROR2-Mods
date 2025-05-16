@@ -26,4 +26,10 @@
 		<PackageReference Include="MMHOOK.RoR2" Version="2025.5.5" NoWarn="NU1701" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Reference Include="ConfigurationManager">
+	    <HintPath>..\..\..\..\BepInEx.ConfigurationManager_BepInEx5_v18.4\BepInEx\plugins\ConfigurationManager\ConfigurationManager.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
+
 </Project>

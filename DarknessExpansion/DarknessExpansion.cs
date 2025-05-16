@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using BepInEx;
 using BepInEx.Configuration;
 using R2API;
@@ -20,38 +21,38 @@ namespace DarknessExpansion;
 
 public class DarknessExpansion : BaseUnityPlugin
 {
-    public static ConfigEntry<int> startingDarkness;
-    public static ConfigEntry<int> maximumDarknessLevel;
-    public static ConfigEntry<int> darknessGainedFromShrine;
-    public static ConfigEntry<int> darknessGainedFromItem;
-    public static ConfigEntry<int> darknessGainedFromArtifact;
-    public static ConfigEntry<bool> linearDarknessEliteItemScaling;
+    public static ConfigEntry<int>   startingDarkness;
+    public static ConfigEntry<int>   maximumDarknessLevel;
+    public static ConfigEntry<int>   darknessGainedFromShrine;
+    public static ConfigEntry<int>   darknessGainedFromItem;
+    public static ConfigEntry<int>   darknessGainedFromArtifact;
+    public static ConfigEntry<bool>  linearDarknessEliteItemScaling;
     public static ConfigEntry<float> maximumItemChance;
-    public static ConfigEntry<int> maximumBonusItems;
-    public static ConfigEntry<bool> linearDarknessEliteChanceScaling;
-    public static ConfigEntry<bool> linearDarknessEliteStatsScaling;
+    public static ConfigEntry<int>   maximumBonusItems;
+    public static ConfigEntry<bool>  linearDarknessEliteChanceScaling;
+    public static ConfigEntry<bool>  linearDarknessEliteStatsScaling;
     public static ConfigEntry<float> healthBoostAmount;
     public static ConfigEntry<float> damageBoostAmount;
-    public static ConfigEntry<int> creditCost;
-    public static ConfigEntry<int> selectionWeight;
-    public static ConfigEntry<int> maxDarknessShrines;
-    public static ConfigEntry<int> numPotentialsPerShrine;
+    public static ConfigEntry<int>   creditCost;
+    public static ConfigEntry<int>   selectionWeight;
+    public static ConfigEntry<int>   maxDarknessShrines;
+    public static ConfigEntry<int>   numPotentialsPerShrine;
     public static ConfigEntry<float> baseShrineCredits;
-    public static ConfigEntry<int> numWhiteItemsGiven;
-    public static ConfigEntry<int> numGreenItemsGiven;
-    public static ConfigEntry<int> numRedItemsGiven;
-    public static ConfigEntry<int> numYellowItemsGiven;
+    public static ConfigEntry<int>   numWhiteItemsGiven;
+    public static ConfigEntry<int>   numGreenItemsGiven;
+    public static ConfigEntry<int>   numRedItemsGiven;
+    public static ConfigEntry<int>   numYellowItemsGiven;
     public static ConfigEntry<float> bonusStatsGiven;
-    public static ConfigEntry<int> numWhitesPerRed;
-    public static ConfigEntry<bool> logStacking;
-    public static ConfigEntry<bool> sqrtStacking;
-    public static ConfigEntry<int> golemHealth;
-    public static ConfigEntry<int> golemRegen;
+    public static ConfigEntry<int>   numWhitesPerRed;
+    public static ConfigEntry<bool>  logStacking;
+    public static ConfigEntry<bool>  sqrtStacking;
+    public static ConfigEntry<int>   golemHealth;
+    public static ConfigEntry<int>   golemRegen;
     public static ConfigEntry<float> golemChance;
-    public static ConfigEntry<int> golemBaseDamage;
-    public static ConfigEntry<int> golemDamagePerHealth;
-    public static ConfigEntry<int> golemStackingHealth;
-    public static ConfigEntry<int> golemStackingRegen;
+    public static ConfigEntry<int>   golemBaseDamage;
+    public static ConfigEntry<int>   golemDamagePerHealth;
+    public static ConfigEntry<int>   golemStackingHealth;
+    public static ConfigEntry<int>   golemStackingRegen;
     public static ConfigEntry<float> golemStacking;
     public static ConfigEntry<float> pearlHealthPercent;
     public static ConfigEntry<float> pearlOnKillPercent;
@@ -81,7 +82,7 @@ public class DarknessExpansion : BaseUnityPlugin
     public static ConfigEntry<float> jellyOnKillCdrPct;
     public static ConfigEntry<float> jellyStackingMultiplier;
     public static ConfigEntry<int>   wispCount;            
-    public static ConfigEntry<int> wispBaseDamageMult;   
+    public static ConfigEntry<int>   wispBaseDamageMult;   
     public static ConfigEntry<float> wispProcCoeff;        
     public static ConfigEntry<float> wispOnKillMoveSpeedPct;
     public static ConfigEntry<float> wispStackingMultiplier;
@@ -232,6 +233,21 @@ public class DarknessExpansion : BaseUnityPlugin
         new DarknessItems();
     }
 
+    public void applyDefaults()
+    {
+        var fields = GetType()
+            .GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
+            .Where(f => f.FieldType.IsGenericType
+                        && f.FieldType.GetGenericTypeDefinition() == typeof(ConfigEntry<>));
+
+        foreach (var field in fields)
+        {
+            // 2) Pull out the ConfigEntry<T> instance
+            ConfigEntry<dynamic> entry = (ConfigEntry<dynamic>)field.GetValue(this);
+            
+            entry.Value = entry.DefaultValue;
+        }
+    }
     // private int itemNum = 0;
     //
     // private void Update()
