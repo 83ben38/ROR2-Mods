@@ -5,7 +5,7 @@ using RoR2;
 using UnityEngine;
 
 namespace DarknessExpansion;
-[BepInPlugin("com.cybug.DeflationArtifact", "DeflationArtifact","1.2.0")]
+[BepInPlugin("com.cybug.DeflationArtifact", "DeflationArtifact","1.2.1")]
 [BepInDependency(ItemAPI.PluginGUID)]
 [BepInDependency(EliteAPI.PluginGUID)]
 [BepInDependency(LanguageAPI.PluginGUID)]
@@ -36,7 +36,7 @@ public class DeflationArtifact : BaseUnityPlugin
             "How much time should be skipped when the artifact is enabled in seconds.");
         xpToGet = Config.Bind("", "Starting XP", (ulong)746,
             "How much XP should be granted to the player when the artifact is enabled.");
-        creditMultiplier = Config.Bind("","Credit Multiplier",0.2f,"How much credit the director should get while the artifact is enabled.");
+        creditMultiplier = Config.Bind("","Credit Multiplier",0.5f,"How much credit the director should get while the artifact is enabled.");
 
         whitesToGive = Config.Bind("", "White Items", 15, "How many whites deflation gives.");
         greensToGive = Config.Bind("", "Green Items", 5, "How many greens deflation gives.");

@@ -101,7 +101,16 @@ public class Deflation
     {
         if (RunArtifactManager.instance.IsArtifactEnabled(deflationArtifact))
         {
-            // remove void stuff, green shrine thingy
+            arg2.RemoveCardsThatFailFilter(card =>
+            {
+                
+                InteractableSpawnCard interactableSpawnCard = card.spawnCard as InteractableSpawnCard;
+                if (interactableSpawnCard.name.Contains("Halcyonite") || interactableSpawnCard.name.Contains("Chest"))
+                {
+                    Log.Debug("Blocked One");
+                }
+                return !(interactableSpawnCard.name.Contains("Halcyonite") || interactableSpawnCard.name.Contains("Chest"));
+            });
             arg2.RemoveCardsThatFailFilter(card =>
             {
                 InteractableSpawnCard interactableSpawnCard = card.spawnCard as InteractableSpawnCard;
