@@ -1,10 +1,13 @@
+using System;
 using BepInEx;
 using BepInEx.Configuration;
 using R2API;
 using RoR2;
+using UnityEngine.AddressableAssets;
 using SceneDirector = On.RoR2.SceneDirector;
 using SceneExitController = On.RoR2.SceneExitController;
 using SceneExitControllerColossusPortal = On.RoR2.SceneExitControllerColossusPortal;
+using TeleporterInteraction = On.RoR2.TeleporterInteraction;
 
 namespace DarknessExpansion;
 [BepInPlugin("com.cybug.ColossusPath", "ColossusPath","1.0.0")]
@@ -22,6 +25,7 @@ public class PathOfTheColossus : BaseUnityPlugin
     private ConfigEntry<string> goAfterStage4;
     private ConfigEntry<string> goAfterStage5;
     private ConfigEntry<bool> startOverAfterLooping;
+    private InteractableSpawnCard portalSpawnCard = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/DLC2/iscColossusPortal.asset").WaitForCompletion();
     public PathOfTheColossus()
     {
         Log.Init(Logger);
@@ -32,58 +36,75 @@ public class PathOfTheColossus : BaseUnityPlugin
         goAfterStage5 = Config.Bind("", "Stage 5 Leads to", "meridian", "Where the green portal leads after stage 5.");
         startOverAfterLooping = Config.Bind("", "Start over After Looping", false,
             "Whether the stage number resets after stage 5. If set to false, all green portals after looping will lead to prime meridian.");
-        SceneExitControllerColossusPortal.Begin += SceneExitControllerColossusPortalOnBegin;
-        On.RoR2.Run.PickNextStageScene += (orig, self, choices) =>
+        SceneExitController.SetState += SceneExitControllerOnSetState;
+        TeleporterInteraction.AttemptToSpawnAllEligiblePortals += TeleporterInteractionOnAttemptToSpawnAllEligiblePortals;
+        
+    }
+
+    private void TeleporterInteractionOnAttemptToSpawnAllEligiblePortals(TeleporterInteraction.orig_AttemptToSpawnAllEligiblePortals orig, RoR2.TeleporterInteraction self)
+    {
+        orig(self);
+        if (shouldSpawnPortal)
         {
-            Log.Debug("Here2");
-            orig(self, choices);
-        };
-        SceneExitController.Begin += (orig, self) =>
-        {
-            Log.Debug("Here3");
-            orig(self);
-        };
+            Log.Debug("Spawning portal");
+            self.AttemptSpawnPortal(portalSpawnCard, 10f, 40f, "PORTAL_COLOSSUS_OPEN");
+            shouldSpawnPortal = false;
+        }
     }
     
 
-    private void SceneExitControllerColossusPortalOnBegin(SceneExitControllerColossusPortal.orig_Begin orig, RoR2.SceneExitControllerColossusPortal self)
+    private bool shouldSpawnPortal = false;
+    
+    private void SceneExitControllerOnSetState(SceneExitController.orig_SetState orig, RoR2.SceneExitController self, RoR2.SceneExitController.ExitState newstate)
     {
-        
-        Log.Debug("Here");
-        SceneDef nextStageScene = null;
-        if (!startOverAfterLooping.Value && Run.instance.stageClearCount >= 5)
+        orig(self, newstate);
+        if (newstate == RoR2.SceneExitController.ExitState.Finished)
         {
-            nextStageScene = SceneCatalog.FindSceneDef("meridian");
-        }
-        else
-        {
-            int n = Run.instance.stageClearCount % 5;
-            if (n == 0)
+            if (self.isColossusPortal)
             {
-                nextStageScene = SceneCatalog.FindSceneDef(goAfterStage1.Value);
-            }
-            if (n == 1)
-            {
-                nextStageScene = SceneCatalog.FindSceneDef(goAfterStage2.Value);
-            }
-            if (n == 2)
-            {
-                nextStageScene = SceneCatalog.FindSceneDef(goAfterStage3.Value);
-            }
-            if (n == 3)
-            {
-                nextStageScene = SceneCatalog.FindSceneDef(goAfterStage4.Value);
-            }
-            if (n == 4)
-            {
-                nextStageScene = SceneCatalog.FindSceneDef(goAfterStage5.Value);
-            }
-        }
+                Log.Debug("Here");
+                string nextStageScene = null;
+                if (!startOverAfterLooping.Value && Run.instance.stageClearCount >= 5)
+                {
+                    nextStageScene = "meridian";
+                }
+                else
+                {
+                    int n = Run.instance.stageClearCount % 5;
+                    if (n == 0)
+                    {
+                        nextStageScene = goAfterStage1.Value;
+                    }
+                    if (n == 1)
+                    {
+                        nextStageScene = goAfterStage2.Value;
+                    }
+                    if (n == 2)
+                    {
+                        nextStageScene = goAfterStage3.Value;
+                    }
+                    if (n == 3)
+                    {
+                        nextStageScene = goAfterStage4.Value;
+                    }
+                    if (n == 4)
+                    {
+                        nextStageScene = goAfterStage5.Value;
+                    }
+                }
+                Log.Debug("Switching Stage to " + nextStageScene);
+                self.destinationScene = SceneCatalog.FindSceneDef(nextStageScene);
+                Log.Debug(self.useRunNextStageScene);
+                if (self.useRunNextStageScene)
+                {
+                    self.useRunNextStageScene = false;
+                }
 
-        WeightedSelection<SceneDef> toPick = new WeightedSelection<SceneDef>();
-        toPick.AddChoice(nextStageScene,1);
-        Run.instance.PickNextStageScene(toPick);
-        SceneCatalog.mostRecentSceneDef = Run.instance.nextStageScene;
-        orig(self);
+                shouldSpawnPortal = true;
+                Stage.instance.BeginAdvanceStage(self.destinationScene);
+            }
+        }
     }
+
+    
 }
