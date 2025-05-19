@@ -29,7 +29,7 @@ public class AbilityRandomizer : BaseUnityPlugin
     public AbilityRandomizer()
     {
         Log.Init(Logger);
-        keepSlot = Config.Bind<bool>("","Stay in slot",true,"Whether the abilities stay in the slot they are in.");
+        keepSlot = Config.Bind("","Stay in slot",true,"Whether the abilities stay in the slot they are in.");
         foreach (SurvivorDef survivor in ContentManager.survivorDefs) { // first pass to collect skilldefs
             GameObject prefab = survivor.bodyPrefab;
             SkillLocator locator = prefab.GetComponent<SkillLocator>();
@@ -48,19 +48,19 @@ public class AbilityRandomizer : BaseUnityPlugin
         {
             if (self.skillLocator.primary == skill)
             {
-                
+                self.skillLocator.primary.skillDef = keepSlot.Value ? primaries[(int)(primaries.Count *Random.value)] : all[(int)(all.Count *Random.value)];
             }
             else if (self.skillLocator.secondary == skill)
             {
-                
+                self.skillLocator.secondary.skillDef = keepSlot.Value ? secondaries[(int)(secondaries.Count *Random.value)] : all[(int)(all.Count *Random.value)];
             }
             else if (self.skillLocator.utility == skill)
             {
-                
+                self.skillLocator.utility.skillDef = keepSlot.Value ? utilites[(int)(utilites.Count *Random.value)] : all[(int)(all.Count *Random.value)];
             }
             else if (self.skillLocator.special == skill)
             {
-                
+                self.skillLocator.special.skillDef = keepSlot.Value ? specials[(int)(specials.Count *Random.value)] : all[(int)(all.Count *Random.value)];
             }
         }
     }
