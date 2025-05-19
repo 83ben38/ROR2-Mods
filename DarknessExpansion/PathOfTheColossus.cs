@@ -3,6 +3,7 @@ using BepInEx.Configuration;
 using R2API;
 using RoR2;
 using SceneDirector = On.RoR2.SceneDirector;
+using SceneExitController = On.RoR2.SceneExitController;
 using SceneExitControllerColossusPortal = On.RoR2.SceneExitControllerColossusPortal;
 
 namespace DarknessExpansion;
@@ -32,12 +33,23 @@ public class PathOfTheColossus : BaseUnityPlugin
         startOverAfterLooping = Config.Bind("", "Start over After Looping", false,
             "Whether the stage number resets after stage 5. If set to false, all green portals after looping will lead to prime meridian.");
         SceneExitControllerColossusPortal.Begin += SceneExitControllerColossusPortalOnBegin;
-
+        On.RoR2.Run.PickNextStageScene += (orig, self, choices) =>
+        {
+            Log.Debug("Here2");
+            orig(self, choices);
+        };
+        SceneExitController.Begin += (orig, self) =>
+        {
+            Log.Debug("Here3");
+            orig(self);
+        };
     }
     
 
     private void SceneExitControllerColossusPortalOnBegin(SceneExitControllerColossusPortal.orig_Begin orig, RoR2.SceneExitControllerColossusPortal self)
     {
+        
+        Log.Debug("Here");
         SceneDef nextStageScene = null;
         if (!startOverAfterLooping.Value && Run.instance.stageClearCount >= 5)
         {
