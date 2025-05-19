@@ -1,12 +1,9 @@
-using System;
 using BepInEx;
 using BepInEx.Configuration;
 using R2API;
 using RoR2;
 using UnityEngine.AddressableAssets;
-using SceneDirector = On.RoR2.SceneDirector;
 using SceneExitController = On.RoR2.SceneExitController;
-using SceneExitControllerColossusPortal = On.RoR2.SceneExitControllerColossusPortal;
 using TeleporterInteraction = On.RoR2.TeleporterInteraction;
 
 namespace DarknessExpansion;
@@ -62,7 +59,6 @@ public class PathOfTheColossus : BaseUnityPlugin
         {
             if (self.isColossusPortal)
             {
-                Log.Debug("Here");
                 string nextStageScene = null;
                 if (!startOverAfterLooping.Value && Run.instance.stageClearCount >= 5)
                 {
