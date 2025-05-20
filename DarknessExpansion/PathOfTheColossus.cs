@@ -51,6 +51,7 @@ public class PathOfTheColossus : BaseUnityPlugin
     
 
     private bool shouldSpawnPortal = false;
+    private bool shouldIncrementStageCount = false;
     
     private void SceneExitControllerOnSetState(SceneExitController.orig_SetState orig, RoR2.SceneExitController self, RoR2.SceneExitController.ExitState newstate)
     {
@@ -59,6 +60,11 @@ public class PathOfTheColossus : BaseUnityPlugin
         {
             if (self.isColossusPortal)
             {
+                if (shouldIncrementStageCount)
+                {
+                    Run.instance.stageClearCount++;
+                    shouldIncrementStageCount = false;
+                }
                 string nextStageScene = null;
                 if (!startOverAfterLooping.Value && Run.instance.stageClearCount >= 5)
                 {
@@ -89,6 +95,10 @@ public class PathOfTheColossus : BaseUnityPlugin
                     }
                 }
                 Log.Debug("Switching Stage to " + nextStageScene);
+                if (nextStageScene == "gildedcoast")
+                {
+                    shouldIncrementStageCount = true;
+                }
                 self.destinationScene = SceneCatalog.FindSceneDef(nextStageScene);
                 Log.Debug(self.useRunNextStageScene);
                 if (self.useRunNextStageScene)
