@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using BepInEx;
 using BepInEx.Configuration;
@@ -7,6 +9,7 @@ using RoR2.ContentManagement;
 using RoR2.Skills;
 using UnityEngine;
 using CharacterBody = On.RoR2.CharacterBody;
+using Random = UnityEngine.Random;
 
 
 namespace DarknessExpansion;
@@ -30,7 +33,14 @@ public class AbilityRandomizer : BaseUnityPlugin
     {
         Log.Init(Logger);
         keepSlot = Config.Bind("","Stay in slot",true,"Whether the abilities stay in the slot they are in.");
-        foreach (SurvivorDef survivor in ContentManager.survivorDefs) { // first pass to collect skilldefs
+        CharacterBody.OnSkillActivated += CharacterBodyOnOnSkillActivated;
+        On.RoR2.SurvivorCatalog.Init += SurvivorCatalogOnInit;
+    }
+
+    private void SurvivorCatalogOnInit(On.RoR2.SurvivorCatalog.orig_Init orig)
+    {
+        orig();
+        foreach (SurvivorDef survivor in SurvivorCatalog.survivorDefs) {
             GameObject prefab = survivor.bodyPrefab;
             SkillLocator locator = prefab.GetComponent<SkillLocator>();
             CollectSkills(locator.primary.skillFamily, ref primaries);
@@ -38,8 +48,8 @@ public class AbilityRandomizer : BaseUnityPlugin
             CollectSkills(locator.utility.skillFamily, ref utilites);
             CollectSkills(locator.special.skillFamily, ref specials);
         }
-        CharacterBody.OnSkillActivated += CharacterBodyOnOnSkillActivated;
     }
+
 
     private void CharacterBodyOnOnSkillActivated(CharacterBody.orig_OnSkillActivated orig, RoR2.CharacterBody self, GenericSkill skill)
     {
