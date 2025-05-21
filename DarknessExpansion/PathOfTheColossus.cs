@@ -1,7 +1,10 @@
+using System;
+using System.Collections.Generic;
 using BepInEx;
 using BepInEx.Configuration;
 using R2API;
 using RoR2;
+using UnityEngine;
 using UnityEngine.AddressableAssets;
 using SceneExitController = On.RoR2.SceneExitController;
 using TeleporterInteraction = On.RoR2.TeleporterInteraction;
@@ -22,7 +25,9 @@ public class PathOfTheColossus : BaseUnityPlugin
     private ConfigEntry<string> goAfterStage4;
     private ConfigEntry<string> goAfterStage5;
     private ConfigEntry<bool> startOverAfterLooping;
+    private ConfigEntry<bool> blacklistStages;
     private InteractableSpawnCard portalSpawnCard = Addressables.LoadAssetAsync<InteractableSpawnCard>("RoR2/DLC2/iscColossusPortal.asset").WaitForCompletion();
+    private List<SceneDef> stages = new ();
     public PathOfTheColossus()
     {
         Log.Init(Logger);
@@ -33,9 +38,59 @@ public class PathOfTheColossus : BaseUnityPlugin
         goAfterStage5 = Config.Bind("", "Stage 5 Leads to", "meridian", "Where the green portal leads after stage 5.");
         startOverAfterLooping = Config.Bind("", "Start over After Looping", false,
             "Whether the stage number resets after stage 5. If set to false, all green portals after looping will lead to prime meridian.");
+        blacklistStages = Config.Bind("", "Blacklist Stages", false,
+            "Whether chosen stages will not be able to show up outside of the path.");
         SceneExitController.SetState += SceneExitControllerOnSetState;
         TeleporterInteraction.AttemptToSpawnAllEligiblePortals += TeleporterInteractionOnAttemptToSpawnAllEligiblePortals;
+        On.RoR2.Run.PickNextStageSceneFromCurrentSceneDestinations += RunOnPickNextStageSceneFromCurrentSceneDestinations;
+        stages.Add(SceneCatalog.FindSceneDef(goAfterStage1.Value));
+        stages.Add(SceneCatalog.FindSceneDef(goAfterStage2.Value));
+        stages.Add(SceneCatalog.FindSceneDef(goAfterStage3.Value));
+        stages.Add(SceneCatalog.FindSceneDef(goAfterStage4.Value));
+        stages.Add(SceneCatalog.FindSceneDef(goAfterStage5.Value));
+        On.RoR2.Run.AdvanceStage += RunOnAdvanceStage;
+    }
+
+    private void FixedUpdate()
+    {
+        if (Input.GetKeyDown(KeyCode.F2))
+        {
+            PlayerCharacterMasterController.instances[0].master.GiveMoney(100);
+        }
+    }
+
+    private void RunOnAdvanceStage(On.RoR2.Run.orig_AdvanceStage orig, Run self, SceneDef nextscene)
+    {
+        if (SceneCatalog.GetSceneDefForCurrentScene()?.baseSceneName == "goldshores")
+        {
+            Log.Debug("Here");
+            self.NetworkstageClearCount = self.stageClearCount + 1;
+        }
+
+        orig(self, nextscene);
+    }
+
+    private void RunOnPickNextStageSceneFromCurrentSceneDestinations(On.RoR2.Run.orig_PickNextStageSceneFromCurrentSceneDestinations orig, Run self)
+    {
         
+        WeightedSelection<SceneDef> weightedSelection = new WeightedSelection<SceneDef>(8);
+        SceneCatalog.mostRecentSceneDef.AddDestinationsToWeightedSelection(weightedSelection, def => CanPickStage(def,self));
+        self.PickNextStageScene(weightedSelection);
+    }
+
+    public bool CanPickStage(SceneDef sceneDef, Run self)
+    {
+        if (!self.CanPickStage(sceneDef))
+        {
+            return false;
+        }
+
+        if (blacklistStages.Value && stages.Contains(sceneDef))
+        {
+            return false;
+        }
+
+        return true;
     }
 
     private void TeleporterInteractionOnAttemptToSpawnAllEligiblePortals(TeleporterInteraction.orig_AttemptToSpawnAllEligiblePortals orig, RoR2.TeleporterInteraction self)
@@ -60,11 +115,6 @@ public class PathOfTheColossus : BaseUnityPlugin
         {
             if (self.isColossusPortal)
             {
-                if (shouldIncrementStageCount)
-                {
-                    Run.instance.stageClearCount++;
-                    shouldIncrementStageCount = false;
-                }
                 string nextStageScene = null;
                 if (!startOverAfterLooping.Value && Run.instance.stageClearCount >= 5)
                 {
