@@ -187,7 +187,11 @@ public class AbilityRandomizer : BaseUnityPlugin
             {
                 CollectSkills(locator.special.skillFamily, ref specials);
             }
-            CollectMachines(survivor.bodyPrefab);
+
+            if (survivor.survivorIndex != SurvivorCatalog.FindSurvivorIndex("Toolbot"))
+            {
+                CollectMachines(survivor.bodyPrefab);
+            }
         }
 
         foreach (SurvivorDef survivor in ContentManager.survivorDefs)
@@ -247,6 +251,14 @@ public class AbilityRandomizer : BaseUnityPlugin
                     {
                         huntressTracker = self.gameObject.GetComponent<HuntressTracker>()
                     };
+                }
+                if (self.skillLocator.primary.skillDef is ReloadSkillDef)
+                {
+                    self.skillLocator.primary.skillInstanceData = new ReloadSkillDef.InstanceData();
+                }
+                if (self.skillLocator.primary.skillDef is SteppedSkillDef)
+                {
+                    self.skillLocator.primary.skillInstanceData = new SteppedSkillDef.InstanceData();
                 }
             }
             else if (self.skillLocator.secondary == skill)
