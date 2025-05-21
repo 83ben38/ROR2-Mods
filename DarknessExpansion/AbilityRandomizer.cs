@@ -272,6 +272,10 @@ public class AbilityRandomizer : BaseUnityPlugin
                         huntressTracker = self.gameObject.GetComponent<HuntressTracker>()
                     };
                 }
+                if (self.skillLocator.secondary.skillDef is SteppedSkillDef)
+                {
+                    self.skillLocator.secondary.skillInstanceData = new SteppedSkillDef.InstanceData();
+                }
             }
             else if (self.skillLocator.utility == skill)
             {
@@ -290,6 +294,10 @@ public class AbilityRandomizer : BaseUnityPlugin
             {
                 self.skillLocator.special.skillDef = keepSlot.Value ? specials[(int)(specials.Count *Random.value)] : all[(int)(all.Count *Random.value)];
                 self.skillLocator.special.cooldownOverride = self.skillLocator.special.skillDef.baseRechargeInterval;
+                if (self.skillLocator.special.skillDef is SteppedSkillDef)
+                {
+                    self.skillLocator.special.skillInstanceData = new SteppedSkillDef.InstanceData();
+                }
             }
         }
     }  
