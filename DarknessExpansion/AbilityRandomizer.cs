@@ -183,7 +183,7 @@ public class AbilityRandomizer : BaseUnityPlugin
                 CollectSkills(locator.utility.skillFamily, ref utilites);
             }
 
-            if (survivor.survivorIndex != SurvivorCatalog.FindSurvivorIndex("Captain") && survivor.survivorIndex != SurvivorCatalog.FindSurvivorIndex("Toolbot") && survivor.survivorIndex != SurvivorCatalog.FindSurvivorIndex("Railgunner"))
+            if (survivor.survivorIndex != SurvivorCatalog.FindSurvivorIndex("Captain") && survivor.survivorIndex != SurvivorCatalog.FindSurvivorIndex("Toolbot") && survivor.survivorIndex != SurvivorCatalog.FindSurvivorIndex("Railgunner") && survivor.survivorIndex != SurvivorCatalog.FindSurvivorIndex("VoidSurvivor"))
             {
                 CollectSkills(locator.special.skillFamily, ref specials);
             }
