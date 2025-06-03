@@ -27,6 +27,7 @@ public class AbilityRandomizer : BaseUnityPlugin
     
     private ConfigEntry<bool> keepSlot;
     private ConfigEntry<bool> workOnEnemies;
+    private ConfigEntry<bool> workOnPlayers;
     private static List<SkillDef> primaries = new();
     private static List<SkillDef> secondaries = new();
     private static List<SkillDef> utilites = new();
@@ -37,6 +38,7 @@ public class AbilityRandomizer : BaseUnityPlugin
         Log.Init(Logger);
         keepSlot = Config.Bind("","Stay in slot",true,"Whether the abilities stay in the slot they are in.");
         workOnEnemies = Config.Bind("", "Work On Enemies", false, "Whether enemy abilities are randomized.");
+        workOnPlayers = Config.Bind("", "Work On Players", true, "Whether player abilities are randomized.");
         CharacterBody.OnSkillActivated += CharacterBodyOnOnSkillActivated;
         On.RoR2.SurvivorCatalog.Init += SurvivorCatalogOnInit;
         
@@ -238,7 +240,10 @@ public class AbilityRandomizer : BaseUnityPlugin
         {
             return;
         }
-
+        if (!workOnPlayers.Value && self.isPlayerControlled)
+        {
+            return;
+        }
         if (self.skillLocator)
         {
             if (self.skillLocator.primary == skill)
