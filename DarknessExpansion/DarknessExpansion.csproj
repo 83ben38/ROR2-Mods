@@ -13,7 +13,9 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-
+		<Reference Include="RandomlyGeneratedItems">
+		  <HintPath>libs\RandomlyGeneratedItems.dll</HintPath>
+		</Reference>
 		<PackageReference Include="BepInEx.Core" Version="5.4.21" />
 
 		<PackageReference Include="R2API" Version="5.0.5" />
@@ -27,9 +29,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Reference Include="ConfigurationManager">
-	    <HintPath>..\..\..\..\BepInEx.ConfigurationManager_BepInEx5_v18.4\BepInEx\plugins\ConfigurationManager\ConfigurationManager.dll</HintPath>
-	  </Reference>
+	  <Folder Include="libs\" />
 	</ItemGroup>
 
 </Project>
